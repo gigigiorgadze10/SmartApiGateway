@@ -1,0 +1,73 @@
+﻿@{
+    ViewData["Title"] = "პროფილის პარამეტრები";
+}
+
+<div class="max-w-5xl mx-auto">
+    <h1 class="text-2xl font-bold text-slate-800 mb-6">პროფილის პარამეტრები</h1>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        
+        <div class="md:col-span-2 space-y-6">
+            
+            <div class="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
+                <h2 class="text-lg font-semibold text-slate-800 mb-4 border-b pb-2">პირადი ინფორმაცია</h2>
+                <form>
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-600 mb-1">სახელი</label>
+                            <input type="text" value="ადმინ" class="w-full border-slate-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-slate-50 border p-2" readonly>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-600 mb-1">გვარი</label>
+                            <input type="text" value="მომხმარებელი" class="w-full border-slate-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-slate-50 border p-2" readonly>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-slate-600 mb-1">ელ-ფოსტა</label>
+                        <input type="email" value="admin@gateway.com" class="w-full border-slate-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-slate-50 border p-2" readonly>
+                    </div>
+                </form>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
+                <h2 class="text-lg font-semibold text-slate-800 mb-4 border-b pb-2">პაროლის შეცვლა</h2>
+                <form>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-slate-600 mb-1">მიმდინარე პაროლი</label>
+                        <input type="password" class="w-full border-slate-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2">
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-slate-600 mb-1">ახალი პაროლი</label>
+                        <input type="password" class="w-full border-slate-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2">
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-slate-600 mb-1">გაიმეორეთ პაროლი</label>
+                        <input type="password" class="w-full border-slate-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2">
+                    </div>
+                    <button type="button" class="bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700 transition">
+                        პაროლის განახლება
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="space-y-6">
+            <div class="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
+                <h2 class="text-lg font-semibold text-slate-800 mb-4 border-b pb-2">მიმდინარე როლი</h2>
+                <div class="flex items-center p-3 bg-blue-50 rounded-lg text-blue-700 border border-blue-100">
+                    <i data-lucide="shield-check" class="w-5 h-5 mr-2"></i>
+                    <span class="font-bold">Super Admin</span>
+                </div>
+                
+                <h2 class="text-lg font-semibold text-slate-800 mt-6 mb-4 border-b pb-2">აქტიური უფლებები</h2>
+                <ul class="space-y-2 text-sm text-slate-600">
+                    <li class="flex items-center"><i data-lucide="check-circle-2" class="w-4 h-4 text-green-500 mr-2"></i> სრული სისტემური წვდომა</li>
+                    <li class="flex items-center"><i data-lucide="check-circle-2" class="w-4 h-4 text-green-500 mr-2"></i> IP მისამართების დაბლოკვა</li>
+                    <li class="flex items-center"><i data-lucide="check-circle-2" class="w-4 h-4 text-green-500 mr-2"></i> როლების მართვა</li>
+                    <li class="flex items-center"><i data-lucide="check-circle-2" class="w-4 h-4 text-green-500 mr-2"></i> ლოგების ნახვა და წაშლა</li>
+                </ul>
+            </div>
+        </div>
+
+    </div>
+</div>

@@ -1,0 +1,169 @@
+﻿@{
+    ViewData["Title"] = "Dashboard";
+    // ამოგვაქვს კონტროლერიდან გამოგზავნილი მონაცემები
+    var recentLogs = ViewBag.RecentLogs as IEnumerable<SmartApiGateway.Models.TrafficLog>;
+}
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<div class="mb-6 flex justify-between items-center">
+    <div>
+        <h1 class="text-2xl font-bold text-slate-800">სისტემის მიმოხილვა</h1>
+        <p class="text-sm text-slate-500">ტრაფიკის ანალიტიკა და მონიტორინგი რეალურ დროში</p>
+    </div>
+    <button onclick="window.location.reload();" class="bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 px-4 py-2 rounded shadow-sm flex items-center transition">
+        <i data-lucide="refresh-cw" class="w-4 h-4 mr-2"></i> მონაცემების განახლება
+    </button>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex items-center">
+        <div class="rounded-full bg-blue-100 p-3 mr-4">
+            <i data-lucide="activity" class="w-8 h-8 text-blue-600"></i>
+        </div>
+        <div>
+            <h3 class="text-slate-500 text-sm font-semibold uppercase tracking-wider mb-1">ჯამური ტრაფიკი (დღეს)</h3>
+            <p class="text-3xl font-bold text-slate-800">@ViewBag.TotalRequests</p>
+        </div>
+    </div>
+    
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex items-center">
+        <div class="rounded-full bg-red-100 p-3 mr-4">
+            <i data-lucide="shield-alert" class="w-8 h-8 text-red-600"></i>
+        </div>
+        <div>
+            <h3 class="text-slate-500 text-sm font-semibold uppercase tracking-wider mb-1">დაბლოკილი IP-ები</h3>
+            <p class="text-3xl font-bold text-slate-800">@ViewBag.TotalBlocked</p>
+        </div>
+    </div>
+    
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex items-center">
+        <div class="rounded-full bg-green-100 p-3 mr-4">
+            <i data-lucide="clock" class="w-8 h-8 text-green-600"></i>
+        </div>
+        <div>
+            <h3 class="text-slate-500 text-sm font-semibold uppercase tracking-wider mb-1">საშუალო დაყოვნება</h3>
+            <p class="text-3xl font-bold text-slate-800">@ViewBag.AvgLatency ms</p>
+        </div>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+    
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 lg:col-span-2">
+        <h2 class="text-lg font-bold text-slate-800 mb-4 border-b pb-2">ტრაფიკის ინტენსივობა</h2>
+        <div class="relative h-64 w-full">
+            <canvas id="trafficChart"></canvas>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+        <h2 class="text-lg font-bold text-slate-800 mb-4 border-b pb-2">მოთხოვნების სტატუსი</h2>
+        <div class="relative h-64 w-full flex justify-center">
+            <canvas id="statusChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mb-8">
+    <div class="p-6 border-b border-slate-200 flex justify-between items-center">
+        <h2 class="text-lg font-bold text-slate-800">ბოლო ტრანზაქციები</h2>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-slate-200">
+            <thead class="bg-slate-50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase">თარიღი/დრო</th>
+                    <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase">წყარო (IP)</th>
+                    <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase">მეთოდი & მისამართი</th>
+                    <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase">სტატუსი</th>
+                    <th class="px-6 py-3 text-right text-xs font-bold text-slate-500 uppercase">დაყოვნება</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-slate-200">
+                @if (recentLogs == null || !recentLogs.Any())
+                {
+                    <tr><td colspan="5" class="px-6 py-8 text-center text-slate-500">ტრაფიკი ჯერ არ დაფიქსირებულა</td></tr>
+                }
+                else
+                {
+                    foreach (var log in recentLogs)
+                    {
+                        <tr class="hover:bg-slate-50 transition">
+                            <td class="px-6 py-3 whitespace-nowrap text-sm text-slate-500">@log.Timestamp.ToString("HH:mm:ss")</td>
+                            <td class="px-6 py-3 whitespace-nowrap text-sm font-medium text-slate-900">@log.IpAddress</td>
+                            <td class="px-6 py-3 whitespace-nowrap text-sm text-slate-500">
+                                <span class="font-bold text-slate-700">@log.Method</span> @log.Endpoint
+                            </td>
+                            <td class="px-6 py-3 whitespace-nowrap">
+                                @if (log.StatusCode >= 200 && log.StatusCode < 300)
+                                {
+                                    <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">@log.StatusCode</span>
+                                }
+                                else if (log.StatusCode == 429)
+                                {
+                                    <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">@log.StatusCode Blocked</span>
+                                }
+                                else
+                                {
+                                    <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">@log.StatusCode</span>
+                                }
+                            </td>
+                            <td class="px-6 py-3 whitespace-nowrap text-sm text-right text-slate-500">@log.LatencyMs ms</td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+    // ტრაფიკის ხაზოვანი გრაფიკი (Line Chart)
+    var ctxTraffic = document.getElementById('trafficChart').getContext('2d');
+    var trafficChart = new Chart(ctxTraffic, {
+    type: 'line',
+    data: {
+    labels: ['10:00', '10:15', '10:30', '10:45', '11:00', '11:15', 'ახლა'],
+    datasets: [{
+    label: 'წარმატებული მოთხოვნები',
+    data: [12, 19, 3, 5, 2, 3, @ViewBag.SuccessCount], // მაგალითი მონაცემები
+    borderColor: 'rgb(34, 197, 94)',
+    tension: 0.3,
+    fill: false
+    },
+    {
+    label: 'დაბლოკილი/შეცდომები',
+    data: [2, 3, 20, 5, 1, 4, @ViewBag.ErrorCount], // მაგალითი მონაცემები
+    borderColor: 'rgb(239, 68, 68)',
+    tension: 0.3,
+    fill: false
+    }]
+    },
+    options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    }
+    });
+
+    // სტატუსების წრიული გრაფიკი (Doughnut Chart)
+    var ctxStatus = document.getElementById('statusChart').getContext('2d');
+    var statusChart = new Chart(ctxStatus, {
+    type: 'doughnut',
+    data: {
+    labels: ['წარმატებული (2xx)', 'შეცდომები (4xx/5xx)'],
+    datasets: [{
+    data: [@ViewBag.SuccessCount, @ViewBag.ErrorCount],
+    backgroundColor: ['#22c55e', '#ef4444'],
+    hoverOffset: 4
+    }]
+    },
+    options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    cutout: '70%'
+    }
+    });
+    });
+</script>

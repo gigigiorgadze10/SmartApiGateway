@@ -1,0 +1,51 @@
+﻿@model IEnumerable<SmartApiGateway.Data.ApplicationUser>
+
+@{
+    ViewData["Title"] = "მომხმარებლების მართვა";
+}
+
+<div class="flex justify-between items-center mb-6">
+    <h1 class="text-2xl font-bold text-slate-800">სისტემის მომხმარებლები</h1>
+    <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow-sm flex items-center transition">
+        <i data-lucide="plus" class="w-4 h-4 mr-2"></i> მომხმარებლის დამატება
+    </button>
+</div>
+
+<div class="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
+    <table class="min-w-full divide-y divide-slate-200">
+        <thead class="bg-slate-50">
+            <tr>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">სახელი / გვარი</th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">ელ-ფოსტა</th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">რეგისტრაციის თარიღი</th>
+                <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">მოქმედება</th>
+            </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-slate-200">
+            @if (!Model.Any())
+            {
+                <tr>
+                    <td colspan="4" class="px-6 py-10 text-center text-slate-500">ბაზაში მომხმარებლები არ მოიძებნა</td>
+                </tr>
+            }
+            @foreach (var user in Model)
+            {
+                <tr class="hover:bg-slate-50 transition">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">
+                        @user.FirstName @user.LastName
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
+                        @user.Email
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
+                        @user.CreatedAt.ToString("dd/MM/yyyy")
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <a href="#" class="text-blue-600 hover:text-blue-900 mr-3">რედაქტირება</a>
+                        <a href="#" class="text-red-600 hover:text-red-900">წაშლა</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

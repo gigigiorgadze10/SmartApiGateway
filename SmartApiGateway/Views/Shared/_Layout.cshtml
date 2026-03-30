@@ -1,0 +1,76 @@
+﻿<!DOCTYPE html>
+<html lang="ka">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - API Gateway</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="bg-gray-100 font-sans leading-normal tracking-normal flex h-screen overflow-hidden">
+
+    <div class="flex-1 flex flex-col h-full overflow-hidden w-full relative">
+        
+        <header class="bg-white shadow-sm border-b p-4 flex justify-between items-center z-10">
+            <div class="text-xl font-bold text-slate-800">
+                Smart API Gateway
+            </div>
+            
+            <div class="relative group cursor-pointer">
+                <div class="flex items-center space-x-3 bg-slate-50 border border-slate-200 py-2 px-3 rounded-full hover:bg-slate-100 transition">
+                    <span class="text-sm font-semibold text-slate-700">@User.Identity?.Name</span>
+                    <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold uppercase">
+                        @(string.IsNullOrEmpty(User.Identity?.Name) ? "U" : User.Identity.Name.Substring(0, 1))
+                    </div>
+                </div>
+                
+                <div class="absolute right-0 mt-1 w-48 bg-white rounded-md shadow-lg py-1 border border-slate-100 opacity-0 group-hover:opacity-100 transition-opacity duration-200 invisible group-hover:visible z-50">
+                    <a href="/Settings" class="flex items-center px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">
+                        <i data-lucide="settings" class="w-4 h-4 mr-2"></i> Settings
+                    </a>
+                    <hr class="my-1 border-slate-100" />
+                    <a href="/Account/Logout" class="flex items-center px-4 py-2 text-sm text-red-600 hover:bg-slate-50">
+                        <i data-lucide="log-out" class="w-4 h-4 mr-2"></i> Log out
+                    </a>
+                </div>
+            </div>
+        </header>
+
+        <main class="flex-1 overflow-x-hidden overflow-y-auto bg-slate-50 p-6">
+            @RenderBody()
+        </main>
+    </div>
+
+    <aside class="w-64 bg-slate-900 text-slate-300 flex flex-col shadow-2xl z-20 border-l border-slate-800">
+        <div class="p-5 border-b border-slate-800">
+            <h2 class="text-lg font-bold text-white tracking-wider">მენიუ</h2>
+        </div>
+        
+        <nav class="flex-1 p-4 space-y-1 overflow-y-auto">
+            <a href="/" class="flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-slate-800 hover:text-white @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Home" ? "bg-blue-600 text-white" : "")">
+                <i data-lucide="layout-dashboard" class="w-5 h-5 mr-3"></i> Dashboard
+            </a>
+            
+            <div class="pt-6 pb-2 px-4 text-xs uppercase font-bold tracking-wider text-slate-500">
+                ადმინისტრირება
+            </div>
+            
+            <a href="/Users" class="flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-slate-800 hover:text-white">
+                <i data-lucide="users" class="w-5 h-5 mr-3"></i> მომხმარებლები
+            </a>
+            <a href="/Roles" class="flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-slate-800 hover:text-white">
+                <i data-lucide="shield" class="w-5 h-5 mr-3"></i> როლები
+            </a>
+            <a href="/Permissions" class="flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-slate-800 hover:text-white">
+                <i data-lucide="key" class="w-5 h-5 mr-3"></i> უფლებები
+            </a>
+        </nav>
+    </aside>
+
+    <script>
+        // აიკონების რენდერი
+        lucide.createIcons();
+    </script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
