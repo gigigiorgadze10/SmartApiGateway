@@ -1,6 +1,7 @@
-using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using SmartApiGateway.Data;
+using SmartApiGateway.Middlewares; // დავამატეთ ჩვენი საქაღალდის მისამართი
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -41,6 +42,11 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
+
+// ==========================================================
+// ---> აქ ვსვამთ ჩვენს API Gateway Middleware-ს <---
+// ==========================================================
+app.UseMiddleware<GatewayMiddleware>();
 
 // 5. უსაფრთხოება: აუცილებელია ჯერ Authentication მოხდეს, მერე Authorization
 app.UseAuthentication();
