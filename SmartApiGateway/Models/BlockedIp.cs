@@ -7,7 +7,7 @@ namespace SmartApiGateway.Models
         [Key]
         public int Id { get; set; }
         public string IpAddress { get; set; } = string.Empty;
-        public string Reason { get; set; } = string.Empty; // მაგ: "Rate Limit Exceeded"
+        public string Reason { get; set; } = string.Empty;
         public DateTime BlockedAt { get; set; } = DateTime.UtcNow;
     }
 }
