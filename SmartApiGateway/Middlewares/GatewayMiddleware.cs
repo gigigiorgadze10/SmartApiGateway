@@ -3,7 +3,11 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using System;
 using System.Linq;
-using System.Collections.Generic;
+using System.Diagnostics;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Caching.Memory; // <-- დაემატა მეხსიერების ბიბლიოთეკა
+using SmartApiGateway.Data;
+using SmartApiGateway.Models;
 
 namespace SmartApiGateway.Middlewares
 {
@@ -20,33 +24,45 @@ namespace SmartApiGateway.Middlewares
 
         public async Task InvokeAsync(HttpContext context)
         {
-            // 1. მომხმარებლის (კლიენტის) IP მისამართის წამოღება
             var clientIp = context.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
+            var dbContext = context.RequestServices.GetRequiredService<ApplicationDbContext>();
+            var cache = context.RequestServices.GetRequiredService<IMemoryCache>(); // ვიღებთ Cache სერვისს
 
-            // 2. IP Blacklist-ის სიმულაცია (სატესტო სია)
-            // მომავალში ამ სიას შენი PostgreSQL ბაზიდან წამოვიღებთ
-            var blacklistedIps = new List<string>
+            // 1. IP Blacklist შემოწმება
+            bool isBlocked = dbContext.BlockedIps.Any(b => b.IpAddress == clientIp);
+            if (isBlocked)
             {
-                "192.168.1.100",
-                "10.0.0.5" 
-                // "::1", // <-- თუ გინდა შენი თავი დაბლოკო ლოკალურად (localhost-ის IPv6 მისამართი), მოხსენი კომენტარი
-                // "127.0.0.1" // <-- localhost-ის IPv4 მისამართი
-            };
-
-            // 3. ვამოწმებთ, არის თუ არა კლიენტის IP შავ სიაში
-            if (blacklistedIps.Contains(clientIp))
-            {
-                // თუ შავ სიაშია, ვუბრუნებთ 403 სტატუსს და ვწყვეტთ მოთხოვნას
                 context.Response.StatusCode = StatusCodes.Status403Forbidden;
                 context.Response.ContentType = "application/json";
                 await context.Response.WriteAsync("{\"error\": \"Access Denied. Your IP address is blacklisted.\"}");
-
-                return; // Pipeline წყდება აქ!
+                return;
             }
 
-            // 4. თუ IP უსაფრთხოა, ვაგრძელებთ ჩვეულებრივ API Gateway ლოგიკას
+            // 2. RATE LIMITING (მაქსიმუმ 100 მოთხოვნა 1 წუთში თითო IP-დან)
+            string rateLimitKey = $"RateLimit_{clientIp}";
+            int maxRequests = 100;
+
+            if (cache.TryGetValue(rateLimitKey, out int requestCount))
+            {
+                if (requestCount >= maxRequests)
+                {
+                    // თუ ლიმიტს გადააჭარბა, ვბლოკავთ (Status 429 Too Many Requests)
+                    context.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+                    context.Response.ContentType = "application/json";
+                    await context.Response.WriteAsync("{\"error\": \"Too Many Requests. Please try again in a minute.\"}");
+                    return;
+                }
+                cache.Set(rateLimitKey, requestCount + 1, TimeSpan.FromMinutes(1));
+            }
+            else
+            {
+                cache.Set(rateLimitKey, 1, TimeSpan.FromMinutes(1));
+            }
+
+            // 3. API მარშრუტიზაცია (Reverse Proxy) და ლოგირება
             if (context.Request.Path.StartsWithSegments("/api", out var remainingPath))
             {
+                var stopwatch = Stopwatch.StartNew();
                 string targetBaseUrl = "https://jsonplaceholder.typicode.com";
                 string targetUrl = $"{targetBaseUrl}{remainingPath}{context.Request.QueryString}";
 
@@ -57,7 +73,6 @@ namespace SmartApiGateway.Middlewares
                 };
 
                 using var responseMessage = await _httpClient.SendAsync(targetRequestMessage);
-
                 context.Response.StatusCode = (int)responseMessage.StatusCode;
 
                 foreach (var header in responseMessage.Content.Headers)
@@ -66,7 +81,20 @@ namespace SmartApiGateway.Middlewares
                 }
 
                 await responseMessage.Content.CopyToAsync(context.Response.Body);
+                stopwatch.Stop();
 
+                var log = new TrafficLog
+                {
+                    IpAddress = clientIp,
+                    RequestedUrl = targetUrl,
+                    HttpMethod = context.Request.Method,
+                    StatusCode = (int)responseMessage.StatusCode,
+                    ResponseTimeMs = stopwatch.ElapsedMilliseconds,
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                dbContext.TrafficLogs.Add(log);
+                await dbContext.SaveChangesAsync();
                 return;
             }
 

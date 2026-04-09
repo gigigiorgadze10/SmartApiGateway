@@ -28,6 +28,7 @@ builder.Services.ConfigureApplicationCookie(options =>
 });
 
 builder.Services.AddControllersWithViews();
+builder.Services.AddMemoryCache(); // ვრთავთ დროებით მეხსიერებას Rate Limiting-ისთვის
 
 var app = builder.Build();
 
