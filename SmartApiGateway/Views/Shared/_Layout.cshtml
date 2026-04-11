@@ -3,17 +3,16 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - API Gateway</title>
+    <title>@ViewData["Title"] - Smart API Gateway</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body class="bg-gray-100 font-sans leading-normal tracking-normal flex h-screen overflow-hidden">
 
     <div class="flex-1 flex flex-col h-full overflow-hidden w-full relative">
-        
         <header class="bg-white shadow-sm border-b p-4 flex justify-between items-center z-10">
-            <div class="text-xl font-bold text-slate-800">
-                Smart API Gateway
+            <div class="text-xl font-bold text-slate-800 flex items-center">
+                <i data-lucide="zap" class="text-blue-600 mr-2"></i> Smart API Gateway
             </div>
             
             <div class="relative group cursor-pointer">
@@ -29,9 +28,11 @@
                         <i data-lucide="settings" class="w-4 h-4 mr-2"></i> Settings
                     </a>
                     <hr class="my-1 border-slate-100" />
-                    <a href="/Account/Logout" class="flex items-center px-4 py-2 text-sm text-red-600 hover:bg-slate-50">
-                        <i data-lucide="log-out" class="w-4 h-4 mr-2"></i> Log out
-                    </a>
+                    <form asp-controller="Account" asp-action="Logout" method="post" class="inline">
+                        <button type="submit" class="flex w-full items-center px-4 py-2 text-sm text-red-600 hover:bg-slate-50">
+                            <i data-lucide="log-out" class="w-4 h-4 mr-2"></i> Log out
+                        </button>
+                    </form>
                 </div>
             </div>
         </header>
@@ -51,24 +52,35 @@
                 <i data-lucide="layout-dashboard" class="w-5 h-5 mr-3"></i> Dashboard
             </a>
             
-            <div class="pt-6 pb-2 px-4 text-xs uppercase font-bold tracking-wider text-slate-500">
-                ადმინისტრირება
-            </div>
-            
-            <a href="/Users" class="flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-slate-800 hover:text-white">
-                <i data-lucide="users" class="w-5 h-5 mr-3"></i> მომხმარებლები
-            </a>
-            <a href="/Roles" class="flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-slate-800 hover:text-white">
-                <i data-lucide="shield" class="w-5 h-5 mr-3"></i> როლები
-            </a>
-            <a href="/Permissions" class="flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-slate-800 hover:text-white">
-                <i data-lucide="key" class="w-5 h-5 mr-3"></i> უფლებები
-            </a>
+            @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin"))
+            {
+                <div class="pt-6 pb-2 px-4 text-xs uppercase font-bold tracking-wider text-slate-500">
+                    მართვა
+                </div>
+                <a href="/Endpoints" class="flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-slate-800 hover:text-white @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Endpoints" ? "bg-blue-600 text-white" : "")">
+                    <i data-lucide="link" class="w-5 h-5 mr-3"></i> API Endpoints
+                </a>
+                <a href="/BlockedIps" class="flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-slate-800 hover:text-white @(ViewContext.RouteData.Values["Controller"]?.ToString() == "BlockedIps" ? "bg-blue-600 text-white" : "")">
+                    <i data-lucide="shield-off" class="w-5 h-5 mr-3"></i> Blocked IPs
+                </a>
+            }
+
+            @if (User.IsInRole("SuperAdmin"))
+            {
+                <div class="pt-6 pb-2 px-4 text-xs uppercase font-bold tracking-wider text-slate-500">
+                    ადმინისტრირება
+                </div>
+                <a href="/Users" class="flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-slate-800 hover:text-white">
+                    <i data-lucide="users" class="w-5 h-5 mr-3"></i> მომხმარებლები
+                </a>
+                <a href="/Roles" class="flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-slate-800 hover:text-white">
+                    <i data-lucide="shield" class="w-5 h-5 mr-3"></i> როლები
+                </a>
+            }
         </nav>
     </aside>
 
     <script>
-        // აიკონების რენდერი
         lucide.createIcons();
     </script>
     @await RenderSectionAsync("Scripts", required: false)

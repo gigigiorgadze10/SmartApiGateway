@@ -14,5 +14,6 @@ namespace SmartApiGateway.Data
         // ჩვენი ახალი ცხრილები
         public DbSet<TrafficLog> TrafficLogs { get; set; }
         public DbSet<BlockedIp> BlockedIps { get; set; }
+        public DbSet<ApiEndpoint> ApiEndpoints { get; set; }
     }
 }

@@ -1,0 +1,33 @@
+﻿@model SmartApiGateway.Models.ApiEndpoint
+@{
+    ViewData["Title"] = "ახალი ენდპოინტის დამატება";
+}
+
+<div class="container mt-4" style="max-width: 600px;">
+    <h3 class="mb-4">ახალი მარშრუტის დამატება</h3>
+
+    <div class="card shadow-sm rounded-4 border-0 p-4">
+        <form asp-action="Create" method="post">
+            <div class="mb-3">
+                <label asp-for="RoutePath" class="form-label"></label>
+                <input asp-for="RoutePath" class="form-control" placeholder="მაგ: /api/products" required />
+            </div>
+            <div class="mb-3">
+                <label asp-for="TargetUrl" class="form-label"></label>
+                <input asp-for="TargetUrl" class="form-control" placeholder="მაგ: https://dummyjson.com/products" required />
+            </div>
+            <div class="mb-3">
+                <label asp-for="Description" class="form-label"></label>
+                <textarea asp-for="Description" class="form-control" rows="2" placeholder="მოკლე აღწერა..."></textarea>
+            </div>
+            <div class="form-check form-switch mb-4">
+                <input asp-for="IsActive" class="form-check-input" type="checkbox" id="isActiveSwitch" checked>
+                    <label class="form-check-label" for="isActiveSwitch">მარშრუტი აქტიურია</label>
+                </div>
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-primary">შენახვა</button>
+                    <a asp-action="Index" class="btn btn-light">გაუქმება</a>
+                </div>
+            </form>
+        </div>
+    </div>

@@ -53,6 +53,8 @@ app.UseMiddleware<GatewayMiddleware>();
 app.UseAuthentication();
 app.UseAuthorization();
 
+app.UseMiddleware<SmartApiGateway.Middlewares.GatewayMiddleware>();
+
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
