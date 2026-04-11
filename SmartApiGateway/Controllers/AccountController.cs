@@ -56,18 +56,18 @@ namespace SmartApiGateway.Controllers
                 {
                     UserName = model.Email,
                     Email = model.Email,
-                    FirstName = model.FirstName,
-                    LastName = model.LastName
                 };
 
                 var result = await _userManager.CreateAsync(user, model.Password);
 
                 if (result.Succeeded)
                 {
-                    // ახალ მომხმარებელს დეფოლტად ვანიჭებთ "User" როლს
-                    await _userManager.AddToRoleAsync(user, "User");
-                    await _signInManager.SignInAsync(user, isPersistent: false);
-                    return RedirectToAction("Index", "Home");
+                    // რეგისტრაციისას ვანიჭებთ "Admin" როლს (ან სხვა სასურველს)
+                    // შეგიძლიათ model-ში დაამატოთ Role ველი და აქ ის გამოიყენოთ
+                    await _userManager.AddToRoleAsync(user, "Admin");
+
+                    TempData["Success"] = "მომხმარებელი წარმატებით შეიქმნა!";
+                    return RedirectToAction("Index", "Users");
                 }
 
                 foreach (var error in result.Errors)

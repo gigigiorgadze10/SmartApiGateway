@@ -1,51 +1,52 @@
-﻿@model IEnumerable<SmartApiGateway.Data.ApplicationUser>
+﻿@using Microsoft.AspNetCore.Identity
+@using SmartApiGateway.Data
+@model IEnumerable<ApplicationUser>
 
 @{
-    ViewData["Title"] = "მომხმარებლების მართვა";
+    ViewData["Title"] = "მომხმარებლები";
 }
 
-<div class="flex justify-between items-center mb-6">
-    <h1 class="text-2xl font-bold text-slate-800">სისტემის მომხმარებლები</h1>
-    <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow-sm flex items-center transition">
-        <i data-lucide="plus" class="w-4 h-4 mr-2"></i> მომხმარებლის დამატება
-    </button>
-</div>
+<div class="container-fluid">
+    <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold text-slate-800">სისტემის მომხმარებლები</h2>
+        <a href="/Account/Register" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition flex items-center shadow-md">
+            <i data-lucide="user-plus" class="w-4 h-4 mr-2"></i> ახალი მომხმარებელი
+        </a>
+    </div>
 
-<div class="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
-    <table class="min-w-full divide-y divide-slate-200">
-        <thead class="bg-slate-50">
-            <tr>
-                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">სახელი / გვარი</th>
-                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">ელ-ფოსტა</th>
-                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">რეგისტრაციის თარიღი</th>
-                <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">მოქმედება</th>
-            </tr>
-        </thead>
-        <tbody class="bg-white divide-y divide-slate-200">
-            @if (!Model.Any())
-            {
-                <tr>
-                    <td colspan="4" class="px-6 py-10 text-center text-slate-500">ბაზაში მომხმარებლები არ მოიძებნა</td>
+    @* ... დანარჩენი ცხრილის კოდი იგივე რჩება ... *@
+    <div class="bg-white shadow-xl rounded-2xl overflow-hidden border border-slate-100">
+        <table class="w-full text-left border-collapse">
+            <thead>
+                <tr class="bg-slate-50 border-b border-slate-200 text-slate-600 uppercase text-xs font-bold">
+                    <th class="p-4">მომხმარებელი</th>
+                    <th class="p-4">Email</th>
+                    <th class="p-4 text-right">მოქმედება</th>
                 </tr>
-            }
-            @foreach (var user in Model)
-            {
-                <tr class="hover:bg-slate-50 transition">
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">
-                        @user.FirstName @user.LastName
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
-                        @user.Email
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
-                        @user.CreatedAt.ToString("dd/MM/yyyy")
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <a href="#" class="text-blue-600 hover:text-blue-900 mr-3">რედაქტირება</a>
-                        <a href="#" class="text-red-600 hover:text-red-900">წაშლა</a>
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+                @foreach (var user in Model)
+                {
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="p-4">
+                            <div class="flex items-center">
+                                <div class="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center text-slate-600 font-bold mr-3 uppercase">
+                                    @(user.UserName?.Substring(0, 1) ?? "U")
+                                </div>
+                                <span class="font-semibold text-slate-700">@user.UserName</span>
+                            </div>
+                        </td>
+                        <td class="p-4 text-slate-500 text-sm font-monospace">@user.Email</td>
+                        <td class="p-4 text-right">
+                            <form asp-action="Delete" asp-route-id="@user.Id" method="post" onsubmit="return confirm('ნამდვილად გსურთ მომხმარებლის წაშლა?');">
+                                <button type="submit" class="text-red-500 hover:text-red-700 p-2 rounded-lg hover:bg-red-50 transition">
+                                    <i data-lucide="trash-2" class="w-5 h-5"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
 </div>
