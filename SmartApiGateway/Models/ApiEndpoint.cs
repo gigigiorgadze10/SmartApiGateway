@@ -13,7 +13,7 @@ namespace SmartApiGateway.Models
         public string RoutePath { get; set; } = string.Empty;
 
         [Required]
-        [Display(Name = "სამიზნე URL (მაგ. https://api.example.com/users)")]
+        [Display(Name = "სამიზნე URL(ები). რამდენიმე URL გამოყავით მძიმით")]
         public string TargetUrl { get; set; } = string.Empty;
 
         [Display(Name = "აქტიურია?")]
@@ -23,5 +23,9 @@ namespace SmartApiGateway.Models
         public string Description { get; set; } = string.Empty;
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        // დამხმარე მეთოდი Load Balancing-ისთვის
+        public string[] GetTargetUrls() =>
+            TargetUrl.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
     }
 }

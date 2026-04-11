@@ -1,36 +1,44 @@
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using SmartApiGateway.Data;
-using SmartApiGateway.Models; // მოდელების შემოტანა
+using SmartApiGateway.ViewModels;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace SmartApiGateway.Controllers
 {
-    [Authorize] // დაცულია, მხოლოდ დალოგინებულებისთვის
+    [Authorize] // მხოლოდ ავტორიზებული პირებისთვის
     public class HomeController : Controller
     {
         private readonly ApplicationDbContext _context;
 
-        // ბაზის კონტექსტის შემოტანა
         public HomeController(ApplicationDbContext context)
         {
             _context = context;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            var allLogs = _context.TrafficLogs.ToList();
+            var totalRequests = await _context.TrafficLogs.CountAsync();
+            var blockedCount = await _context.BlockedIps.CountAsync();
+            var avgTime = totalRequests > 0 ? await _context.TrafficLogs.AverageAsync(t => t.ResponseTimeMs) : 0;
 
-            // სტატისტიკის დათვლა View-სთვის
-            ViewBag.TotalRequests = allLogs.Count;
-            ViewBag.AvgLatency = allLogs.Any() ? Math.Round(allLogs.Average(l => l.ResponseTimeMs)) : 0;
-            ViewBag.BlockedCount = _context.BlockedIps.Count();
-            ViewBag.ErrorsCount = allLogs.Count(l => l.StatusCode >= 400); // ერორების რაოდენობა
+            // ბოლო 10 ტრანზაქციის წამოღება
+            var recentLogs = await _context.TrafficLogs
+                .OrderByDescending(t => t.CreatedAt)
+                .Take(10)
+                .ToListAsync();
 
-            // ბოლო 20 ლოგის წამოღება ცხრილისთვის
-            var recentLogs = allLogs.OrderByDescending(t => t.CreatedAt).Take(20).ToList();
+            var model = new DashboardViewModel
+            {
+                TotalRequests = totalRequests,
+                BlockedIpsCount = blockedCount,
+                AverageResponseTime = System.Math.Round(avgTime, 2),
+                RecentLogs = recentLogs
+            };
 
-            return View(recentLogs);
+            return View(model);
         }
     }
 }

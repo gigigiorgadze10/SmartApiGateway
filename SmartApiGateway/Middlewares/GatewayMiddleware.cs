@@ -1,13 +1,11 @@
 ﻿using Microsoft.AspNetCore.Http;
-using System.Net.Http;
-using System.Threading.Tasks;
-using System;
-using System.Linq;
-using System.Diagnostics;
-using Microsoft.Extensions.DependencyInjection;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Caching.Memory;
 using SmartApiGateway.Data;
+using SmartApiGateway.Hubs;
 using SmartApiGateway.Models;
+using System.Collections.Concurrent;
+using System.Diagnostics;
 
 namespace SmartApiGateway.Middlewares
 {
@@ -16,6 +14,9 @@ namespace SmartApiGateway.Middlewares
         private readonly RequestDelegate _next;
         private readonly HttpClient _httpClient;
         private readonly IServiceScopeFactory _scopeFactory;
+
+        // ინდექსების შესანახი Load Balancer-ისთვის (Round Robin)
+        private static readonly ConcurrentDictionary<int, int> _rotationIndices = new();
 
         public GatewayMiddleware(RequestDelegate next, IServiceScopeFactory scopeFactory)
         {
@@ -28,99 +29,104 @@ namespace SmartApiGateway.Middlewares
         {
             var clientIp = context.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
 
-            // 1. ვქმნით Scope-ს ბაზასთან სამუშაოდ
             using (var scope = _scopeFactory.CreateScope())
             {
                 var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
                 var cache = scope.ServiceProvider.GetRequiredService<IMemoryCache>();
+                var hubContext = scope.ServiceProvider.GetRequiredService<IHubContext<TrafficHub>>();
 
-                // IP Blacklist შემოწმება
-                bool isBlocked = dbContext.BlockedIps.Any(b => b.IpAddress == clientIp);
-                if (isBlocked)
+                // 1. IP Blacklist შემოწმება
+                if (dbContext.BlockedIps.Any(b => b.IpAddress == clientIp))
                 {
-                    context.Response.StatusCode = StatusCodes.Status403Forbidden;
+                    context.Response.StatusCode = 403;
                     await context.Response.WriteAsync("Access Denied: IP Blocked");
                     return;
                 }
 
-                // Rate Limiting
-                string rateLimitKey = $"RL_{clientIp}";
-                if (cache.TryGetValue(rateLimitKey, out int count) && count >= 100)
-                {
-                    context.Response.StatusCode = StatusCodes.Status429TooManyRequests;
-                    await context.Response.WriteAsync("Rate limit exceeded");
-                    return;
-                }
-                cache.Set(rateLimitKey, count + 1, TimeSpan.FromMinutes(1));
-
-                // 2. API დინამიური მარშრუტიზაცია
+                // 2. დინამიური მარშრუტიზაცია
                 string requestPath = context.Request.Path.Value?.TrimEnd('/') ?? "";
-                var endpoint = dbContext.ApiEndpoints
-                    .AsEnumerable()
-                    .FirstOrDefault(e => e.IsActive &&
-                        (requestPath.Equals(e.RoutePath.TrimEnd('/'), StringComparison.OrdinalIgnoreCase) ||
-                         requestPath.StartsWith(e.RoutePath.TrimEnd('/') + "/", StringComparison.OrdinalIgnoreCase)));
+                var endpoint = dbContext.ApiEndpoints.AsEnumerable().FirstOrDefault(e => e.IsActive &&
+                    (requestPath.Equals(e.RoutePath.TrimEnd('/'), StringComparison.OrdinalIgnoreCase) ||
+                     requestPath.StartsWith(e.RoutePath.TrimEnd('/') + "/", StringComparison.OrdinalIgnoreCase)));
 
                 if (endpoint != null)
                 {
                     var stopwatch = Stopwatch.StartNew();
-                    string cleanRoute = endpoint.RoutePath.TrimEnd('/');
-                    string remaining = requestPath.Length > cleanRoute.Length ? requestPath.Substring(cleanRoute.Length) : "";
-                    string targetUrl = $"{endpoint.TargetUrl.TrimEnd('/')}{remaining}{context.Request.QueryString}";
 
-                    int responseStatusCode = 500;
-                    try
+                    // --- LOAD BALANCER (Round Robin) ---
+                    var availableUrls = endpoint.GetTargetUrls();
+                    int targetIndex = _rotationIndices.AddOrUpdate(endpoint.Id, 0, (id, oldIdx) => (oldIdx + 1) % availableUrls.Length);
+                    string selectedBaseUrl = availableUrls[targetIndex];
+
+                    string remainingPath = requestPath.Length > endpoint.RoutePath.TrimEnd('/').Length
+                        ? requestPath.Substring(endpoint.RoutePath.TrimEnd('/').Length) : "";
+
+                    string targetUrl = $"{selectedBaseUrl.TrimEnd('/')}{remainingPath}{context.Request.QueryString}";
+
+                    string cacheKey = $"GatewayCache_{targetUrl}";
+                    if (context.Request.Method == "GET" && cache.TryGetValue(cacheKey, out string? cachedBody)) // დაამატე ?
                     {
-                        var requestMessage = new HttpRequestMessage(new HttpMethod(context.Request.Method), targetUrl);
-                        foreach (var header in context.Request.Headers)
+                        if (cachedBody != null) // შემოწმება
                         {
-                            if (!header.Key.Equals("Host", StringComparison.OrdinalIgnoreCase))
-                                requestMessage.Headers.TryAddWithoutValidation(header.Key, header.Value.ToArray());
+                            context.Response.ContentType = "application/json";
+                            context.Response.Headers["X-Cache"] = "HIT"; // გამოიყენე [] .Add-ის ნაცვლად
+                            await context.Response.WriteAsync(cachedBody);
+                            await LogAndBroadcast(hubContext, dbContext, clientIp, targetUrl, context.Request.Method, 200, 0);
+                            return;
                         }
 
-                        using var response = await _httpClient.SendAsync(requestMessage);
-                        responseStatusCode = (int)response.StatusCode;
-                        context.Response.StatusCode = responseStatusCode;
-
-                        foreach (var header in response.Headers)
-                            context.Response.Headers[header.Key] = header.Value.ToArray();
-                        foreach (var header in response.Content.Headers)
-                            context.Response.Headers[header.Key] = header.Value.ToArray();
-
-                        await response.Content.CopyToAsync(context.Response.Body);
-                    }
-                    catch (Exception ex)
-                    {
-                        responseStatusCode = 502;
-                        context.Response.StatusCode = 502;
-                        await context.Response.WriteAsync("Gateway Error: " + ex.Message);
-                    }
-                    finally
-                    {
-                        stopwatch.Stop();
-
-                        // 3. ლოგირება (ვიყენებთ ახალ Scope-ს შენახვისთვის)
-                        using (var logScope = _scopeFactory.CreateScope())
+                        int statusCode = 500;
+                        try
                         {
-                            var logContext = logScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-                            var log = new TrafficLog
+                            var requestMessage = new HttpRequestMessage(new HttpMethod(context.Request.Method), targetUrl);
+                            foreach (var header in context.Request.Headers)
                             {
-                                IpAddress = clientIp,
-                                RequestedUrl = targetUrl,
-                                HttpMethod = context.Request.Method,
-                                StatusCode = responseStatusCode,
-                                ResponseTimeMs = stopwatch.ElapsedMilliseconds,
-                                CreatedAt = DateTime.UtcNow
-                            };
-                            logContext.TrafficLogs.Add(log);
-                            await logContext.SaveChangesAsync();
-                        }
-                    }
-                    return;
-                }
-            }
+                                if (!header.Key.Equals("Host", StringComparison.OrdinalIgnoreCase))
+                                    requestMessage.Headers.TryAddWithoutValidation(header.Key, header.Value.ToArray());
+                            }
 
-            await _next(context);
+                            using var response = await _httpClient.SendAsync(requestMessage);
+                            statusCode = (int)response.StatusCode;
+                            context.Response.StatusCode = statusCode;
+                            context.Response.Headers["X-Cache"] = "MISS";
+
+                            var content = await response.Content.ReadAsStringAsync();
+
+                            // თუ წარმატებული GET-ია, ვინახავთ ქეშში 30 წამით
+                            if (response.IsSuccessStatusCode && context.Request.Method == "GET")
+                            {
+                                cache.Set(cacheKey, content, TimeSpan.FromSeconds(30));
+                            }
+
+                            await context.Response.WriteAsync(content);
+                        }
+                        catch { statusCode = 502; }
+                        finally
+                        {
+                            stopwatch.Stop();
+                            await LogAndBroadcast(hubContext, dbContext, clientIp, targetUrl, context.Request.Method, statusCode, stopwatch.ElapsedMilliseconds);
+                        }
+                        return;
+                    }
+                }
+                await _next(context);
+            }
+        }
+
+        private async Task LogAndBroadcast(IHubContext<TrafficHub> hub, ApplicationDbContext db, string ip, string url, string method, int status, long time)
+        {
+            var log = new TrafficLog { IpAddress = ip, RequestedUrl = url, HttpMethod = method, StatusCode = status, ResponseTimeMs = time, CreatedAt = DateTime.UtcNow };
+            db.TrafficLogs.Add(log);
+            await db.SaveChangesAsync();
+
+            await hub.Clients.All.SendAsync("ReceiveLog", new
+            {
+                ipAddress = log.IpAddress,
+                url = log.RequestedUrl,
+                method = log.HttpMethod,
+                status = log.StatusCode,
+                time = log.ResponseTimeMs
+            });
         }
     }
 }

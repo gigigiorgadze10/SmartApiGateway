@@ -1,121 +1,144 @@
-﻿@model IEnumerable<SmartApiGateway.Models.TrafficLog>
-
+﻿@model SmartApiGateway.ViewModels.DashboardViewModel
 @{
     ViewData["Title"] = "Dashboard";
 }
 
-<div class="container-fluid mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>სისტემის მონიტორინგი</h2>
-        <span class="badge bg-success fs-6"><i class="bi bi-circle-fill me-2"></i>Gateway Active</span>
+<div class="container-fluid">
+    <div class="mb-6 text-center lg:text-left">
+        <h2 class="text-2xl font-bold text-slate-800">სისტემის მიმოხილვა</h2>
+        <p class="text-slate-500 text-sm mt-1">ლაივ სტატისტიკა და ტრაფიკის მონიტორინგი</p>
     </div>
 
-    <div class="row mb-4">
-        <div class="col-md-3">
-            <div class="card text-black bg-primary shadow-sm h-100 rounded-4 border-0">
-                <div class="card-body">
-                    <h6 class="text-uppercase mb-2">ჯამური მოთხოვნები</h6>
-                    <h2 class="display-6 fw-bold mb-0">@ViewBag.TotalRequests</h2>
-                </div>
+    @* სტატისტიკის ბარათები *@
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between">
+            <div>
+                <p class="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-1">ჯამური მოთხოვნები</p>
+                <h3 id="totalRequests" class="text-3xl font-black text-blue-600">@Model.TotalRequests</h3>
+            </div>
+            <div class="w-14 h-14 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center">
+                <i data-lucide="activity" class="w-7 h-7"></i>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card text-black bg-info shadow-sm h-100 rounded-4 border-0">
-                <div class="card-body">
-                    <h6 class="text-uppercase mb-2">საშ. პასუხის დრო</h6>
-                    <h2 class="display-6 fw-bold mb-0">@ViewBag.AvgLatency <span class="fs-5">ms</span></h2>
-                </div>
+
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between">
+            <div>
+                <p class="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-1">საშუალო სიჩქარე</p>
+                <h3 class="text-3xl font-black text-green-500">@Model.AverageResponseTime <span class="text-lg">ms</span></h3>
+            </div>
+            <div class="w-14 h-14 bg-green-50 text-green-500 rounded-full flex items-center justify-center">
+                <i data-lucide="zap" class="w-7 h-7"></i>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card text-black bg-warning shadow-sm h-100 rounded-4 border-0">
-                <div class="card-body">
-                    <h6 class="text-uppercase mb-2">შეცდომები (4xx-5xx)</h6>
-                    <h2 class="display-6 fw-bold mb-0 text-dark">@ViewBag.ErrorsCount</h2>
-                </div>
+
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between">
+            <div>
+                <p class="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-1">დაბლოკილი IP</p>
+                <h3 class="text-3xl font-black text-red-500">@Model.BlockedIpsCount</h3>
             </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card text-black bg-danger shadow-sm h-100 rounded-4 border-0">
-                <div class="card-body">
-                    <h6 class="text-uppercase mb-2">დაბლოკილი IP-ები</h6>
-                    <h2 class="display-6 fw-bold mb-0">@ViewBag.BlockedCount</h2>
-                </div>
+            <div class="w-14 h-14 bg-red-50 text-red-500 rounded-full flex items-center justify-center">
+                <i data-lucide="shield-alert" class="w-7 h-7"></i>
             </div>
         </div>
     </div>
 
-    <div class="card shadow-sm rounded-4 border-0">
-        <div class="card-header bg-white border-bottom py-3">
-            <h5 class="mb-0 text-secondary"><i class="bi bi-activity me-2"></i>ბოლო აქტივობა (Live)</h5>
+    @* ტრაფიკის ცხრილი *@
+    <div class="bg-white shadow-xl rounded-2xl border border-slate-100 overflow-hidden">
+        <div class="p-5 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
+            <h3 class="text-lg font-bold text-slate-700 flex items-center">
+                <i data-lucide="list" class="w-5 h-5 mr-2 text-slate-400"></i> ბოლო შემოსული ტრაფიკი
+            </h3>
+            <span class="flex items-center text-xs font-bold text-green-500 animate-pulse">
+                <span class="w-2 h-2 bg-green-500 rounded-full mr-2"></span> LIVE
+            </span>
         </div>
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                    <thead class="table-light text-secondary">
-                        <tr>
-                            <th class="ps-4">დრო</th>
-                            <th>IP მისამართი</th>
-                            <th>მეთოდი</th>
-                            <th>მისამართი (URL)</th>
-                            <th>სტატუსი</th>
-                            <th class="pe-4 text-end">ხანგრძლივობა</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @if (Model != null && Model.Any())
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-white border-b border-slate-200 text-slate-500 uppercase text-xs font-bold">
+                        <th class="p-4">IP მისამართი</th>
+                        <th class="p-4">URL მარშრუტი</th>
+                        <th class="p-4">მეთოდი</th>
+                        <th class="p-4">სტატუსი</th>
+                        <th class="p-4 text-right">ხანგრძლივობა</th>
+                    </tr>
+                </thead>
+                <tbody id="logTableBody" class="divide-y divide-slate-100">
+                    @if (!Model.RecentLogs.Any())
+                    {
+                        <tr id="noDataRow"><td colspan="5" class="p-10 text-center text-slate-400">ტრაფიკი ჯერ არ დაფიქსირებულა</td></tr>
+                    }
+                    else
+                    {
+                        foreach (var log in Model.RecentLogs)
                         {
-                            foreach (var log in Model)
-                            {
-                                <tr>
-                                    <td class="ps-4 text-muted">@log.CreatedAt.ToString("HH:mm:ss")</td>
-                                    <td><span class="font-monospace bg-light px-2 py-1 rounded">@log.IpAddress</span></td>
-                                    <td>
-                                        @if (log.HttpMethod == "GET")
-                                        {
-                                            <span class="badge bg-success rounded-pill px-3">GET</span>
-                                        }
-                                        else if (log.HttpMethod == "POST")
-                                        {
-
-                                            <span class="badge bg-warning text-dark rounded-pill px-3">POST</span>
-                                        }
-                                        else
-                                        {
-
-                                            <span class="badge bg-secondary rounded-pill px-3">@log.HttpMethod</span>
-                                        }
-                                    </td>
-                                    <td class="text-truncate" style="max-width: 250px;">@log.RequestedUrl</td>
-                                    <td>
-                                        @if (log.StatusCode == 200 || log.StatusCode == 201)
-                                        {
-                                            <span class="text-success fw-bold"><i class="bi bi-check-circle-fill me-1"></i>@log.StatusCode</span>
-                                        }
-                                        else if (log.StatusCode == 429)
-                                        {
-
-                                            <span class="text-warning fw-bold"><i class="bi bi-exclamation-triangle-fill me-1"></i>429 Limit</span>
-                                        }
-                                        else
-                                        {
-
-                                            <span class="text-danger fw-bold"><i class="bi bi-x-circle-fill me-1"></i>@log.StatusCode</span>
-                                        }
-                                    </td>
-                                    <td class="pe-4 text-end font-monospace">@log.ResponseTimeMs ms</td>
-                                </tr>
-                            }
-                        }
-                        else
-                        {
-                            <tr>
-                                <td colspan="6" class="text-center text-muted py-5">ტრაფიკი ჯერ არ დაფიქსირებულა. გაუშვით მოთხოვნები.</td>
+                            <tr class="hover:bg-slate-50 transition">
+                                <td class="p-4 font-mono text-sm text-slate-600">@log.IpAddress</td>
+                                <td class="p-4 text-sm text-slate-600 max-w-xs truncate" title="@log.RequestedUrl">@log.RequestedUrl</td>
+                                <td class="p-4">
+                                    <span class="px-2 py-1 bg-slate-100 text-slate-700 text-xs font-bold rounded">@log.HttpMethod</span>
+                                </td>
+                                <td class="p-4">
+                                    @{
+                                        var statusClass = log.StatusCode >= 200 && log.StatusCode < 300 ? "bg-green-100 text-green-700" :
+                                                         log.StatusCode == 429 ? "bg-yellow-100 text-yellow-700" : "bg-red-100 text-red-700";
+                                    }
+                                    <span class="px-2 py-1 @statusClass text-xs font-bold rounded">@log.StatusCode</span>
+                                </td>
+                                <td class="p-4 text-right text-sm font-medium @(log.ResponseTimeMs > 1000 ? "text-red-500" : "text-slate-500")">
+                                    @log.ResponseTimeMs ms
+                                </td>
                             </tr>
                         }
-                    </tbody>
-                </table>
-            </div>
+                    }
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.min.js"></script>
+    <script>
+        const connection = new signalR.HubConnectionBuilder()
+        .withUrl("/trafficHub")
+        .withAutomaticReconnect()
+        .build();
+
+        connection.on("ReceiveLog", function (log) {
+        const tbody = document.getElementById("logTableBody");
+        const noDataRow = document.getElementById("noDataRow");
+            
+        // თუ პირველი ლოგია, წავშალოთ "მონაცემები არ არის" ტექსტი
+        if (noDataRow) noDataRow.remove();
+
+        // სტატუსის ფერის შერჩევა
+        let statusClass = log.status >= 200 && log.status < 300 ? "bg-green-100 text-green-700" :
+        log.status === 429 ? "bg-yellow-100 text-yellow-700" : "bg-red-100 text-red-700";
+
+        const row = `
+        <tr class="hover:bg-blue-50 transition duration-500 bg-blue-50/20 animate-in fade-in slide-in-from-top-4 duration-700">
+        <td class="p-4 font-mono text-sm text-slate-600">${log.ipAddress}</td>
+        <td class="p-4 text-sm text-slate-600 max-w-xs truncate" title="${log.url}">${log.url}</td>
+        <td class="p-4"><span class="px-2 py-1 bg-slate-100 text-slate-700 text-xs font-bold rounded">${log.method}</span></td>
+        <td class="p-4"><span class="px-2 py-1 ${statusClass} text-xs font-bold rounded">${log.status}</span></td>
+        <td class="p-4 text-right text-sm font-medium text-slate-500">${log.time} ms</td>
+        </tr>`;
+            
+        tbody.insertAdjacentHTML('afterbegin', row);
+            
+        // ჯამური რაოდენობის განახლება ბარათზე
+        const totalElem = document.getElementById("totalRequests");
+        if(totalElem) {
+        totalElem.innerText = parseInt(totalElem.innerText) + 1;
+        }
+
+        // მაქსიმუმ 10 ჩანაწერი დავტოვოთ ცხრილში
+        if (tbody.children.length > 10) {
+        tbody.lastElementChild.remove();
+        }
+        });
+
+        connection.start().catch(err => console.error("SignalR Error: ", err));
+    </script>
+}

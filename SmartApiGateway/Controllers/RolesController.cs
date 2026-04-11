@@ -9,9 +9,10 @@ namespace SmartApiGateway.Controllers
     [Authorize(Roles = "SuperAdmin")]
     public class RolesController : Controller
     {
-        private readonly RoleManager<IdentityRole> _roleManager;
+        // მივუთითოთ სრული სახელი IdentityRole-ისთვის
+        private readonly RoleManager<Microsoft.AspNetCore.Identity.IdentityRole> _roleManager;
 
-        public RolesController(RoleManager<IdentityRole> roleManager)
+        public RolesController(RoleManager<Microsoft.AspNetCore.Identity.IdentityRole> roleManager)
         {
             _roleManager = roleManager;
         }
@@ -27,7 +28,7 @@ namespace SmartApiGateway.Controllers
         {
             if (!string.IsNullOrWhiteSpace(roleName))
             {
-                await _roleManager.CreateAsync(new IdentityRole(roleName.Trim()));
+                await _roleManager.CreateAsync(new Microsoft.AspNetCore.Identity.IdentityRole(roleName.Trim()));
             }
             return RedirectToAction(nameof(Index));
         }
@@ -36,7 +37,7 @@ namespace SmartApiGateway.Controllers
         public async Task<IActionResult> Delete(string id)
         {
             var role = await _roleManager.FindByIdAsync(id);
-            if (role != null && role.Name != "SuperAdmin") // სუპერ-ადმინის როლს ვერ წავშლით
+            if (role != null && role.Name != "SuperAdmin")
             {
                 await _roleManager.DeleteAsync(role);
             }
