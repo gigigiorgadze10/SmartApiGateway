@@ -1,51 +1,63 @@
 ﻿@model SmartApiGateway.ViewModels.LoginViewModel
 @{
-    Layout = null;
+    ViewData["Title"] = "სისტემაში შესვლა";
 }
 
-<!DOCTYPE html>
-<html lang="ka">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>სისტემაში შესვლა - Smart API Gateway</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-slate-100 flex items-center justify-center h-screen">
+<div class="min-h-screen flex items-center justify-center relative bg-slate-50">
+    <div class="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+        <div class="absolute -top-1/4 -left-1/4 w-1/2 h-1/2 bg-blue-400/20 rounded-full blur-3xl"></div>
+        <div class="absolute top-3/4 -right-1/4 w-1/2 h-1/2 bg-indigo-400/20 rounded-full blur-3xl"></div>
+    </div>
 
-    <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-md border border-slate-200">
-        <h2 class="text-2xl font-bold text-center text-slate-800 mb-6">სისტემაში შესვლა</h2>
-        
-        <form asp-controller="Account" asp-action="Login" method="post">
-            <div asp-validation-summary="ModelOnly" class="text-red-500 text-sm mb-4 text-center"></div>
-            
-            <div class="mb-4">
-                <label class="block text-slate-700 text-sm font-bold mb-2">ელ-ფოსტა</label>
-                <input asp-for="Email" class="w-full px-3 py-2 border border-slate-300 rounded focus:outline-none focus:border-blue-500" placeholder="admin@gateway.com">
-                    <span asp-validation-for="Email" class="text-red-500 text-xs"></span>
-                </div>
-            
-                <div class="mb-6">
-                    <label class="block text-slate-700 text-sm font-bold mb-2">პაროლი</label>
-                    <input asp-for="Password" type="password" class="w-full px-3 py-2 border border-slate-300 rounded focus:outline-none focus:border-blue-500" placeholder="••••••••">
-                        <span asp-validation-for="Password" class="text-red-500 text-xs"></span>
+    <div class="w-full max-w-md bg-white/80 backdrop-blur-xl p-8 rounded-3xl shadow-2xl border border-white z-10 mx-4">
+        <div class="text-center mb-8">
+            <div class="w-16 h-16 bg-blue-600 rounded-2xl mx-auto flex items-center justify-center text-white shadow-lg shadow-blue-500/30 mb-4 transform -rotate-6 hover:rotate-0 transition duration-300">
+                <i data-lucide="network" class="w-8 h-8"></i>
+            </div>
+            <h2 class="text-2xl font-black text-slate-800">კეთილი იყოს თქვენი მობრძანება</h2>
+            <p class="text-slate-500 text-sm mt-2">შეიყვანეთ მონაცემები პანელში შესასვლელად</p>
+        </div>
+
+        <form asp-action="Login" method="post" class="space-y-5">
+            <div asp-validation-summary="ModelOnly" class="text-red-500 text-sm bg-red-50 p-3 rounded-lg border border-red-100"></div>
+
+            <div>
+                <label class="block text-sm font-semibold text-slate-600 mb-1.5 ml-1">ელ. ფოსტა</label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i data-lucide="mail" class="w-5 h-5 text-slate-400"></i>
                     </div>
-            
-                    <div class="flex items-center justify-between mb-6">
-                        <label class="flex items-center text-sm text-slate-600">
-                            <input asp-for="RememberMe" type="checkbox" class="mr-2"> დამახსოვრება
-                            </label>
-                        </div>
-            
-                        <button type="submit" class="w-full bg-blue-600 text-white font-bold py-2 px-4 rounded hover:bg-blue-700 transition">
-                            შესვლა
-                        </button>
-                    </form>
-        
-                    <p class="mt-4 text-center text-sm text-slate-600">
-                        არ გაქვთ ანგარიში? <a href="/Account/Register" class="text-blue-600 hover:underline">დარეგისტრირდით</a>
-                    </p>
+                    <input asp-for="Email" class="w-full pl-10 p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition" placeholder="admin@gateway.com" />
                 </div>
+                <span asp-validation-for="Email" class="text-red-500 text-xs ml-1 mt-1 block"></span>
+            </div>
 
-            </body>
-        </html>
+            <div>
+                <label class="block text-sm font-semibold text-slate-600 mb-1.5 ml-1">პაროლი</label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i data-lucide="lock" class="w-5 h-5 text-slate-400"></i>
+                    </div>
+                    <input asp-for="Password" type="password" class="w-full pl-10 p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition" placeholder="••••••••" />
+                </div>
+                <span asp-validation-for="Password" class="text-red-500 text-xs ml-1 mt-1 block"></span>
+            </div>
+
+            <div class="flex items-center justify-between pl-1">
+                <label class="flex items-center cursor-pointer">
+                    <input asp-for="RememberMe" type="checkbox" class="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
+                    <span class="ml-2 text-sm text-slate-600 font-medium">დამიმახსოვრე</span>
+                </label>
+            </div>
+
+            <button type="submit" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3.5 rounded-xl transition flex items-center justify-center group shadow-lg">
+                სისტემაში შესვლა
+                <i data-lucide="arrow-right" class="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform"></i>
+            </button>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

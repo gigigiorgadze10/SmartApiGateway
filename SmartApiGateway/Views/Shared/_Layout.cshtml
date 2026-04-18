@@ -1,88 +1,110 @@
-﻿<!DOCTYPE html>
+﻿@using Microsoft.AspNetCore.Identity
+@using SmartApiGateway.Data
+@inject SignInManager<ApplicationUser> SignInManager
+
+<!DOCTYPE html>
 <html lang="ka">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Smart API Gateway</title>
+    <title>@ViewData["Title"] - Smart Gateway</title>
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Georgian:wght@400;500;700;900&display=swap" rel="stylesheet">
+    
+    <style>
+        body { font-family: 'Noto Sans Georgian', sans-serif; }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
 </head>
-<body class="bg-gray-100 font-sans leading-normal tracking-normal flex h-screen overflow-hidden">
+<body class="bg-slate-50 text-slate-800 flex h-screen overflow-hidden antialiased">
 
-    <div class="flex-1 flex flex-col h-full overflow-hidden w-full relative">
-        <header class="bg-white shadow-sm border-b p-4 flex justify-between items-center z-10">
-            <div class="text-xl font-bold text-slate-800 flex items-center">
-                <i data-lucide="zap" class="text-blue-600 mr-2"></i> Smart API Gateway
-            </div>
-            
-            <div class="relative group cursor-pointer">
-                <div class="flex items-center space-x-3 bg-slate-50 border border-slate-200 py-2 px-3 rounded-full hover:bg-slate-100 transition">
-                    <span class="text-sm font-semibold text-slate-700">@User.Identity?.Name</span>
-                    <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold uppercase">
-                        @(string.IsNullOrEmpty(User.Identity?.Name) ? "U" : User.Identity.Name.Substring(0, 1))
-                    </div>
+    @if (SignInManager.IsSignedIn(User))
+    {
+        <aside class="w-64 bg-slate-900 text-slate-300 flex flex-col hidden md:flex flex-shrink-0 transition-all duration-300">
+            <div class="h-16 flex items-center px-6 bg-slate-950 border-b border-slate-800">
+                <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white mr-3 shadow-lg shadow-blue-500/20">
+                    <i data-lucide="network" class="w-5 h-5"></i>
                 </div>
-                
-                <div class="absolute right-0 mt-1 w-48 bg-white rounded-md shadow-lg py-1 border border-slate-100 opacity-0 group-hover:opacity-100 transition-opacity duration-200 invisible group-hover:visible z-50">
-                    <a href="/Settings" class="flex items-center px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">
-                        <i data-lucide="settings" class="w-4 h-4 mr-2"></i> Settings
+                <span class="text-white text-lg font-bold tracking-wide">Gateway<span class="text-blue-500">OS</span></span>
+            </div>
+
+            <nav class="flex-1 overflow-y-auto py-4 px-3 space-y-1">
+                <p class="px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 mt-4">მონიტორინგი</p>
+                <a href="/Home/Dashboard" class="flex items-center px-3 py-2.5 rounded-lg hover:bg-slate-800 hover:text-white transition group @(ViewContext.RouteData.Values["Action"]?.ToString() == "Dashboard" ? "bg-blue-600 text-white shadow-md shadow-blue-900/20" : "")">
+                    <i data-lucide="layout-dashboard" class="w-5 h-5 mr-3 group-hover:scale-110 transition-transform"></i> მთავარი
+                </a>
+
+                <p class="px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 mt-6">მართვა</p>
+                <a href="/Endpoints" class="flex items-center px-3 py-2.5 rounded-lg hover:bg-slate-800 hover:text-white transition group @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Endpoints" ? "bg-slate-800 text-white" : "")">
+                    <i data-lucide="route" class="w-5 h-5 mr-3 group-hover:scale-110 transition-transform text-green-400"></i> მარშრუტები
+                </a>
+                <a href="/BlockedIps" class="flex items-center px-3 py-2.5 rounded-lg hover:bg-slate-800 hover:text-white transition group @(ViewContext.RouteData.Values["Controller"]?.ToString() == "BlockedIps" ? "bg-slate-800 text-white" : "")">
+                    <i data-lucide="shield-ban" class="w-5 h-5 mr-3 group-hover:scale-110 transition-transform text-red-400"></i> დაბლოკილი IP
+                </a>
+
+                @if (User.IsInRole("SuperAdmin"))
+                {
+                    <p class="px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 mt-6">სისტემა</p>
+                    <a href="/Users" class="flex items-center px-3 py-2.5 rounded-lg hover:bg-slate-800 hover:text-white transition group @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Users" ? "bg-slate-800 text-white" : "")">
+                        <i data-lucide="users" class="w-5 h-5 mr-3 group-hover:scale-110 transition-transform text-blue-400"></i> მომხმარებლები
                     </a>
-                    <hr class="my-1 border-slate-100" />
-                    <form asp-controller="Account" asp-action="Logout" method="post" class="inline">
-                        <button type="submit" class="flex w-full items-center px-4 py-2 text-sm text-red-600 hover:bg-slate-50">
-                            <i data-lucide="log-out" class="w-4 h-4 mr-2"></i> Log out
+                    <a href="/Roles" class="flex items-center px-3 py-2.5 rounded-lg hover:bg-slate-800 hover:text-white transition group @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Roles" ? "bg-slate-800 text-white" : "")">
+                        <i data-lucide="key" class="w-5 h-5 mr-3 group-hover:scale-110 transition-transform text-amber-400"></i> როლები
+                    </a>
+                }
+            </nav>
+
+            <div class="p-4 border-t border-slate-800">
+                <a href="/Settings" class="flex items-center px-3 py-2.5 rounded-lg hover:bg-slate-800 hover:text-white transition group">
+                    <i data-lucide="settings" class="w-5 h-5 mr-3 group-hover:rotate-90 transition-transform"></i> პარამეტრები
+                </a>
+            </div>
+        </aside>
+
+        <div class="flex-1 flex flex-col min-w-0 bg-slate-50">
+            <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 z-10 shadow-sm">
+                <div class="flex items-center">
+                    </div>
+                <div class="flex items-center space-x-4">
+                    <div class="flex items-center space-x-3 border-r border-slate-200 pr-4">
+                        <div class="text-right hidden sm:block">
+                            <p class="text-sm font-bold text-slate-700 leading-none">@User.Identity?.Name</p>
+                            <p class="text-xs text-slate-400 mt-1">@((User.IsInRole("SuperAdmin")) ? "Super Admin" : "Administrator")</p>
+                        </div>
+                        <div class="w-9 h-9 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-500 font-bold uppercase">
+                            @(User.Identity?.Name?.Substring(0, 1) ?? "U")
+                        </div>
+                    </div>
+                    <form method="post" asp-controller="Account" asp-action="Logout" class="m-0">
+                        <button type="submit" class="text-slate-500 hover:text-red-500 transition p-2 rounded-lg hover:bg-red-50 flex items-center" title="გასვლა">
+                            <i data-lucide="log-out" class="w-5 h-5"></i>
                         </button>
                     </form>
                 </div>
-            </div>
-        </header>
+            </header>
 
-        <main class="flex-1 overflow-x-hidden overflow-y-auto bg-slate-50 p-6">
+            <main class="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
+                @RenderBody()
+            </main>
+        </div>
+    }
+    else
+    {
+        <main class="w-full min-h-screen">
             @RenderBody()
         </main>
-    </div>
+    }
 
-    <aside class="w-64 bg-slate-900 text-slate-300 flex flex-col shadow-2xl z-20 border-l border-slate-800">
-        <div class="p-5 border-b border-slate-800">
-            <h2 class="text-lg font-bold text-white tracking-wider">მენიუ</h2>
-        </div>
-        
-        <nav class="flex-1 p-4 space-y-1 overflow-y-auto">
-            <a href="/" class="flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-slate-800 hover:text-white @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Home" ? "bg-blue-600 text-white" : "")">
-                <i data-lucide="layout-dashboard" class="w-5 h-5 mr-3"></i> Dashboard
-            </a>
-            
-            @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin"))
-            {
-                <div class="pt-6 pb-2 px-4 text-xs uppercase font-bold tracking-wider text-slate-500">
-                    მართვა
-                </div>
-                <a href="/Endpoints" class="flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-slate-800 hover:text-white @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Endpoints" ? "bg-blue-600 text-white" : "")">
-                    <i data-lucide="link" class="w-5 h-5 mr-3"></i> API Endpoints
-                </a>
-                <a href="/BlockedIps" class="flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-slate-800 hover:text-white @(ViewContext.RouteData.Values["Controller"]?.ToString() == "BlockedIps" ? "bg-blue-600 text-white" : "")">
-                    <i data-lucide="shield-off" class="w-5 h-5 mr-3"></i> Blocked IPs
-                </a>
-            }
-
-            @if (User.IsInRole("SuperAdmin"))
-            {
-                <div class="pt-6 pb-2 px-4 text-xs uppercase font-bold tracking-wider text-slate-500">
-                    ადმინისტრირება
-                </div>
-                <a href="/Users" class="flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-slate-800 hover:text-white">
-                    <i data-lucide="users" class="w-5 h-5 mr-3"></i> მომხმარებლები
-                </a>
-                <a href="/Roles" class="flex items-center py-2.5 px-4 rounded transition duration-200 hover:bg-slate-800 hover:text-white">
-                    <i data-lucide="shield" class="w-5 h-5 mr-3"></i> როლები
-                </a>
-            }
-        </nav>
-    </aside>
-
-    <script>
-        lucide.createIcons();
-    </script>
     @await RenderSectionAsync("Scripts", required: false)
+    <script>
+        // აიკონების გააქტიურება
+        if (typeof lucide !== 'undefined') { lucide.createIcons(); }
+    </script>
 </body>
 </html>

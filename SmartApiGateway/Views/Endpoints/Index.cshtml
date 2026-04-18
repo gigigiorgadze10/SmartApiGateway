@@ -1,52 +1,73 @@
 ﻿@model IEnumerable<SmartApiGateway.Models.ApiEndpoint>
 @{
-    ViewData["Title"] = "API ენდპოინტები";
+    ViewData["Title"] = "მარშრუტები";
 }
 
-<div class="container-fluid mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2><i class="bi bi-hdd-network"></i> მარშრუტების (Endpoints) მართვა</h2>
-        <a asp-action="Create" class="btn btn-primary"><i class="bi bi-plus-circle"></i> ახლის დამატება</a>
+<div class="container-fluid max-w-7xl mx-auto">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+        <div>
+            <h2 class="text-2xl font-bold text-slate-800">API ენდპოინტები</h2>
+            <p class="text-slate-500 text-sm mt-1">მართეთ ტრაფიკის მარშრუტიზაცია და Load Balancing</p>
+        </div>
+        <a asp-action="Create" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl transition flex items-center font-semibold shadow-lg shadow-blue-500/30">
+            <i data-lucide="plus" class="w-5 h-5 mr-2"></i> ახალი მარშრუტი
+        </a>
     </div>
 
-    @if (TempData["Success"] != null)
-    {
-        <div class="alert alert-success">@TempData["Success"]</div>
-    }
-
-    <div class="card shadow-sm border-0 rounded-4">
-        <div class="card-body p-0">
-            <table class="table table-hover align-middle mb-0">
-                <thead class="table-dark">
-                    <tr>
-                        <th class="ps-4">შემომავალი მარშრუტი</th>
-                        <th>სამიზნე URL</th>
-                        <th>სტატუსი</th>
-                        <th>აღწერა</th>
-                        <th class="text-end pe-4">მოქმედება</th>
+    <div class="bg-white shadow-sm border border-slate-200 rounded-2xl overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-50/50 border-b border-slate-200 text-slate-500 uppercase text-[11px] font-black tracking-wider">
+                        <th class="p-4 pl-6">შემომავალი მარშრუტი</th>
+                        <th class="p-4">სამიზნე URL (Load Balancing)</th>
+                        <th class="p-4 text-center">სტატუსი</th>
+                        <th class="p-4">აღწერა</th>
+                        <th class="p-4 pr-6 text-right">მოქმედება</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody class="divide-y divide-slate-100">
+                    @if (!Model.Any())
+                    {
+                        <tr><td colspan="5" class="p-8 text-center text-slate-400">მარშრუტები ჯერ არ დამატებულა</td></tr>
+                    }
                     @foreach (var item in Model)
                     {
-                        <tr>
-                            <td class="ps-4 font-monospace fw-bold text-primary">@item.RoutePath</td>
-                            <td class="font-monospace">@item.TargetUrl</td>
-                            <td>
+                        <tr class="hover:bg-slate-50/80 transition duration-150">
+                            <td class="p-4 pl-6">
+                                <span class="font-mono text-sm text-blue-600 bg-blue-50 px-2 py-1 rounded-md font-semibold border border-blue-100">@item.RoutePath</span>
+                            </td>
+                            <td class="p-4 text-sm text-slate-600 max-w-xs truncate" title="@item.TargetUrl">
+                                @{
+                                    var urls = item.GetTargetUrls();
+                                    if (urls.Length > 1)
+                                    {
+                                        <span class="inline-flex items-center text-[10px] bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded font-bold mr-2 uppercase">კლასტერი (@urls.Length)</span>
+                                    }
+                                }
+                                @item.TargetUrl
+                            </td>
+                            <td class="p-4 text-center">
                                 @if (item.IsActive)
                                 {
-                                    <span class="badge bg-success">აქტიური</span>
+                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700 border border-green-200">
+                                        <span class="w-1.5 h-1.5 bg-green-500 rounded-full mr-1.5 animate-pulse"></span> აქტიური
+                                    </span>
                                 }
                                 else
                                 {
-
-                                    <span class="badge bg-danger">გათიშული</span>
+                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-600 border border-slate-200">გათიშული</span>
                                 }
                             </td>
-                            <td>@item.Description</td>
-                            <td class="text-end pe-4">
-                                <form asp-action="Delete" asp-route-id="@item.Id" method="post" onsubmit="return confirm('ნამდვილად გსურთ წაშლა?');">
-                                    <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i> წაშლა</button>
+                            <td class="p-4 text-sm text-slate-500">@item.Description</td>
+                            <td class="p-4 pr-6 text-right space-x-1">
+                                <button class="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition" title="რედაქტირება">
+                                    <i data-lucide="edit-2" class="w-4 h-4"></i>
+                                </button>
+                                <form asp-action="Delete" asp-route-id="@item.Id" method="post" class="inline" onsubmit="return confirm('წავშალოთ მარშრუტი?');">
+                                    <button type="submit" class="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition" title="წაშლა">
+                                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                    </button>
                                 </form>
                             </td>
                         </tr>

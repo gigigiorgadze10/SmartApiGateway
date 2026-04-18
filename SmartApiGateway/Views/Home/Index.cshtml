@@ -1,144 +1,85 @@
-﻿@model SmartApiGateway.ViewModels.DashboardViewModel
-@{
-    ViewData["Title"] = "Dashboard";
+﻿@{
+    Layout = null; 
 }
+<!DOCTYPE html>
+<html lang="ka">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Smart API Gateway</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Georgian:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Noto Sans Georgian', sans-serif; }
+        .bg-grid { background-size: 40px 40px; background-image: linear-gradient(to right, rgba(0, 0, 0, 0.05) 1px, transparent 1px), linear-gradient(to bottom, rgba(0, 0, 0, 0.05) 1px, transparent 1px); }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 bg-grid min-h-screen flex flex-col relative">
 
-<div class="container-fluid">
-    <div class="mb-6 text-center lg:text-left">
-        <h2 class="text-2xl font-bold text-slate-800">სისტემის მიმოხილვა</h2>
-        <p class="text-slate-500 text-sm mt-1">ლაივ სტატისტიკა და ტრაფიკის მონიტორინგი</p>
-    </div>
-
-    @* სტატისტიკის ბარათები *@
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between">
-            <div>
-                <p class="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-1">ჯამური მოთხოვნები</p>
-                <h3 id="totalRequests" class="text-3xl font-black text-blue-600">@Model.TotalRequests</h3>
+    <nav class="absolute top-0 left-0 right-0 p-6 flex justify-between items-center z-10 max-w-7xl mx-auto w-full">
+        <div class="flex items-center space-x-2">
+            <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg">
+                <i data-lucide="network"></i>
             </div>
-            <div class="w-14 h-14 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center">
-                <i data-lucide="activity" class="w-7 h-7"></i>
-            </div>
+            <span class="text-xl font-black text-slate-800 tracking-tight">Smart Gateway</span>
         </div>
-
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between">
-            <div>
-                <p class="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-1">საშუალო სიჩქარე</p>
-                <h3 class="text-3xl font-black text-green-500">@Model.AverageResponseTime <span class="text-lg">ms</span></h3>
-            </div>
-            <div class="w-14 h-14 bg-green-50 text-green-500 rounded-full flex items-center justify-center">
-                <i data-lucide="zap" class="w-7 h-7"></i>
-            </div>
+        <div>
+            <a href="/Account/Login" class="bg-white text-blue-600 hover:bg-slate-100 font-bold py-2.5 px-6 rounded-lg shadow-sm border border-slate-200 transition">
+                პანელში შესვლა
+            </a>
         </div>
+    </nav>
 
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between">
-            <div>
-                <p class="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-1">დაბლოკილი IP</p>
-                <h3 class="text-3xl font-black text-red-500">@Model.BlockedIpsCount</h3>
-            </div>
-            <div class="w-14 h-14 bg-red-50 text-red-500 rounded-full flex items-center justify-center">
-                <i data-lucide="shield-alert" class="w-7 h-7"></i>
-            </div>
-        </div>
-    </div>
-
-    @* ტრაფიკის ცხრილი *@
-    <div class="bg-white shadow-xl rounded-2xl border border-slate-100 overflow-hidden">
-        <div class="p-5 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
-            <h3 class="text-lg font-bold text-slate-700 flex items-center">
-                <i data-lucide="list" class="w-5 h-5 mr-2 text-slate-400"></i> ბოლო შემოსული ტრაფიკი
-            </h3>
-            <span class="flex items-center text-xs font-bold text-green-500 animate-pulse">
-                <span class="w-2 h-2 bg-green-500 rounded-full mr-2"></span> LIVE
+    <div class="flex-grow flex flex-col justify-center items-center text-center px-4 pt-32 pb-20">
+        <div class="inline-flex items-center space-x-2 bg-blue-100 text-blue-700 px-4 py-2 rounded-full text-sm font-bold mb-8 shadow-sm">
+            <span class="relative flex h-3 w-3">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+              <span class="relative inline-flex rounded-full h-3 w-3 bg-blue-500"></span>
             </span>
+            <span>სისტემა აქტიურია (v1.0)</span>
         </div>
-        <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse">
-                <thead>
-                    <tr class="bg-white border-b border-slate-200 text-slate-500 uppercase text-xs font-bold">
-                        <th class="p-4">IP მისამართი</th>
-                        <th class="p-4">URL მარშრუტი</th>
-                        <th class="p-4">მეთოდი</th>
-                        <th class="p-4">სტატუსი</th>
-                        <th class="p-4 text-right">ხანგრძლივობა</th>
-                    </tr>
-                </thead>
-                <tbody id="logTableBody" class="divide-y divide-slate-100">
-                    @if (!Model.RecentLogs.Any())
-                    {
-                        <tr id="noDataRow"><td colspan="5" class="p-10 text-center text-slate-400">ტრაფიკი ჯერ არ დაფიქსირებულა</td></tr>
-                    }
-                    else
-                    {
-                        foreach (var log in Model.RecentLogs)
-                        {
-                            <tr class="hover:bg-slate-50 transition">
-                                <td class="p-4 font-mono text-sm text-slate-600">@log.IpAddress</td>
-                                <td class="p-4 text-sm text-slate-600 max-w-xs truncate" title="@log.RequestedUrl">@log.RequestedUrl</td>
-                                <td class="p-4">
-                                    <span class="px-2 py-1 bg-slate-100 text-slate-700 text-xs font-bold rounded">@log.HttpMethod</span>
-                                </td>
-                                <td class="p-4">
-                                    @{
-                                        var statusClass = log.StatusCode >= 200 && log.StatusCode < 300 ? "bg-green-100 text-green-700" :
-                                                         log.StatusCode == 429 ? "bg-yellow-100 text-yellow-700" : "bg-red-100 text-red-700";
-                                    }
-                                    <span class="px-2 py-1 @statusClass text-xs font-bold rounded">@log.StatusCode</span>
-                                </td>
-                                <td class="p-4 text-right text-sm font-medium @(log.ResponseTimeMs > 1000 ? "text-red-500" : "text-slate-500")">
-                                    @log.ResponseTimeMs ms
-                                </td>
-                            </tr>
-                        }
-                    }
-                </tbody>
-            </table>
+        
+        <h1 class="text-5xl md:text-7xl font-black text-slate-900 mb-6 max-w-4xl leading-tight">
+            მართე შენი <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-500">API ტრაფიკი</span> ერთი წერტილიდან
+        </h1>
+        
+        <p class="text-lg md:text-xl text-slate-500 max-w-2xl mb-10 leading-relaxed">
+            უსაფრთხო, სწრაფი და მოქნილი შუალედური ფენა თქვენს მიკროსერვისებსა და კლიენტებს შორის. 
+            აკონტროლეთ მარშრუტიზაცია, დაიცავით სერვერები და დააკვირდით სტატისტიკას ლაივ რეჟიმში.
+        </p>
+        
+        <div class="flex flex-col sm:flex-row gap-4">
+            <a href="/Account/Login" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-8 rounded-xl shadow-lg transition flex items-center justify-center">
+                <i data-lucide="layout-dashboard" class="w-5 h-5 mr-2"></i> მართვის პანელი
+            </a>
         </div>
     </div>
-</div>
 
-@section Scripts {
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.min.js"></script>
-    <script>
-        const connection = new signalR.HubConnectionBuilder()
-        .withUrl("/trafficHub")
-        .withAutomaticReconnect()
-        .build();
+    <div class="max-w-7xl mx-auto px-4 pb-24 grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div class="bg-white p-8 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition">
+            <div class="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-lg flex items-center justify-center mb-6">
+                <i data-lucide="shield-check" class="w-6 h-6"></i>
+            </div>
+            <h3 class="text-xl font-bold mb-3">სრული უსაფრთხოება</h3>
+            <p class="text-slate-500 text-sm">IP ბლოკირება და Rate Limiting თქვენი სერვერების დასაცავად.</p>
+        </div>
+        <div class="bg-white p-8 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition">
+            <div class="w-12 h-12 bg-green-100 text-green-600 rounded-lg flex items-center justify-center mb-6">
+                <i data-lucide="route" class="w-6 h-6"></i>
+            </div>
+            <h3 class="text-xl font-bold mb-3">დინამიური მარშრუტიზაცია</h3>
+            <p class="text-slate-500 text-sm">Load Balancing და ენდპოინტების მართვა სერვერის გათიშვის გარეშე.</p>
+        </div>
+        <div class="bg-white p-8 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition">
+            <div class="w-12 h-12 bg-amber-100 text-amber-600 rounded-lg flex items-center justify-center mb-6">
+                <i data-lucide="activity" class="w-6 h-6"></i>
+            </div>
+            <h3 class="text-xl font-bold mb-3">ლაივ ანალიტიკა</h3>
+            <p class="text-slate-500 text-sm">SignalR-ზე დაფუძნებული რეალური დროის ტრაფიკის მონიტორინგი.</p>
+        </div>
+    </div>
 
-        connection.on("ReceiveLog", function (log) {
-        const tbody = document.getElementById("logTableBody");
-        const noDataRow = document.getElementById("noDataRow");
-            
-        // თუ პირველი ლოგია, წავშალოთ "მონაცემები არ არის" ტექსტი
-        if (noDataRow) noDataRow.remove();
-
-        // სტატუსის ფერის შერჩევა
-        let statusClass = log.status >= 200 && log.status < 300 ? "bg-green-100 text-green-700" :
-        log.status === 429 ? "bg-yellow-100 text-yellow-700" : "bg-red-100 text-red-700";
-
-        const row = `
-        <tr class="hover:bg-blue-50 transition duration-500 bg-blue-50/20 animate-in fade-in slide-in-from-top-4 duration-700">
-        <td class="p-4 font-mono text-sm text-slate-600">${log.ipAddress}</td>
-        <td class="p-4 text-sm text-slate-600 max-w-xs truncate" title="${log.url}">${log.url}</td>
-        <td class="p-4"><span class="px-2 py-1 bg-slate-100 text-slate-700 text-xs font-bold rounded">${log.method}</span></td>
-        <td class="p-4"><span class="px-2 py-1 ${statusClass} text-xs font-bold rounded">${log.status}</span></td>
-        <td class="p-4 text-right text-sm font-medium text-slate-500">${log.time} ms</td>
-        </tr>`;
-            
-        tbody.insertAdjacentHTML('afterbegin', row);
-            
-        // ჯამური რაოდენობის განახლება ბარათზე
-        const totalElem = document.getElementById("totalRequests");
-        if(totalElem) {
-        totalElem.innerText = parseInt(totalElem.innerText) + 1;
-        }
-
-        // მაქსიმუმ 10 ჩანაწერი დავტოვოთ ცხრილში
-        if (tbody.children.length > 10) {
-        tbody.lastElementChild.remove();
-        }
-        });
-
-        connection.start().catch(err => console.error("SignalR Error: ", err));
-    </script>
-}
+    <script>lucide.createIcons();</script>
+</body>
+</html>

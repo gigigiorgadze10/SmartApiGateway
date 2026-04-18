@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 
 namespace SmartApiGateway.Controllers
 {
-    [Authorize] // მხოლოდ ავტორიზებული პირებისთვის
     public class HomeController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -18,13 +17,24 @@ namespace SmartApiGateway.Controllers
             _context = context;
         }
 
-        public async Task<IActionResult> Index()
+        // ლენდინგი (საჯარო)
+        public IActionResult Index()
+        {
+            if (User.Identity != null && User.Identity.IsAuthenticated)
+            {
+                return RedirectToAction("Dashboard");
+            }
+            return View();
+        }
+
+        // დეშბორდი (მხოლოდ შესული იუზერებისთვის)
+        [Authorize]
+        public async Task<IActionResult> Dashboard()
         {
             var totalRequests = await _context.TrafficLogs.CountAsync();
             var blockedCount = await _context.BlockedIps.CountAsync();
             var avgTime = totalRequests > 0 ? await _context.TrafficLogs.AverageAsync(t => t.ResponseTimeMs) : 0;
 
-            // ბოლო 10 ტრანზაქციის წამოღება
             var recentLogs = await _context.TrafficLogs
                 .OrderByDescending(t => t.CreatedAt)
                 .Take(10)

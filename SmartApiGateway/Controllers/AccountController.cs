@@ -32,7 +32,7 @@ namespace SmartApiGateway.Controllers
                 var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, false);
                 if (result.Succeeded)
                 {
-                    return RedirectToAction("Index", "Home");
+                    return RedirectToAction("Dashboard", "Home");
                 }
                 ModelState.AddModelError(string.Empty, "არასწორი ელ-ფოსტა ან პაროლი");
             }
