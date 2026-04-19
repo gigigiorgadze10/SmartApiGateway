@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Logging;
 using SmartApiGateway.Data;
 using SmartApiGateway.Hubs;
 using SmartApiGateway.Models;
@@ -12,15 +13,17 @@ namespace SmartApiGateway.Middlewares
     public class GatewayMiddleware
     {
         private readonly RequestDelegate _next;
-        private readonly HttpClient _httpClient;
         private readonly IServiceScopeFactory _scopeFactory;
+        private readonly IHttpClientFactory _httpClientFactory;
+        private readonly ILogger<GatewayMiddleware> _logger;
         private static readonly ConcurrentDictionary<int, int> _rotationIndices = new();
 
-        public GatewayMiddleware(RequestDelegate next, IServiceScopeFactory scopeFactory)
+        public GatewayMiddleware(RequestDelegate next, IServiceScopeFactory scopeFactory, IHttpClientFactory httpClientFactory, ILogger<GatewayMiddleware> logger)
         {
             _next = next;
-            _httpClient = new HttpClient();
             _scopeFactory = scopeFactory;
+            _httpClientFactory = httpClientFactory;
+            _logger = logger;
         }
 
         public async Task InvokeAsync(HttpContext context)
@@ -85,19 +88,56 @@ namespace SmartApiGateway.Middlewares
                     try
                     {
                         var requestMessage = new HttpRequestMessage(new HttpMethod(context.Request.Method), targetUrl);
-                        using var response = await _httpClient.SendAsync(requestMessage);
+                        var httpClient = _httpClientFactory.CreateClient();
+
+                        using var response = await httpClient.SendAsync(requestMessage, HttpCompletionOption.ResponseHeadersRead);
                         statusCode = (int)response.StatusCode;
-                        context.Response.StatusCode = statusCode;
-                        context.Response.Headers["X-Cache"] = "MISS";
+
+                        if (!context.Response.HasStarted)
+                        {
+                            context.Response.StatusCode = statusCode;
+                            context.Response.Headers["X-Cache"] = "MISS";
+
+                            foreach (var header in response.Headers)
+                            {
+                                if (!context.Response.Headers.ContainsKey(header.Key))
+                                    context.Response.Headers[header.Key] = header.Value.ToArray();
+                            }
+                            foreach (var header in response.Content.Headers)
+                            {
+                                if (!context.Response.Headers.ContainsKey(header.Key))
+                                    context.Response.Headers[header.Key] = header.Value.ToArray();
+                            }
+                        }
+                        else
+                        {
+                            _logger.LogWarning("Response already started for {TargetUrl}", targetUrl);
+                        }
 
                         var content = await response.Content.ReadAsStringAsync();
                         if (response.IsSuccessStatusCode && context.Request.Method == "GET")
                         {
                             cache.Set(cacheKey, content, TimeSpan.FromSeconds(30));
                         }
+
+                        // Write body. If response has already started, this will continue the output stream.
                         await context.Response.WriteAsync(content);
                     }
-                    catch { statusCode = 502; }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Forwarding failed for {TargetUrl}", targetUrl);
+                        statusCode = 502;
+                        if (!context.Response.HasStarted)
+                        {
+                            context.Response.StatusCode = statusCode;
+                            context.Response.ContentType = "application/json";
+                            await context.Response.WriteAsync("{\"error\": \"Could not reach target service.\"}");
+                        }
+                        else
+                        {
+                            try { context.Abort(); } catch { }
+                        }
+                    }
                     finally
                     {
                         stopwatch.Stop();
