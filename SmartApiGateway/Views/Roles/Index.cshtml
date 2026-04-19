@@ -1,40 +1,82 @@
-﻿@model IEnumerable<Microsoft.AspNetCore.Identity.IdentityRole>
-
+﻿@using Microsoft.AspNetCore.Identity
+@model IEnumerable<IdentityRole>
 @{
-    ViewData["Title"] = "როლების მართვა";
+    ViewData["Title"] = "სისტემური როლები";
 }
 
-<div class="flex justify-between items-center mb-6">
-    <h1 class="text-2xl font-bold text-slate-800">სისტემური როლები</h1>
-    <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow-sm flex items-center transition">
-        <i data-lucide="plus" class="w-4 h-4 mr-2"></i> ახალი როლი
-    </button>
-</div>
+<div class="max-w-6xl mx-auto">
+    <div class="flex justify-between items-center mb-8">
+        <div>
+            <h2 class="text-2xl font-bold text-slate-800">წვდომის როლები (RBAC)</h2>
+            <p class="text-slate-500 text-sm mt-1">მართეთ ვის რა უფლებები აქვს სისტემაში</p>
+        </div>
+        <button class="bg-amber-500 hover:bg-amber-600 text-white px-5 py-2.5 rounded-xl transition flex items-center font-bold shadow-lg shadow-amber-500/30">
+            <i data-lucide="shield-plus" class="w-5 h-5 mr-2"></i> ახალი როლი
+        </button>
+    </div>
 
-<div class="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
-    <table class="min-w-full divide-y divide-slate-200">
-        <thead class="bg-slate-50">
-            <tr>
-                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">როლის დასახელება</th>
-                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">ID კოდი</th>
-                <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">მოქმედება</th>
-            </tr>
-        </thead>
-        <tbody class="bg-white divide-y divide-slate-200">
-            @foreach (var role in Model)
-            {
-                <tr class="hover:bg-slate-50 transition">
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-900">
-                        @role.Name
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
-                        @role.Id
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <a href="#" class="text-blue-600 hover:text-blue-900 mr-3">რედაქტირება</a>
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        @foreach (var role in Model)
+        {
+            <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 hover:shadow-md transition relative overflow-hidden group">
+                <div class="absolute -right-10 -top-10 w-32 h-32 bg-slate-50 rounded-full group-hover:scale-150 transition-transform duration-500 pointer-events-none z-0"></div>
+                
+                <div class="relative z-10">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="w-12 h-12 rounded-2xl flex items-center justify-center shadow-inner
+                            @(role.Name == "SuperAdmin" ? "bg-red-50 text-red-600 border border-red-100" :
+                                                           role.Name == "Admin" ? "bg-blue-50 text-blue-600 border border-blue-100" : "bg-slate-100 text-slate-600 border border-slate-200")">
+                            
+                            @if (role.Name == "SuperAdmin")
+                            {
+                                <i data-lucide="shield-alert" class="w-6 h-6"></i>
+                            }
+                            else if (role.Name == "Admin")
+                            {
+
+                                <i data-lucide="shield-check" class="w-6 h-6"></i>
+                            }
+                            else
+                            {
+
+                                <i data-lucide="shield" class="w-6 h-6"></i>
+                            }
+                        </div>
+                        
+                        <div class="flex space-x-1">
+                            @if (role.Name != "SuperAdmin")
+                            {
+                                <form asp-action="Delete" asp-route-id="@role.Id" method="post" onsubmit="return confirm('დარწმუნებული ხართ?');">
+                                    <button type="submit" class="p-2 text-slate-400 hover:text-red-500 bg-slate-50 hover:bg-red-50 rounded-lg transition" title="წაშლა">
+                                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                    </button>
+                                </form>
+                            }
+                        </div>
+                    </div>
+                    
+                    <h3 class="text-xl font-black text-slate-800 mb-2">@role.Name</h3>
+                    
+                    <p class="text-sm text-slate-500 leading-relaxed mb-6 h-16">
+                        @if (role.Name == "SuperAdmin")
+                        {
+                            @: აქვს 100%-იანი წვდომა სისტემაზე. შეუძლია როლების, მომხმარებლების და სხვა ადმინების პარამეტრების მართვა.
+                        }
+                        else if (role.Name == "Admin")
+                        {
+                            @: მართავს API ენდპოინტებს და IP ბლოკირებებს. არ აქვს წვდომა სხვა იუზერების პარამეტრებზე.
+                        }
+                        else
+                        {
+                            @: სტანდარტული მომხმარებელი. ძირითადად აქვს მხოლოდ დეშბორდის და სტატისტიკის ნახვის უფლება.
+                        }
+                    </p>
+
+                    <div class="flex items-center text-xs font-bold text-slate-400 uppercase tracking-widest border-t border-slate-100 pt-4">
+                        <i data-lucide="fingerprint" class="w-4 h-4 mr-1.5"></i> @role.Id.Substring(0, 8)...
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
 </div>

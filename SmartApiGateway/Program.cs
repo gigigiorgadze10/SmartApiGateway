@@ -20,10 +20,16 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options => {
 .AddEntityFrameworkStores<ApplicationDbContext>()
 .AddDefaultTokenProviders();
 
+// 3. ავტორიზაციის და 403 Access Denied-ის კონფიგურაცია (ახალი დამატებული)
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.LoginPath = "/Account/Login";
+    options.AccessDeniedPath = "/Home/AccessDenied";
+});
+
 builder.Services.AddControllersWithViews();
 builder.Services.AddMemoryCache();
 builder.Services.AddSignalR();
-builder.Services.AddHttpClient();
 
 var app = builder.Build();
 
@@ -37,18 +43,20 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
-// Place gateway middleware after routing but before auth and endpoint execution
-app.UseMiddleware<GatewayMiddleware>();
 
 app.UseAuthentication();
 app.UseAuthorization();
 
-// 1. Register standard pages (Home, Dashboard, Login)
+// --- კრიტიკული ცვლილება რიგითობაში ---
+// 1. ჯერ ვარეგისტრირებთ სტანდარტულ გვერდებს (Home, Dashboard, Login)
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.MapHub<TrafficHub>("/trafficHub");
+
+// 2. მხოლოდ ამის შემდეგ ვრთავთ Gateway-ს, რომ შიდა მარშრუტები არ "დაბლოკოს"
+app.UseMiddleware<GatewayMiddleware>();
 
 // მონაცემთა ბაზის Seeding
 using (var scope = app.Services.CreateScope())

@@ -18,6 +18,7 @@ namespace SmartApiGateway.Controllers
         }
 
         // ლენდინგი (საჯარო)
+        [AllowAnonymous]
         public IActionResult Index()
         {
             if (User.Identity != null && User.Identity.IsAuthenticated)
@@ -49,6 +50,13 @@ namespace SmartApiGateway.Controllers
             };
 
             return View(model);
+        }
+
+        // 403 - წვდომა შეზღუდულია (ახალი დამატებული)
+        [AllowAnonymous]
+        public IActionResult AccessDenied()
+        {
+            return View();
         }
     }
 }
