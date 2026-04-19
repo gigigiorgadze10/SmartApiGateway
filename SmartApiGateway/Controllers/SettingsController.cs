@@ -1,6 +1,6 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Authorization;
 using SmartApiGateway.Data;
 using System.Threading.Tasks;
 
@@ -18,7 +18,26 @@ namespace SmartApiGateway.Controllers
             _signInManager = signInManager;
         }
 
-        public IActionResult Index() => View();
+        public async Task<IActionResult> Index()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return NotFound();
+
+            return View(user);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> UpdateProfile(string userName)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user != null && !string.IsNullOrWhiteSpace(userName))
+            {
+                user.UserName = userName;
+                await _userManager.UpdateAsync(user);
+                TempData["Success"] = "პროფილი წარმატებით განახლდა.";
+            }
+            return RedirectToAction(nameof(Index));
+        }
 
         [HttpPost]
         public async Task<IActionResult> ChangePassword(string oldPassword, string newPassword)
@@ -30,11 +49,13 @@ namespace SmartApiGateway.Controllers
             if (result.Succeeded)
             {
                 await _signInManager.RefreshSignInAsync(user);
-                TempData["Success"] = "პაროლი წარმატებით შეიცვალა!";
-                return RedirectToAction(nameof(Index));
+                TempData["Success"] = "პაროლი წარმატებით შეიცვალა.";
+            }
+            else
+            {
+                TempData["Error"] = "ძველი პაროლი არასწორია ან ახალი პაროლი არ აკმაყოფილებს სტანდარტებს.";
             }
 
-            TempData["Error"] = "პაროლის შეცვლა ვერ მოხერხდა. შეამოწმეთ მონაცემები.";
             return RedirectToAction(nameof(Index));
         }
     }

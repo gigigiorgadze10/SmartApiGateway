@@ -84,5 +84,49 @@ namespace SmartApiGateway.Controllers
             await _signInManager.SignOutAsync();
             return RedirectToAction("Login", "Account");
         }
+
+        [HttpGet]
+        public IActionResult ForgotPassword()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ForgotPassword(string email)
+        {
+            var user = await _userManager.FindByEmailAsync(email);
+            if (user != null)
+            {
+                // ვაგენერირებთ ტოკენს
+                var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+
+                // აქ იდეაში უნდა იგზავნებოდეს მეილი, მაგრამ ტესტირებისთვის პირდაპირ ეკრანზე გამოგვაქვს
+                TempData["ResetToken"] = token;
+                TempData["ResetEmail"] = email;
+                TempData["Message"] = "სატესტო გარემო: გამოიყენეთ ქვემოთ მოცემული ტოკენი პაროლის შესაცვლელად.";
+            }
+            else
+            {
+                TempData["Error"] = "მომხმარებელი ამ ელ-ფოსტით არ მოიძებნა.";
+            }
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ResetPassword(string email, string token, string newPassword)
+        {
+            var user = await _userManager.FindByEmailAsync(email);
+            if (user != null)
+            {
+                var result = await _userManager.ResetPasswordAsync(user, token, newPassword);
+                if (result.Succeeded)
+                {
+                    TempData["Success"] = "პაროლი წარმატებით შეიცვალა! შეგიძლიათ შეხვიდეთ სისტემაში.";
+                    return RedirectToAction("Login");
+                }
+            }
+            TempData["Error"] = "პაროლის აღდგენა ვერ მოხერხდა. ტოკენი ვადაგასულია ან არასწორია.";
+            return RedirectToAction("Login");
+        }
     }
 }
