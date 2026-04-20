@@ -117,9 +117,9 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         // 1. სერვერიდან ვიღებთ ისტორიულ მონაცემებს
-        const initialLabels = @Html.Raw(JsonSerializer.Serialize(Model.ChartLabels));
-        const initialData = @Html.Raw(JsonSerializer.Serialize(Model.ChartData));
-        const initialTopIps = @Html.Raw(JsonSerializer.Serialize(Model.TopIps));
+        const initialLabels = JSON.parse('@Html.Raw(JsonSerializer.Serialize(Model.ChartLabels))');
+        const initialData = JSON.parse('@Html.Raw(JsonSerializer.Serialize(Model.ChartData))');
+        const initialTopIps = JSON.parse('@Html.Raw(JsonSerializer.Serialize(Model.TopIps))');
 
         // 2. ხაზოვანი ჩარტი (სიჩქარე)
         const ctxTraffic = document.getElementById('trafficChart').getContext('2d');
@@ -148,7 +148,7 @@
         data: {
         labels: ['წარმატებული (2xx)', 'კლიენტის შეცდომა (4xx)', 'სერვერის შეცდომა (5xx)'],
         datasets: [{
-        data: [@Model.SuccessCount, @Model.ClientErrorCount, @Model.ServerErrorCount],
+        data: [Number('@Model.SuccessCount'), Number('@Model.ClientErrorCount'), Number('@Model.ServerErrorCount')],
         backgroundColor: ['#22c55e', '#f97316', '#ef4444'],
         borderWidth: 0
         }]

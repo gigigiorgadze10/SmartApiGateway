@@ -5,6 +5,7 @@ using SmartApiGateway.Hubs;
 using SmartApiGateway.Models;
 using System.Collections.Concurrent;
 using System.Diagnostics;
+using Microsoft.EntityFrameworkCore;
 
 namespace SmartApiGateway.Middlewares
 {

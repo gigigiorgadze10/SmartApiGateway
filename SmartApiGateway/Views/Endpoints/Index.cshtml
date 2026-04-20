@@ -58,9 +58,9 @@
                                 {
                                     <div class="flex items-center">
                                         <div class="w-6 h-6 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-[10px] font-bold mr-2 uppercase">
-                                            @(item.CreatedBy.UserName.Substring(0, 1))
+                                            @(item.CreatedBy?.UserName?.Substring(0, 1) ?? "U")
                                         </div>
-                                        <span class="text-xs font-bold text-slate-600">@item.CreatedBy.UserName</span>
+                                        <span class="text-xs font-bold text-slate-600">@(item.CreatedBy?.UserName ?? "Unknown")</span>
                                     </div>
                                 }
                                 else

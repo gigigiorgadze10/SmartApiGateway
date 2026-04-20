@@ -85,9 +85,9 @@
                                         {
                                             <div class="flex items-center" title="@ip.BlockedAt.ToLocalTime().ToString("dd MMM yyyy, HH:mm")">
                                                 <div class="w-6 h-6 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center text-[10px] font-bold mr-2 uppercase">
-                                                    @(ip.BlockedBy.UserName.Substring(0, 1))
+                                                    @(ip.BlockedBy?.UserName?.Substring(0, 1) ?? "U")
                                                 </div>
-                                                <span class="text-xs font-bold text-slate-700">@ip.BlockedBy.UserName</span>
+                                                <span class="text-xs font-bold text-slate-700">@(ip.BlockedBy?.UserName ?? "Unknown")</span>
                                             </div>
                                         }
                                         else
