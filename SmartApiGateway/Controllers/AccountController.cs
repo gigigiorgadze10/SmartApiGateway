@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using SmartApiGateway.Data;
 using SmartApiGateway.ViewModels;
+using System.Net;
 
 namespace SmartApiGateway.Controllers
 {
@@ -10,122 +11,159 @@ namespace SmartApiGateway.Controllers
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly UserManager<ApplicationUser> _userManager;
 
-        public AccountController(SignInManager<ApplicationUser> signInManager, UserManager<ApplicationUser> userManager)
+        public AccountController(
+            SignInManager<ApplicationUser> signInManager,
+            UserManager<ApplicationUser> userManager)
         {
             _signInManager = signInManager;
             _userManager = userManager;
         }
 
-        // ლოგინის გვერდის ჩატვირთვა
+        // =================== Login ===================
+
         [HttpGet]
         public IActionResult Login()
         {
+            if (User.Identity?.IsAuthenticated == true)
+                return RedirectToAction("Dashboard", "Home");
             return View();
         }
 
-        // ლოგინის ფორმის გაგზავნა
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Login(LoginViewModel model)
         {
-            if (ModelState.IsValid)
-            {
-                var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, false);
-                if (result.Succeeded)
-                {
-                    return RedirectToAction("Dashboard", "Home");
-                }
-                ModelState.AddModelError(string.Empty, "არასწორი ელ-ფოსტა ან პაროლი");
-            }
+            if (!ModelState.IsValid) return View(model);
+
+            var result = await _signInManager.PasswordSignInAsync(
+                model.Email, model.Password, model.RememberMe, lockoutOnFailure: false);
+
+            if (result.Succeeded)
+                return RedirectToAction("Dashboard", "Home");
+
+            ModelState.AddModelError(string.Empty, "არასწორი ელ-ფოსტა ან პაროლი.");
             return View(model);
         }
 
-        // რეგისტრაციის გვერდის ჩატვირთვა
-        [HttpGet]
-        public IActionResult Register()
-        {
-            return View();
-        }
+        // =================== Register ===================
 
-        // რეგისტრაციის ფორმის გაგზავნა
+        [HttpGet]
+        public IActionResult Register() => View();
+
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Register(RegisterViewModel model)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid) return View(model);
+
+            var user = new ApplicationUser
             {
-                var user = new ApplicationUser
-                {
-                    UserName = model.Email,
-                    Email = model.Email,
-                };
+                UserName = model.Email,
+                Email = model.Email,
+                FirstName = model.FirstName,
+                LastName = model.LastName,
+            };
 
-                var result = await _userManager.CreateAsync(user, model.Password);
+            var result = await _userManager.CreateAsync(user, model.Password);
 
-                if (result.Succeeded)
-                {
-                    // რეგისტრაციისას ვანიჭებთ "Admin" როლს (ან სხვა სასურველს)
-                    // შეგიძლიათ model-ში დაამატოთ Role ველი და აქ ის გამოიყენოთ
-                    await _userManager.AddToRoleAsync(user, "Admin");
-
-                    TempData["Success"] = "მომხმარებელი წარმატებით შეიქმნა!";
-                    return RedirectToAction("Index", "Users");
-                }
-
-                foreach (var error in result.Errors)
-                {
-                    ModelState.AddModelError(string.Empty, error.Description);
-                }
+            if (result.Succeeded)
+            {
+                await _userManager.AddToRoleAsync(user, "Admin");
+                TempData["Success"] = "მომხმარებელი წარმატებით შეიქმნა!";
+                return RedirectToAction("Index", "Users");
             }
+
+            foreach (var error in result.Errors)
+                ModelState.AddModelError(string.Empty, error.Description);
+
             return View(model);
         }
 
-        // სისტემიდან გასვლა
+        // =================== Logout ===================
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Logout()
         {
             await _signInManager.SignOutAsync();
             return RedirectToAction("Login", "Account");
         }
 
+        // =================== Forgot Password ===================
+
         [HttpGet]
-        public IActionResult ForgotPassword()
-        {
-            return View();
-        }
+        public IActionResult ForgotPassword() => View();
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> ForgotPassword(string email)
         {
-            var user = await _userManager.FindByEmailAsync(email);
-            if (user != null)
-            {
-                // ვაგენერირებთ ტოკენს
-                var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+            // უსაფრთხოებისთვის: ყოველთვის ერთი და იგივე მესიჯი ვაჩვენოთ,
+            // რომ attacker-მა ვერ გაიგოს, ამ email-ზე user გვყავს თუ არა.
+            TempData["Message"] = "თუ ეს ელ-ფოსტა სისტემაში გვხვდება, მიიღებთ შეტყობინებას.";
 
-                // აქ იდეაში უნდა იგზავნებოდეს მეილი, მაგრამ ტესტირებისთვის პირდაპირ ეკრანზე გამოგვაქვს
-                TempData["ResetToken"] = token;
-                TempData["ResetEmail"] = email;
-                TempData["Message"] = "სატესტო გარემო: გამოიყენეთ ქვემოთ მოცემული ტოკენი პაროლის შესაცვლელად.";
-            }
-            else
+            var user = await _userManager.FindByEmailAsync(email);
+            if (user == null) return View();
+
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+            var encodedToken = WebUtility.UrlEncode(token);
+
+            // Reset ბმული — production-ში ეს EMAIL-ით უნდა გაიგზავნოს (SendGrid, SMTP და სხვ.)
+            var resetLink = Url.Action(
+                "ResetPassword", "Account",
+                new { email, token = encodedToken },
+                Request.Scheme);
+
+            // TODO: production-ში ჩაანაცვლეთ email-ის გაგზავნით:
+            // await _emailService.SendPasswordResetEmailAsync(email, resetLink!);
+
+            // dev/test გარემოსთვის: ბმულს ვაჩვენებთ (token-ს პირდაპირ არ ვაჩვენებთ)
+            if (HttpContext.RequestServices
+                    .GetRequiredService<IWebHostEnvironment>().IsDevelopment())
             {
-                TempData["Error"] = "მომხმარებელი ამ ელ-ფოსტით არ მოიძებნა.";
+                TempData["DevResetLink"] = resetLink;
+                TempData["DevResetEmail"] = email;
             }
+
+            return View();
+        }
+
+        // =================== Reset Password ===================
+
+        [HttpGet]
+        public IActionResult ResetPassword(string email, string token)
+        {
+            ViewBag.Email = email;
+            ViewBag.Token = token;
             return View();
         }
 
         [HttpPost]
-        public async Task<IActionResult> ResetPassword(string email, string token, string newPassword)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ResetPassword(
+            string email, string token, string newPassword)
         {
             var user = await _userManager.FindByEmailAsync(email);
-            if (user != null)
+            if (user == null)
             {
-                var result = await _userManager.ResetPasswordAsync(user, token, newPassword);
-                if (result.Succeeded)
-                {
-                    TempData["Success"] = "პაროლი წარმატებით შეიცვალა! შეგიძლიათ შეხვიდეთ სისტემაში.";
-                    return RedirectToAction("Login");
-                }
+                TempData["Error"] = "პაროლის აღდგენა ვერ მოხერხდა.";
+                return RedirectToAction("Login");
             }
-            TempData["Error"] = "პაროლის აღდგენა ვერ მოხერხდა. ტოკენი ვადაგასულია ან არასწორია.";
+
+            // URL encoded token-ის decode
+            var decodedToken = WebUtility.UrlDecode(token);
+            var result = await _userManager.ResetPasswordAsync(user, decodedToken, newPassword);
+
+            if (result.Succeeded)
+            {
+                TempData["Success"] = "პაროლი წარმატებით შეიცვალა! შეგიძლიათ შეხვიდეთ სისტემაში.";
+                return RedirectToAction("Login");
+            }
+
+            foreach (var error in result.Errors)
+                ModelState.AddModelError(string.Empty, error.Description);
+
+            TempData["Error"] = "პაროლის აღდგენა ვერ მოხერხდა. ბმული ვადაგასულია ან პაროლი სუსტია.";
             return RedirectToAction("Login");
         }
     }

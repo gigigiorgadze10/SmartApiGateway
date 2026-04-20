@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.SignalR;
+﻿using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Caching.Memory;
 using SmartApiGateway.Data;
 using SmartApiGateway.Hubs;
@@ -12,24 +11,35 @@ namespace SmartApiGateway.Middlewares
     public class GatewayMiddleware
     {
         private readonly RequestDelegate _next;
-        private readonly HttpClient _httpClient;
+        private readonly IHttpClientFactory _httpClientFactory;
         private readonly IServiceScopeFactory _scopeFactory;
         private static readonly ConcurrentDictionary<int, int> _rotationIndices = new();
 
-        public GatewayMiddleware(RequestDelegate next, IServiceScopeFactory scopeFactory)
+        // შიდა პანელის მარშრუტები — Gateway-ი ამ prefix-ებს გამოტოვებს
+        private static readonly string[] _internalPrefixes =
+        {
+            "/trafficHub", "/lib", "/css", "/js", "/favicon.ico",
+            "/Home", "/Account", "/Endpoints", "/BlockedIps",
+            "/Users", "/Roles", "/Settings", "/Permissions"
+        };
+
+        public GatewayMiddleware(
+            RequestDelegate next,
+            IServiceScopeFactory scopeFactory,
+            IHttpClientFactory httpClientFactory)
         {
             _next = next;
-            _httpClient = new HttpClient();
             _scopeFactory = scopeFactory;
+            _httpClientFactory = httpClientFactory;
         }
 
         public async Task InvokeAsync(HttpContext context)
         {
-            // თუ მოთხოვნა არის შიდა ფაილებზე (CSS, JS) ან SignalR-ზე, პირდაპირ გავატაროთ
-            if (context.Request.Path.StartsWithSegments("/trafficHub") ||
-                context.Request.Path.StartsWithSegments("/lib") ||
-                context.Request.Path.StartsWithSegments("/css") ||
-                context.Request.Path.StartsWithSegments("/js"))
+            var path = context.Request.Path.Value ?? "";
+
+            // თუ მოთხოვნა შიდა პანელზეა ან root-ზე — პირდაპირ გავატაროთ
+            if (path == "/" || _internalPrefixes.Any(p =>
+                    path.StartsWith(p, StringComparison.OrdinalIgnoreCase)))
             {
                 await _next(context);
                 return;
@@ -37,93 +47,222 @@ namespace SmartApiGateway.Middlewares
 
             var clientIp = context.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
 
-            using (var scope = _scopeFactory.CreateScope())
-            {
-                var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-                var cache = scope.ServiceProvider.GetRequiredService<IMemoryCache>();
-                var hubContext = scope.ServiceProvider.GetRequiredService<IHubContext<TrafficHub>>();
+            using var scope = _scopeFactory.CreateScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var cache = scope.ServiceProvider.GetRequiredService<IMemoryCache>();
+            var hub = scope.ServiceProvider.GetRequiredService<IHubContext<TrafficHub>>();
 
-                // 1. IP Blacklist
-                if (dbContext.BlockedIps.Any(b => b.IpAddress == clientIp))
+            // 1. IP Blacklist — cache-ში ვინახავთ 30 წამი
+            if (await IsIpBlockedAsync(dbContext, cache, clientIp))
+            {
+                context.Response.StatusCode = 403;
+                await context.Response.WriteAsync("Access Denied: IP Blocked");
+                return;
+            }
+
+            // 2. Endpoint lookup — cache-ში ვინახავთ, DB-ზე ყოველ request-ზე არ ვდივართ
+            string requestPath = path.TrimEnd('/');
+            var endpoint = await FindEndpointAsync(dbContext, cache, requestPath);
+
+            if (endpoint == null)
+            {
+                // ბაზაში მარშრუტი ვერ მოიძებნა — კონტროლერებს გავატანთ (404 და სხვ.)
+                await _next(context);
+                return;
+            }
+
+            // 3. Load Balancing — Round Robin
+            var availableUrls = endpoint.GetTargetUrls();
+            int targetIndex = _rotationIndices.AddOrUpdate(
+                endpoint.Id, 0, (_, old) => (old + 1) % availableUrls.Length);
+            string selectedBaseUrl = availableUrls[targetIndex];
+
+            string suffix = requestPath.Length > endpoint.RoutePath.TrimEnd('/').Length
+                ? requestPath.Substring(endpoint.RoutePath.TrimEnd('/').Length)
+                : "";
+            string targetUrl = $"{selectedBaseUrl.TrimEnd('/')}{suffix}{context.Request.QueryString}";
+
+            // 4. Response Caching — მხოლოდ GET მოთხოვნებისთვის
+            string cacheKey = $"GW_{targetUrl}";
+            if (HttpMethods.IsGet(context.Request.Method) &&
+                cache.TryGetValue(cacheKey, out string? cached))
+            {
+                context.Response.StatusCode = 200;
+                context.Response.ContentType = "application/json";
+                context.Response.Headers["X-Cache"] = "HIT";
+                await context.Response.WriteAsync(cached!);
+                await LogAndBroadcastAsync(hub, dbContext, clientIp, targetUrl,
+                    context.Request.Method, 200, 0);
+                return;
+            }
+
+            // 5. Proxy — downstream სერვისზე გაგზავნა
+            var stopwatch = Stopwatch.StartNew();
+            int statusCode = 500;
+
+            try
+            {
+                var httpClient = _httpClientFactory.CreateClient("gateway");
+                using var requestMessage = BuildProxyRequest(context, targetUrl, clientIp);
+                using var response = await httpClient.SendAsync(
+                    requestMessage,
+                    HttpCompletionOption.ResponseHeadersRead,
+                    context.RequestAborted);
+
+                statusCode = (int)response.StatusCode;
+                context.Response.StatusCode = statusCode;
+                context.Response.Headers["X-Cache"] = "MISS";
+
+                // Downstream-ის response headers-ის კოპირება
+                foreach (var header in response.Headers)
                 {
-                    context.Response.StatusCode = 403;
-                    await context.Response.WriteAsync("Access Denied: IP Blocked");
-                    return;
+                    // Transfer-Encoding-ი ASP.NET-მა თავად უნდა განსაზღვროს
+                    if (header.Key.Equals("Transfer-Encoding", StringComparison.OrdinalIgnoreCase))
+                        continue;
+                    context.Response.Headers.TryAdd(header.Key, header.Value.ToArray());
                 }
 
-                string requestPath = context.Request.Path.Value?.TrimEnd('/') ?? "";
+                // Content-Type-ის გადაცემა
+                if (response.Content.Headers.ContentType != null)
+                    context.Response.ContentType = response.Content.Headers.ContentType.ToString();
 
-                // ვეძებთ ენდპოინტს ბაზაში
-                var endpoint = dbContext.ApiEndpoints.AsEnumerable().FirstOrDefault(e => e.IsActive &&
-                    (requestPath.Equals(e.RoutePath.TrimEnd('/'), StringComparison.OrdinalIgnoreCase) ||
-                     requestPath.StartsWith(e.RoutePath.TrimEnd('/') + "/", StringComparison.OrdinalIgnoreCase)));
+                var content = await response.Content.ReadAsStringAsync();
 
-                if (endpoint != null)
+                if (response.IsSuccessStatusCode && HttpMethods.IsGet(context.Request.Method))
+                    cache.Set(cacheKey, content, TimeSpan.FromSeconds(30));
+
+                await context.Response.WriteAsync(content);
+            }
+            catch (TaskCanceledException)
+            {
+                statusCode = 504;
+                context.Response.StatusCode = 504;
+                await context.Response.WriteAsync("{\"error\":\"Gateway Timeout\"}");
+            }
+            catch (Exception ex)
+            {
+                statusCode = 502;
+                context.Response.StatusCode = 502;
+                await context.Response.WriteAsync($"{{\"error\":\"Bad Gateway\",\"detail\":\"{ex.Message}\"}}");
+            }
+            finally
+            {
+                stopwatch.Stop();
+                await LogAndBroadcastAsync(hub, dbContext, clientIp, targetUrl,
+                    context.Request.Method, statusCode, stopwatch.ElapsedMilliseconds);
+            }
+        }
+
+        // =================== Helper Methods ===================
+
+        /// <summary>
+        /// Proxy request-ის build — body, headers და forwarding meta-data
+        /// </summary>
+        private static HttpRequestMessage BuildProxyRequest(
+            HttpContext context, string targetUrl, string clientIp)
+        {
+            var msg = new HttpRequestMessage(new HttpMethod(context.Request.Method), targetUrl);
+
+            // POST / PUT / PATCH — body-ის კოპირება
+            if (!HttpMethods.IsGet(context.Request.Method) &&
+                !HttpMethods.IsHead(context.Request.Method) &&
+                !HttpMethods.IsDelete(context.Request.Method) &&
+                context.Request.ContentLength is > 0)
+            {
+                msg.Content = new StreamContent(context.Request.Body);
+                if (!string.IsNullOrEmpty(context.Request.ContentType))
                 {
-                    var stopwatch = Stopwatch.StartNew();
-                    var availableUrls = endpoint.GetTargetUrls();
-                    int targetIndex = _rotationIndices.AddOrUpdate(endpoint.Id, 0, (id, oldIdx) => (oldIdx + 1) % availableUrls.Length);
-                    string selectedBaseUrl = availableUrls[targetIndex];
-
-                    string remainingPath = requestPath.Length > endpoint.RoutePath.TrimEnd('/').Length
-                        ? requestPath.Substring(endpoint.RoutePath.TrimEnd('/').Length) : "";
-
-                    string targetUrl = $"{selectedBaseUrl.TrimEnd('/')}{remainingPath}{context.Request.QueryString}";
-
-                    // Caching
-                    string cacheKey = $"GatewayCache_{targetUrl}";
-                    if (context.Request.Method == "GET" && cache.TryGetValue(cacheKey, out string? cachedBody))
-                    {
-                        context.Response.ContentType = "application/json";
-                        context.Response.Headers["X-Cache"] = "HIT";
-                        await context.Response.WriteAsync(cachedBody!);
-                        await LogAndBroadcast(hubContext, dbContext, clientIp, targetUrl, context.Request.Method, 200, 0);
-                        return;
-                    }
-
-                    int statusCode = 500;
-                    try
-                    {
-                        var requestMessage = new HttpRequestMessage(new HttpMethod(context.Request.Method), targetUrl);
-                        using var response = await _httpClient.SendAsync(requestMessage);
-                        statusCode = (int)response.StatusCode;
-                        context.Response.StatusCode = statusCode;
-                        context.Response.Headers["X-Cache"] = "MISS";
-
-                        var content = await response.Content.ReadAsStringAsync();
-                        if (response.IsSuccessStatusCode && context.Request.Method == "GET")
-                        {
-                            cache.Set(cacheKey, content, TimeSpan.FromSeconds(30));
-                        }
-                        await context.Response.WriteAsync(content);
-                    }
-                    catch { statusCode = 502; }
-                    finally
-                    {
-                        stopwatch.Stop();
-                        await LogAndBroadcast(hubContext, dbContext, clientIp, targetUrl, context.Request.Method, statusCode, stopwatch.ElapsedMilliseconds);
-                    }
-                    return;
+                    msg.Content.Headers.TryAddWithoutValidation(
+                        "Content-Type", context.Request.ContentType);
                 }
             }
 
-            // თუ ენდპოინტი ბაზაში არ მოიძებნა, გადავცემთ კონტროლერებს (Dashboard, Login და ა.შ.)
-            await _next(context);
+            // Original request headers-ის კოპირება
+            // (Content-* headers msg.Content-ზე გადადის, არა msg.Headers-ზე)
+            foreach (var header in context.Request.Headers)
+            {
+                if (header.Key.StartsWith("Content-", StringComparison.OrdinalIgnoreCase))
+                    continue;
+                if (header.Key.Equals("Host", StringComparison.OrdinalIgnoreCase))
+                    continue;
+                msg.Headers.TryAddWithoutValidation(header.Key, header.Value.ToArray());
+            }
+
+            // Gateway meta-headers
+            msg.Headers.TryAddWithoutValidation("X-Forwarded-For", clientIp);
+            msg.Headers.TryAddWithoutValidation(
+                "X-Forwarded-Host", context.Request.Host.ToString());
+            msg.Headers.TryAddWithoutValidation("X-Gateway-Version", "SmartGateway/1.0");
+
+            return msg;
         }
 
-        private async Task LogAndBroadcast(IHubContext<TrafficHub> hub, ApplicationDbContext db, string ip, string url, string method, int status, long time)
+        /// <summary>
+        /// IP Blacklist — cache-ით (30 წამი) — DB-ზე ყოველ request-ზე არ ვდივართ
+        /// </summary>
+        private static async Task<bool> IsIpBlockedAsync(
+            ApplicationDbContext db, IMemoryCache cache, string ip)
         {
-            var log = new TrafficLog { IpAddress = ip, RequestedUrl = url, HttpMethod = method, StatusCode = status, ResponseTimeMs = time, CreatedAt = DateTime.UtcNow };
-            db.TrafficLogs.Add(log);
+            const string key = "blocked_ips_set";
+            if (!cache.TryGetValue(key, out HashSet<string>? set))
+            {
+                var ips = await db.BlockedIps
+                    .Select(b => b.IpAddress)
+                    .ToListAsync();
+                set = new HashSet<string>(ips, StringComparer.OrdinalIgnoreCase);
+                cache.Set(key, set, TimeSpan.FromSeconds(30));
+            }
+            return set!.Contains(ip);
+        }
+
+        /// <summary>
+        /// Endpoint lookup — cache-ით (30 წამი) — AsEnumerable()-ის ნაცვლად
+        /// </summary>
+        private static async Task<ApiEndpoint?> FindEndpointAsync(
+            ApplicationDbContext db, IMemoryCache cache, string requestPath)
+        {
+            const string key = "active_endpoints";
+            if (!cache.TryGetValue(key, out List<ApiEndpoint>? endpoints))
+            {
+                endpoints = await db.ApiEndpoints
+                    .Where(e => e.IsActive)
+                    .ToListAsync();
+                cache.Set(key, endpoints, TimeSpan.FromSeconds(30));
+            }
+
+            return endpoints!.FirstOrDefault(e =>
+                requestPath.Equals(
+                    e.RoutePath.TrimEnd('/'), StringComparison.OrdinalIgnoreCase) ||
+                requestPath.StartsWith(
+                    e.RoutePath.TrimEnd('/') + "/", StringComparison.OrdinalIgnoreCase));
+        }
+
+        /// <summary>
+        /// Traffic log-ის შენახვა DB-ში და SignalR-ით broadcast-ი
+        /// </summary>
+        private static async Task LogAndBroadcastAsync(
+            IHubContext<TrafficHub> hub,
+            ApplicationDbContext db,
+            string ip, string url, string method, int status, long time)
+        {
+            db.TrafficLogs.Add(new TrafficLog
+            {
+                IpAddress = ip,
+                RequestedUrl = url,
+                HttpMethod = method,
+                StatusCode = status,
+                ResponseTimeMs = time,
+                CreatedAt = DateTime.UtcNow
+            });
             await db.SaveChangesAsync();
 
             await hub.Clients.All.SendAsync("ReceiveLog", new
             {
                 ipAddress = ip,
-                url = url,
-                method = method,
-                status = status,
-                time = time
+                url,
+                method,
+                status,
+                time
             });
         }
     }
