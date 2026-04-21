@@ -25,7 +25,7 @@ namespace SmartApiGateway.Controllers
             if (role == null) return NotFound();
 
             var existingClaims = await _roleManager.GetClaimsAsync(role);
-            var model = new ManageRolePermissionsViewModel { RoleId = roleId, RoleName = role.Name };
+            var model = new ManageRolePermissionsViewModel { RoleId = roleId, RoleName = role.Name ?? string.Empty };
 
             // აქ ვწერთ სისტემაში არსებულ ყველა შესაძლო უფლებას (უფრო მეტის დამატებაც შეგიძლია)
             var allPermissions = new[] { "ViewDashboard", "ManageEndpoints", "ManageRoles", "ManageUsers", "ViewLogs" };
