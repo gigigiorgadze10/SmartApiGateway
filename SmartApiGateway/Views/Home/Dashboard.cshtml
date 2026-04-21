@@ -1,211 +1,126 @@
 ﻿@model SmartApiGateway.Models.DashboardViewModel
-@using System.Text.Json
 @{
-    ViewData["Title"] = "Dashboard";
+    ViewData["Title"] = "სტატისტიკა";
 }
 
-<div class="container-fluid max-w-7xl mx-auto">
-    <div class="mb-8 flex flex-col lg:flex-row justify-between items-start lg:items-end gap-4">
-        <div>
-            <h2 class="text-2xl font-bold text-slate-800">სისტემის მიმოხილვა</h2>
-            <p class="text-slate-500 text-sm mt-1 flex items-center">
-                <span class="relative flex h-2.5 w-2.5 mr-2">
-                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                    <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
-                </span>
-                LIVE მონიტორინგი და ტრაფიკის ანალიტიკა
-            </p>
+<div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+    <div class="bg-gradient-to-br from-indigo-500 to-indigo-700 rounded-3xl p-6 shadow-xl shadow-indigo-500/30 text-white relative overflow-hidden group">
+        <div class="relative z-10">
+            <p class="text-indigo-100 text-sm font-semibold mb-1">სულ მოთხოვნები</p>
+            <h3 class="text-4xl font-black tracking-tight">@Model.TotalRequests</h3>
         </div>
-        
-        <div class="bg-white p-1 rounded-lg border border-slate-200 shadow-sm inline-flex">
-            <a href="?filter=1h" class="px-4 py-1.5 text-sm font-bold rounded-md transition @(Model.ActiveFilter == "1h" ? "bg-slate-900 text-white shadow" : "text-slate-500 hover:text-slate-800 hover:bg-slate-50")">1 სთ</a>
-            <a href="?filter=24h" class="px-4 py-1.5 text-sm font-bold rounded-md transition @(Model.ActiveFilter == "24h" ? "bg-slate-900 text-white shadow" : "text-slate-500 hover:text-slate-800 hover:bg-slate-50")">24 სთ</a>
-            <a href="?filter=7d" class="px-4 py-1.5 text-sm font-bold rounded-md transition @(Model.ActiveFilter == "7d" ? "bg-slate-900 text-white shadow" : "text-slate-500 hover:text-slate-800 hover:bg-slate-50")">7 დღე</a>
-            <a href="?filter=30d" class="px-4 py-1.5 text-sm font-bold rounded-md transition @(Model.ActiveFilter == "30d" ? "bg-slate-900 text-white shadow" : "text-slate-500 hover:text-slate-800 hover:bg-slate-50")">30 დღე</a>
+        <i data-lucide="activity" class="absolute -bottom-4 -right-4 w-32 h-32 text-indigo-400 opacity-20 group-hover:scale-110 transition duration-500"></i>
+    </div>
+
+    <div class="bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-3xl p-6 shadow-xl shadow-emerald-500/30 text-white relative overflow-hidden group">
+        <div class="relative z-10">
+            <p class="text-emerald-100 text-sm font-semibold mb-1">წარმატებული (200 OK)</p>
+            <h3 class="text-4xl font-black tracking-tight">@Model.SuccessCount</h3>
+        </div>
+        <i data-lucide="check-circle" class="absolute -bottom-4 -right-4 w-32 h-32 text-emerald-300 opacity-20 group-hover:scale-110 transition duration-500"></i>
+    </div>
+
+    <div class="bg-gradient-to-br from-amber-400 to-orange-500 rounded-3xl p-6 shadow-xl shadow-orange-500/30 text-white relative overflow-hidden group">
+        <div class="relative z-10">
+            <p class="text-orange-100 text-sm font-semibold mb-1">კლიენტის შეცდომა (4xx)</p>
+            <h3 class="text-4xl font-black tracking-tight">@Model.ClientErrorCount</h3>
+        </div>
+        <i data-lucide="alert-triangle" class="absolute -bottom-4 -right-4 w-32 h-32 text-orange-300 opacity-20 group-hover:scale-110 transition duration-500"></i>
+    </div>
+
+    <div class="bg-gradient-to-br from-rose-500 to-red-600 rounded-3xl p-6 shadow-xl shadow-red-500/30 text-white relative overflow-hidden group">
+        <div class="relative z-10">
+            <p class="text-red-100 text-sm font-semibold mb-1">სერვერის შეცდომა (5xx)</p>
+            <h3 class="text-4xl font-black tracking-tight">@Model.ServerErrorCount</h3>
+        </div>
+        <i data-lucide="server-crash" class="absolute -bottom-4 -right-4 w-32 h-32 text-red-400 opacity-20 group-hover:scale-110 transition duration-500"></i>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    
+    <div class="lg:col-span-2 bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+        <h3 class="text-lg font-bold text-slate-800 mb-6 flex items-center">
+            <i data-lucide="trending-up" class="w-5 h-5 text-indigo-500 mr-2"></i> ტრაფიკის დინამიკა
+        </h3>
+        <div class="relative h-80">
+            <canvas id="trafficChart"></canvas>
         </div>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 flex items-center justify-between">
-            <div>
-                <p class="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">ჯამური ტრაფიკი</p>
-                <h3 id="totalRequests" class="text-4xl font-black text-blue-600">@Model.TotalRequests</h3>
-            </div>
-            <div class="w-14 h-14 bg-blue-50 text-blue-500 rounded-2xl flex items-center justify-center"><i data-lucide="activity" class="w-7 h-7"></i></div>
-        </div>
-        <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 flex items-center justify-between">
-            <div>
-                <p class="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">საშუალო სიჩქარე</p>
-                <h3 class="text-4xl font-black text-green-500">@Model.AverageResponseTime <span class="text-lg">ms</span></h3>
-            </div>
-            <div class="w-14 h-14 bg-green-50 text-green-500 rounded-2xl flex items-center justify-center"><i data-lucide="zap" class="w-7 h-7"></i></div>
-        </div>
-        <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 flex items-center justify-between">
-            <div>
-                <p class="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">დაბლოკილი IP</p>
-                <h3 class="text-4xl font-black text-red-500">@Model.BlockedIpsCount</h3>
-            </div>
-            <div class="w-14 h-14 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center"><i data-lucide="shield-alert" class="w-7 h-7"></i></div>
-        </div>
-    </div>
-
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 lg:col-span-2">
-            <h3 class="text-slate-700 font-bold mb-4 flex items-center text-sm uppercase tracking-wide">
-                <i data-lucide="trending-up" class="w-5 h-5 mr-2 text-blue-500"></i> სიჩქარის დინამიკა
-            </h3>
-            <div class="relative h-64 w-full"><canvas id="trafficChart"></canvas></div>
-        </div>
-        <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
-            <h3 class="text-slate-700 font-bold mb-4 flex items-center text-sm uppercase tracking-wide">
-                <i data-lucide="pie-chart" class="w-5 h-5 mr-2 text-indigo-500"></i> სტატუს კოდები
-            </h3>
-            <div class="relative h-64 flex justify-center w-full"><canvas id="statusChart"></canvas></div>
-        </div>
-    </div>
-
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-        <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
-            <h3 class="text-slate-700 font-bold mb-4 flex items-center text-sm uppercase tracking-wide">
-                <i data-lucide="users" class="w-5 h-5 mr-2 text-amber-500"></i> Top 5 IP მისამართი
-            </h3>
-            <div class="relative h-72 w-full"><canvas id="topIpsChart"></canvas></div>
-        </div>
-
-        <div class="bg-white shadow-sm rounded-3xl border border-slate-200 overflow-hidden lg:col-span-2 flex flex-col">
-            <div class="p-5 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
-                <h3 class="text-sm font-bold text-slate-700 uppercase tracking-wide flex items-center">
-                    <i data-lucide="list" class="w-5 h-5 mr-2 text-slate-400"></i> შემომავალი ტრაფიკი
-                </h3>
-            </div>
-            <div class="overflow-x-auto flex-1">
-                <table class="w-full text-left border-collapse">
-                    <thead>
-                        <tr class="bg-white border-b border-slate-100 text-slate-400 uppercase text-[10px] font-black tracking-wider">
-                            <th class="p-4 pl-6">IP მისამართი</th>
-                            <th class="p-4">URL მარშრუტი</th>
-                            <th class="p-4">მეთოდი</th>
-                            <th class="p-4">სტატუსი</th>
-                            <th class="p-4 pr-6 text-right">დრო</th>
-                        </tr>
-                    </thead>
-                    <tbody id="logTableBody" class="divide-y divide-slate-50">
-                        @foreach (var log in Model.RecentLogs)
-                        {
-                            <tr class="hover:bg-slate-50 transition">
-                                <td class="p-4 pl-6 font-mono text-sm text-slate-600 font-semibold">@log.IpAddress</td>
-                                <td class="p-4 text-sm text-slate-500 max-w-[200px] truncate" title="@log.RequestedUrl">@log.RequestedUrl</td>
-                                <td class="p-4"><span class="px-2 py-1 bg-slate-100 text-slate-600 text-[10px] uppercase font-black rounded">@log.HttpMethod</span></td>
-                                <td class="p-4">
-                                    @{
-                                        var statusClass = log.StatusCode >= 200 && log.StatusCode < 300 ? "bg-green-50 text-green-600" : log.StatusCode >= 400 && log.StatusCode < 500 ? "bg-orange-50 text-orange-600" : "bg-red-50 text-red-600";
-                                    }
-                                    <span class="px-2 py-1 @statusClass border border-current border-opacity-20 text-[11px] font-bold rounded">@log.StatusCode</span>
-                                </td>
-                                <td class="p-4 pr-6 text-right text-sm font-medium @(log.ResponseTimeMs > 1000 ? "text-red-500" : "text-slate-400")">@log.ResponseTimeMs ms</td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
+    <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+        <h3 class="text-lg font-bold text-slate-800 mb-6 flex items-center">
+            <i data-lucide="pie-chart" class="w-5 h-5 text-emerald-500 mr-2"></i> სტატუსების გადანაწილება
+        </h3>
+        <div class="relative h-72 flex justify-center items-center">
+            <canvas id="statusChart"></canvas>
         </div>
     </div>
 </div>
 
 @section Scripts {
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        // 1. სერვერიდან ვიღებთ ისტორიულ მონაცემებს
-        const initialLabels = JSON.parse('@Html.Raw(JsonSerializer.Serialize(Model.ChartLabels))');
-        const initialData = JSON.parse('@Html.Raw(JsonSerializer.Serialize(Model.ChartData))');
-        const initialTopIps = JSON.parse('@Html.Raw(JsonSerializer.Serialize(Model.TopIps))');
-
-        // 2. ხაზოვანი ჩარტი (სიჩქარე)
+        // მთავარი გრაფიკი ლამაზი გრადიენტით
         const ctxTraffic = document.getElementById('trafficChart').getContext('2d');
-        const trafficChart = new Chart(ctxTraffic, {
+        let gradient = ctxTraffic.createLinearGradient(0, 0, 0, 400);
+        gradient.addColorStop(0, 'rgba(99, 102, 241, 0.5)'); // Indigo
+        gradient.addColorStop(1, 'rgba(99, 102, 241, 0.0)');
+
+        const trafficLabels = JSON.parse('@Html.Raw(JsonSerializer.Serialize(Model.ChartLabels))');
+        const trafficData = JSON.parse('@Html.Raw(JsonSerializer.Serialize(Model.ChartData))');
+
+        new Chart(ctxTraffic, {
         type: 'line',
         data: {
-        labels: initialLabels,
-        datasets: [{
-        label: 'პასუხის დრო (ms)',
-        data: initialData,
-        borderColor: '#3b82f6',
-        backgroundColor: 'rgba(59, 130, 246, 0.1)',
-        tension: 0.4,
-        fill: true,
-        borderWidth: 2,
-        pointRadius: 2
-        }]
-        },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
-        });
-
-        // 3. სტატუს კოდების დონატი (გამოყოფილი 4xx და 5xx)
-        const ctxStatus = document.getElementById('statusChart').getContext('2d');
-        const statusChart = new Chart(ctxStatus, {
-        type: 'doughnut',
-        data: {
-        labels: ['წარმატებული (2xx)', 'კლიენტის შეცდომა (4xx)', 'სერვერის შეცდომა (5xx)'],
-        datasets: [{
-        data: [Number('@Model.SuccessCount'), Number('@Model.ClientErrorCount'), Number('@Model.ServerErrorCount')],
-        backgroundColor: ['#22c55e', '#f97316', '#ef4444'],
-        borderWidth: 0
-        }]
-        },
-        options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 8 } } } }
-        });
-
-        // 4. Top IPs ბარ-ჩარტი
-        const ctxIps = document.getElementById('topIpsChart').getContext('2d');
-        const topIpsChart = new Chart(ctxIps, {
-        type: 'bar',
-        data: {
-        labels: Object.keys(initialTopIps),
+        labels: trafficLabels,
         datasets: [{
         label: 'მოთხოვნები',
-        data: Object.values(initialTopIps),
-        backgroundColor: '#eab308',
-        borderRadius: 4
+        data: trafficData,
+        borderColor: '#4f46e5',
+        backgroundColor: gradient,
+        borderWidth: 3,
+        pointBackgroundColor: '#ffffff',
+        pointBorderColor: '#4f46e5',
+        pointBorderWidth: 2,
+        pointRadius: 4,
+        pointHoverRadius: 6,
+        fill: true,
+        tension: 0.4 // ხაზის დამრგვალება
         }]
         },
-        options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', plugins: { legend: { display: false } } }
+        options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+        x: { grid: { display: false }, ticks: { color: '#64748b', font: { family: 'sans-serif' } } },
+        y: { grid: { color: '#f1f5f9', borderDash: [5, 5] }, ticks: { color: '#64748b', font: { family: 'sans-serif' } }, beginAtZero: true }
+        }
+        }
         });
 
-        // 5. SignalR LIVE Updates
-        const connection = new signalR.HubConnectionBuilder().withUrl("/trafficHub").build();
-        connection.on("ReceiveLog", function (log) {
-            
-        // ცხრილის განახლება
-        const tbody = document.getElementById("logTableBody");
-        let statusClass = log.status >= 200 && log.status < 300 ? "bg-green-50 text-green-600" : log.status >= 400 && log.status < 500 ? "bg-orange-50 text-orange-600" : "bg-red-50 text-red-600";
-            
-        const row = `<tr class="hover:bg-blue-50 transition duration-500 bg-blue-50/20">
-        <td class="p-4 pl-6 font-mono text-sm text-slate-600 font-semibold">${log.ipAddress}</td>
-        <td class="p-4 text-sm text-slate-500 max-w-[200px] truncate">${log.url}</td>
-        <td class="p-4"><span class="px-2 py-1 bg-slate-100 text-slate-600 text-[10px] uppercase font-black rounded">${log.method}</span></td>
-        <td class="p-4"><span class="px-2 py-1 ${statusClass} border border-current border-opacity-20 text-[11px] font-bold rounded">${log.status}</span></td>
-        <td class="p-4 pr-6 text-right text-sm font-medium text-slate-400">${log.time} ms</td>
-        </tr>`;
-        tbody.insertAdjacentHTML('afterbegin', row);
-        if (tbody.children.length > 20) tbody.lastElementChild.remove();
-
-        const totalElem = document.getElementById("totalRequests");
-        if(totalElem) totalElem.innerText = parseInt(totalElem.innerText) + 1;
-
-        // ჩარტების ლაივ განახლება
-        const timeNow = new Date().toLocaleTimeString('ka-GE', { hour: '2-digit', minute: '2-digit' });
-        trafficChart.data.labels.push(timeNow);
-        trafficChart.data.datasets[0].data.push(log.time);
-        if(trafficChart.data.labels.length > 50) { trafficChart.data.labels.shift(); trafficChart.data.datasets[0].data.shift(); }
-        trafficChart.update();
-
-        // დონატის განახლება
-        if(log.status >= 200 && log.status < 400) statusChart.data.datasets[0].data[0]++;
-        else if (log.status >= 400 && log.status < 500) statusChart.data.datasets[0].data[1]++;
-        else statusChart.data.datasets[0].data[2]++;
-        statusChart.update();
+        // სტატუსების წრიული გრაფიკი
+        const ctxStatus = document.getElementById('statusChart').getContext('2d');
+        new Chart(ctxStatus, {
+        type: 'doughnut',
+        data: {
+        labels: ['წარმატებული', 'კლიენტის ერორი', 'სერვერის ერორი'],
+        datasets: [{
+        data: [Number('@Model.SuccessCount'), Number('@Model.ClientErrorCount'), Number('@Model.ServerErrorCount')],
+        backgroundColor: ['#10b981', '#f59e0b', '#ef4444'], // Emerald, Amber, Red
+        borderWidth: 0,
+        hoverOffset: 4
+        }]
+        },
+        options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '75%', // შიგნით სიცარიელის ზომა
+        plugins: {
+        legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20, font: { family: 'sans-serif', weight: 'bold' } } }
+        }
+        }
         });
-        connection.start();
     </script>
 }

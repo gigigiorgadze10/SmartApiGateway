@@ -1,0 +1,44 @@
+﻿@model SmartApiGateway.ViewModels.ManageRolePermissionsViewModel
+@{
+    ViewData["Title"] = "უფლებების მართვა";
+}
+
+<div class="max-w-2xl mx-auto bg-white p-8 rounded-3xl shadow-lg border border-slate-100">
+    <div class="mb-6 border-b border-slate-100 pb-4">
+        <h2 class="text-2xl font-black text-slate-800 flex items-center">
+            <span class="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center mr-3">
+                <i data-lucide="shield-check" class="w-5 h-5"></i>
+            </span>
+            როლის უფლებები: <span class="text-indigo-600 ml-2">@Model.RoleName</span>
+        </h2>
+    </div>
+
+    <form asp-action="Manage" method="post">
+        <input type="hidden" asp-for="RoleId" />
+        <input type="hidden" asp-for="RoleName" />
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+            @for (int i = 0; i < Model.RoleClaims.Count; i++)
+            {
+                <div class="flex items-center p-4 rounded-xl border border-slate-200 hover:border-indigo-500 hover:bg-indigo-50 transition cursor-pointer">
+                    <input type="hidden" asp-for="@Model.RoleClaims[i].Type" />
+                    <input type="hidden" asp-for="@Model.RoleClaims[i].Value" />
+                    
+                    <input asp-for="@Model.RoleClaims[i].Selected" class="w-5 h-5 text-indigo-600 bg-gray-100 border-gray-300 rounded focus:ring-indigo-500 cursor-pointer" />
+                    <label class="ml-3 font-semibold text-slate-700 cursor-pointer select-none w-full" for="@Model.RoleClaims[i].Selected">
+                        @Model.RoleClaims[i].Value
+                    </label>
+                </div>
+            }
+        </div>
+
+        <div class="flex space-x-3">
+            <button type="submit" class="flex-1 bg-indigo-600 text-white py-3 rounded-xl font-bold shadow-lg shadow-indigo-600/30 hover:bg-indigo-700 transition">
+                შენახვა
+            </button>
+            <a asp-controller="Roles" asp-action="Index" class="flex-1 bg-slate-100 text-slate-600 py-3 rounded-xl font-bold text-center hover:bg-slate-200 transition">
+                გაუქმება
+            </a>
+        </div>
+    </form>
+</div>
