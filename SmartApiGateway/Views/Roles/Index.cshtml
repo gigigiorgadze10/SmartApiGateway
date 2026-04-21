@@ -1,82 +1,127 @@
 ﻿@using Microsoft.AspNetCore.Identity
 @model IEnumerable<IdentityRole>
 @{
-    ViewData["Title"] = "სისტემური როლები";
+    ViewData["Title"] = "როლები";
 }
 
-<div class="max-w-6xl mx-auto">
-    <div class="flex justify-between items-center mb-8">
-        <div>
-            <h2 class="text-2xl font-bold text-slate-800">წვდომის როლები (RBAC)</h2>
-            <p class="text-slate-500 text-sm mt-1">მართეთ ვის რა უფლებები აქვს სისტემაში</p>
-        </div>
-        <button class="bg-amber-500 hover:bg-amber-600 text-white px-5 py-2.5 rounded-xl transition flex items-center font-bold shadow-lg shadow-amber-500/30">
-            <i data-lucide="shield-plus" class="w-5 h-5 mr-2"></i> ახალი როლი
-        </button>
-    </div>
+<div class="flex justify-between items-center mb-8">
+    <h1 class="text-3xl font-black text-slate-800 flex items-center">
+        <span class="bg-indigo-600 text-white w-12 h-12 flex items-center justify-center rounded-2xl mr-4 shadow-lg shadow-indigo-600/30">
+            <i data-lucide="shield" class="w-6 h-6"></i>
+        </span>
+        სისტემის როლები
+    </h1>
+    <button onclick="openCreateModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-indigo-600/30 transition duration-200 flex items-center">
+        <i data-lucide="plus" class="w-5 h-5 mr-2"></i> ახალი როლი
+    </button>
+</div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        @foreach (var role in Model)
-        {
-            <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 hover:shadow-md transition relative overflow-hidden group">
-                <div class="absolute -right-10 -top-10 w-32 h-32 bg-slate-50 rounded-full group-hover:scale-150 transition-transform duration-500 pointer-events-none z-0"></div>
-                
-                <div class="relative z-10">
-                    <div class="flex justify-between items-start mb-4">
-                        <div class="w-12 h-12 rounded-2xl flex items-center justify-center shadow-inner
-                            @(role.Name == "SuperAdmin" ? "bg-red-50 text-red-600 border border-red-100" :
-                                                           role.Name == "Admin" ? "bg-blue-50 text-blue-600 border border-blue-100" : "bg-slate-100 text-slate-600 border border-slate-200")">
-                            
-                            @if (role.Name == "SuperAdmin")
-                            {
-                                <i data-lucide="shield-alert" class="w-6 h-6"></i>
-                            }
-                            else if (role.Name == "Admin")
-                            {
-
-                                <i data-lucide="shield-check" class="w-6 h-6"></i>
-                            }
-                            else
-                            {
-
-                                <i data-lucide="shield" class="w-6 h-6"></i>
-                            }
-                        </div>
-                        
-                        <div class="flex space-x-1">
-                            @if (role.Name != "SuperAdmin")
-                            {
-                                <form asp-action="Delete" asp-route-id="@role.Id" method="post" onsubmit="return confirm('დარწმუნებული ხართ?');">
-                                    <button type="submit" class="p-2 text-slate-400 hover:text-red-500 bg-slate-50 hover:bg-red-50 rounded-lg transition" title="წაშლა">
-                                        <i data-lucide="trash-2" class="w-4 h-4"></i>
-                                    </button>
-                                </form>
-                            }
-                        </div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    @foreach (var role in Model)
+    {
+        bool isSuperAdmin = role.Name == "SuperAdmin";
+        <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 hover:shadow-md hover:border-indigo-200 transition duration-300 relative group">
+            <div class="flex items-center justify-between mb-6">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded-xl @(isSuperAdmin ? "bg-amber-100 text-amber-600" : "bg-indigo-50 text-indigo-600") flex items-center justify-center font-bold text-lg">
+                        @role.Name?.Substring(0, 1).ToUpper()
                     </div>
-                    
-                    <h3 class="text-xl font-black text-slate-800 mb-2">@role.Name</h3>
-                    
-                    <p class="text-sm text-slate-500 leading-relaxed mb-6 h-16">
-                        @if (role.Name == "SuperAdmin")
-                        {
-                            @: აქვს 100%-იანი წვდომა სისტემაზე. შეუძლია როლების, მომხმარებლების და სხვა ადმინების პარამეტრების მართვა.
-                        }
-                        else if (role.Name == "Admin")
-                        {
-                            @: მართავს API ენდპოინტებს და IP ბლოკირებებს. არ აქვს წვდომა სხვა იუზერების პარამეტრებზე.
-                        }
-                        else
-                        {
-                            @: სტანდარტული მომხმარებელი. ძირითადად აქვს მხოლოდ დეშბორდის და სტატისტიკის ნახვის უფლება.
-                        }
-                    </p>
-
-                    <div class="flex items-center text-xs font-bold text-slate-400 uppercase tracking-widest border-t border-slate-100 pt-4">
-                        <i data-lucide="fingerprint" class="w-4 h-4 mr-1.5"></i> @role.Id.Substring(0, 8)...
-                    </div>
+                    <h2 class="text-lg font-bold text-slate-800">@role.Name</h2>
                 </div>
             </div>
-        }
-    </div>
+
+            <div class="space-y-3">
+                <a asp-controller="Permissions" asp-action="Manage" asp-route-roleId="@role.Id"
+                       class="w-full flex items-center justify-center bg-slate-50 hover:bg-indigo-50 hover:text-indigo-700 text-slate-600 font-bold py-2.5 rounded-xl border border-slate-200 transition">
+                    <i data-lucide="key" class="w-4 h-4 mr-2"></i> უფლებების მართვა
+                </a>
+                
+                @if (!isSuperAdmin)
+                {
+                    <div class="flex space-x-2">
+                        <button onclick="openEditModal('@role.Id', '@role.Name')" class="flex-1 flex items-center justify-center bg-amber-50 hover:bg-amber-100 text-amber-600 font-bold py-2.5 rounded-xl transition">
+                            <i data-lucide="edit" class="w-4 h-4 mr-2"></i> შეცვლა
+                        </button>
+                        <form asp-action="Delete" method="post" class="flex-1" id="delete-form-@role.Id">
+                            <input type="hidden" name="id" value="@role.Id" />
+                            <button type="button" onclick="confirmDelete('@role.Id')" class="w-full flex items-center justify-center bg-red-50 hover:bg-red-100 text-red-600 font-bold py-2.5 rounded-xl transition">
+                                <i data-lucide="trash-2" class="w-4 h-4 mr-2"></i> წაშლა
+                            </button>
+                        </form>
+                    </div>
+                }
+            </div>
+        </div>
+    }
 </div>
+
+<form id="createForm" asp-action="Create" method="post" class="hidden">
+    <input type="hidden" id="createRoleName" name="roleName" />
+</form>
+
+<form id="editForm" asp-action="Edit" method="post" class="hidden">
+    <input type="hidden" id="editRoleId" name="id" />
+    <input type="hidden" id="editRoleName" name="newName" />
+</form>
+
+@section Scripts {
+    <script>
+        function openCreateModal() {
+            Swal.fire({
+                title: 'ახალი როლი',
+                input: 'text',
+                inputPlaceholder: 'შეიყვანეთ როლის სახელი...',
+                showCancelButton: true,
+                confirmButtonText: 'შენახვა',
+                cancelButtonText: 'გაუქმება',
+                confirmButtonColor: '#4f46e5',
+                inputValidator: (value) => {
+                    if (!value) return 'სახელის შეყვანა სავალდებულოა!'
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById('createRoleName').value = result.value;
+                    document.getElementById('createForm').submit();
+                }
+            });
+        }
+
+        function openEditModal(id, oldName) {
+            Swal.fire({
+                title: 'როლის რედაქტირება',
+                input: 'text',
+                inputValue: oldName,
+                showCancelButton: true,
+                confirmButtonText: 'განახლება',
+                cancelButtonText: 'გაუქმება',
+                confirmButtonColor: '#f59e0b',
+                inputValidator: (value) => {
+                    if (!value) return 'სახელის შეყვანა სავალდებულოა!'
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById('editRoleId').value = id;
+                    document.getElementById('editRoleName').value = result.value;
+                    document.getElementById('editForm').submit();
+                }
+            });
+        }
+
+        function confirmDelete(id) {
+            Swal.fire({
+                title: 'დარწმუნებული ხართ?',
+                text: "ამ როლის წაშლა შეუქცევადი პროცესია!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#94a3b8',
+                confirmButtonText: 'დიახ, წაშალე!',
+                cancelButtonText: 'გაუქმება'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById('delete-form-' + id).submit();
+                }
+            });
+        }
+    </script>
+}

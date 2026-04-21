@@ -1,7 +1,6 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
 
 namespace SmartApiGateway.Controllers
@@ -9,35 +8,55 @@ namespace SmartApiGateway.Controllers
     [Authorize(Roles = "SuperAdmin")]
     public class RolesController : Controller
     {
-        // მივუთითოთ სრული სახელი IdentityRole-ისთვის
-        private readonly RoleManager<Microsoft.AspNetCore.Identity.IdentityRole> _roleManager;
+        private readonly RoleManager<IdentityRole> _roleManager;
 
-        public RolesController(RoleManager<Microsoft.AspNetCore.Identity.IdentityRole> roleManager)
+        public RolesController(RoleManager<IdentityRole> roleManager)
         {
             _roleManager = roleManager;
         }
 
-        public async Task<IActionResult> Index()
+        public IActionResult Index()
         {
-            var roles = await _roleManager.Roles.ToListAsync();
+            var roles = _roleManager.Roles;
             return View(roles);
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(string roleName)
         {
             if (!string.IsNullOrWhiteSpace(roleName))
             {
-                await _roleManager.CreateAsync(new Microsoft.AspNetCore.Identity.IdentityRole(roleName.Trim()));
+                var roleExists = await _roleManager.RoleExistsAsync(roleName);
+                if (!roleExists)
+                {
+                    await _roleManager.CreateAsync(new IdentityRole(roleName));
+                }
             }
             return RedirectToAction(nameof(Index));
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(string id, string newName)
+        {
+            if (string.IsNullOrWhiteSpace(newName)) return RedirectToAction(nameof(Index));
+
+            var role = await _roleManager.FindByIdAsync(id);
+            if (role != null && role.Name != "SuperAdmin") // სუპერადმინის სახელის შეცვლა არ შეიძლება
+            {
+                role.Name = newName;
+                await _roleManager.UpdateAsync(role);
+            }
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(string id)
         {
             var role = await _roleManager.FindByIdAsync(id);
-            if (role != null && role.Name != "SuperAdmin")
+            if (role != null && role.Name != "SuperAdmin") // სუპერადმინს ვერ წავშლით
             {
                 await _roleManager.DeleteAsync(role);
             }

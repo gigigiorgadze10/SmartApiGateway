@@ -4,124 +4,149 @@
     ViewData["Title"] = "სტატისტიკა";
 }
 
+<div class="mb-6 flex justify-between items-center bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
+    <h2 class="text-xl font-bold text-slate-800">Overview</h2>
+    <div class="flex items-center space-x-3">
+        <span class="text-sm font-medium text-slate-500">გაფილტრე:</span>
+        <input type="datetime-local" id="filterStartDate" class="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
+        <span class="text-slate-400">-</span>
+        <input type="datetime-local" id="filterEndDate" class="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
+        <button id="btnFilter" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-md shadow-indigo-500/30 transition">
+            გაფილტვრა
+        </button>
+        <button id="btnClearFilter" class="bg-slate-100 hover:bg-slate-200 text-slate-600 px-4 py-2 rounded-lg text-sm font-bold transition">
+            გასუფთავება
+        </button>
+    </div>
+</div>
+
 <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
     <div class="bg-gradient-to-br from-indigo-500 to-indigo-700 rounded-3xl p-6 shadow-xl shadow-indigo-500/30 text-white relative overflow-hidden group">
-        <div class="relative z-10">
-            <p class="text-indigo-100 text-sm font-semibold mb-1">სულ მოთხოვნები</p>
-            <h3 class="text-4xl font-black tracking-tight">@Model.TotalRequests</h3>
-        </div>
+        <div class="relative z-10"><p class="text-indigo-100 text-sm font-semibold mb-1">სულ მოთხოვნები</p><h3 class="text-4xl font-black tracking-tight" id="statTotal">@Model.TotalRequests</h3></div>
         <i data-lucide="activity" class="absolute -bottom-4 -right-4 w-32 h-32 text-indigo-400 opacity-20 group-hover:scale-110 transition duration-500"></i>
     </div>
-
     <div class="bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-3xl p-6 shadow-xl shadow-emerald-500/30 text-white relative overflow-hidden group">
-        <div class="relative z-10">
-            <p class="text-emerald-100 text-sm font-semibold mb-1">წარმატებული (200 OK)</p>
-            <h3 class="text-4xl font-black tracking-tight">@Model.SuccessCount</h3>
-        </div>
+        <div class="relative z-10"><p class="text-emerald-100 text-sm font-semibold mb-1">წარმატებული (200 OK)</p><h3 class="text-4xl font-black tracking-tight" id="statSuccess">@Model.SuccessCount</h3></div>
         <i data-lucide="check-circle" class="absolute -bottom-4 -right-4 w-32 h-32 text-emerald-300 opacity-20 group-hover:scale-110 transition duration-500"></i>
     </div>
-
     <div class="bg-gradient-to-br from-amber-400 to-orange-500 rounded-3xl p-6 shadow-xl shadow-orange-500/30 text-white relative overflow-hidden group">
-        <div class="relative z-10">
-            <p class="text-orange-100 text-sm font-semibold mb-1">კლიენტის შეცდომა (4xx)</p>
-            <h3 class="text-4xl font-black tracking-tight">@Model.ClientErrorCount</h3>
-        </div>
+        <div class="relative z-10"><p class="text-orange-100 text-sm font-semibold mb-1">კლიენტის შეცდომა (4xx)</p><h3 class="text-4xl font-black tracking-tight" id="statClient">@Model.ClientErrorCount</h3></div>
         <i data-lucide="alert-triangle" class="absolute -bottom-4 -right-4 w-32 h-32 text-orange-300 opacity-20 group-hover:scale-110 transition duration-500"></i>
     </div>
-
     <div class="bg-gradient-to-br from-rose-500 to-red-600 rounded-3xl p-6 shadow-xl shadow-red-500/30 text-white relative overflow-hidden group">
-        <div class="relative z-10">
-            <p class="text-red-100 text-sm font-semibold mb-1">სერვერის შეცდომა (5xx)</p>
-            <h3 class="text-4xl font-black tracking-tight">@Model.ServerErrorCount</h3>
-        </div>
+        <div class="relative z-10"><p class="text-red-100 text-sm font-semibold mb-1">სერვერის შეცდომა (5xx)</p><h3 class="text-4xl font-black tracking-tight" id="statServer">@Model.ServerErrorCount</h3></div>
         <i data-lucide="server-crash" class="absolute -bottom-4 -right-4 w-32 h-32 text-red-400 opacity-20 group-hover:scale-110 transition duration-500"></i>
     </div>
 </div>
 
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-    
     <div class="lg:col-span-2 bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
         <h3 class="text-lg font-bold text-slate-800 mb-6 flex items-center">
             <i data-lucide="trending-up" class="w-5 h-5 text-indigo-500 mr-2"></i> ტრაფიკის დინამიკა
         </h3>
-        <div class="relative h-80">
-            <canvas id="trafficChart"></canvas>
-        </div>
+        <div class="relative h-80"><canvas id="trafficChart"></canvas></div>
     </div>
 
-    <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
-        <h3 class="text-lg font-bold text-slate-800 mb-6 flex items-center">
-            <i data-lucide="pie-chart" class="w-5 h-5 text-emerald-500 mr-2"></i> სტატუსების გადანაწილება
-        </h3>
-        <div class="relative h-72 flex justify-center items-center">
-            <canvas id="statusChart"></canvas>
+    <div class="space-y-8">
+        <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+            <h3 class="text-lg font-bold text-slate-800 mb-6 flex items-center">
+                <i data-lucide="pie-chart" class="w-5 h-5 text-emerald-500 mr-2"></i> სტატუსები
+            </h3>
+            <div class="relative h-56 flex justify-center items-center"><canvas id="statusChart"></canvas></div>
+        </div>
+
+        <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+            <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center">
+                <i data-lucide="users" class="w-5 h-5 text-indigo-500 mr-2"></i> Top 5 IP
+            </h3>
+            <div class="space-y-3" id="topIpsContainer">
+                @foreach (var ip in Model.TopIps)
+                {
+                    <div class="flex justify-between items-center bg-slate-50 p-3 rounded-xl border border-slate-100">
+                        <span class="font-mono text-sm text-slate-700 font-medium">@ip.Key</span>
+                        <span class="bg-indigo-100 text-indigo-700 py-1 px-3 rounded-full text-xs font-bold">@ip.Value Req</span>
+                    </div>
+                }
+            </div>
         </div>
     </div>
 </div>
 
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.js"></script>
     <script>
-        // მთავარი გრაფიკი ლამაზი გრადიენტით
-        const ctxTraffic = document.getElementById('trafficChart').getContext('2d');
-        let gradient = ctxTraffic.createLinearGradient(0, 0, 0, 400);
-        gradient.addColorStop(0, 'rgba(99, 102, 241, 0.5)'); // Indigo
-        gradient.addColorStop(1, 'rgba(99, 102, 241, 0.0)');
-
+        // ჩარტების ინიციალიზაცია (გრადიენტებით)
         const trafficLabels = JSON.parse('@Html.Raw(JsonSerializer.Serialize(Model.ChartLabels))');
         const trafficData = JSON.parse('@Html.Raw(JsonSerializer.Serialize(Model.ChartData))');
 
-        new Chart(ctxTraffic, {
+        const ctxTraffic = document.getElementById('trafficChart').getContext('2d');
+        let gradient = ctxTraffic.createLinearGradient(0, 0, 0, 400);
+        gradient.addColorStop(0, 'rgba(99, 102, 241, 0.5)');
+        gradient.addColorStop(1, 'rgba(99, 102, 241, 0.0)');
+
+        let trafficChart = new Chart(ctxTraffic, {
         type: 'line',
-        data: {
-        labels: trafficLabels,
-        datasets: [{
-        label: 'მოთხოვნები',
-        data: trafficData,
-        borderColor: '#4f46e5',
-        backgroundColor: gradient,
-        borderWidth: 3,
-        pointBackgroundColor: '#ffffff',
-        pointBorderColor: '#4f46e5',
-        pointBorderWidth: 2,
-        pointRadius: 4,
-        pointHoverRadius: 6,
-        fill: true,
-        tension: 0.4 // ხაზის დამრგვალება
-        }]
-        },
-        options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
-        scales: {
-        x: { grid: { display: false }, ticks: { color: '#64748b', font: { family: 'sans-serif' } } },
-        y: { grid: { color: '#f1f5f9', borderDash: [5, 5] }, ticks: { color: '#64748b', font: { family: 'sans-serif' } }, beginAtZero: true }
-        }
-        }
+        data: { labels: trafficLabels, datasets: [{ label: 'მოთხოვნები', data: trafficData, borderColor: '#4f46e5', backgroundColor: gradient, borderWidth: 3, fill: true, tension: 0.4 }] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } }, y: { beginAtZero: true } } }
         });
 
-        // სტატუსების წრიული გრაფიკი
         const ctxStatus = document.getElementById('statusChart').getContext('2d');
-        new Chart(ctxStatus, {
+        let statusChart = new Chart(ctxStatus, {
         type: 'doughnut',
-        data: {
-        labels: ['წარმატებული', 'კლიენტის ერორი', 'სერვერის ერორი'],
-        datasets: [{
-        data: [Number('@Model.SuccessCount'), Number('@Model.ClientErrorCount'), Number('@Model.ServerErrorCount')],
-        backgroundColor: ['#10b981', '#f59e0b', '#ef4444'], // Emerald, Amber, Red
-        borderWidth: 0,
-        hoverOffset: 4
-        }]
-        },
-        options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        cutout: '75%', // შიგნით სიცარიელის ზომა
-        plugins: {
-        legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20, font: { family: 'sans-serif', weight: 'bold' } } }
+        data: { labels: ['200 OK', '4xx Error', '5xx Error'], datasets: [{ data: [Number('@Model.SuccessCount'), Number('@Model.ClientErrorCount'), Number('@Model.ServerErrorCount')], backgroundColor: ['#10b981', '#f59e0b', '#ef4444'], borderWidth: 0 }] },
+        options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { position: 'bottom' } } }
+        });
+
+        // ლოგიკა ფილტრაციისთვის
+        function updateDashboard(data) {
+        document.getElementById('statTotal').innerText = data.totalRequests;
+        document.getElementById('statSuccess').innerText = data.successCount;
+        document.getElementById('statClient').innerText = data.clientErrorCount;
+        document.getElementById('statServer').innerText = data.serverErrorCount;
+
+        trafficChart.data.labels = data.chartLabels;
+        trafficChart.data.datasets[0].data = data.chartData;
+        trafficChart.update();
+
+        statusChart.data.datasets[0].data = [data.successCount, data.clientErrorCount, data.serverErrorCount];
+        statusChart.update();
+
+        const topIpsContainer = document.getElementById('topIpsContainer');
+        topIpsContainer.innerHTML = '';
+        for (const [ip, count] of Object.entries(data.topIps)) {
+        topIpsContainer.innerHTML += `
+        <div class="flex justify-between items-center bg-slate-50 p-3 rounded-xl border border-slate-100">
+        <span class="font-mono text-sm text-slate-700 font-medium">${ip}</span>
+        <span class="bg-indigo-100 text-indigo-700 py-1 px-3 rounded-full text-xs font-bold">${count} Req</span>
+        </div>`;
         }
+        }
+
+        document.getElementById('btnFilter').addEventListener('click', async () => {
+        const start = document.getElementById('filterStartDate').value;
+        const end = document.getElementById('filterEndDate').value;
+        let url = '/Home/FilterData';
+        if (start || end) url += `?start=${start}&end=${end}`;
+            
+        const response = await fetch(url);
+        if (response.ok) updateDashboard(await response.json());
+        });
+
+        document.getElementById('btnClearFilter').addEventListener('click', () => {
+        document.getElementById('filterStartDate').value = '';
+        document.getElementById('filterEndDate').value = '';
+        document.getElementById('btnFilter').click();
+        });
+
+        // SignalR LIVE განახლებებისთვის
+        const connection = new signalR.HubConnectionBuilder().withUrl("/trafficHub").build();
+        connection.on("ReceiveTrafficUpdate", function () {
+        // თუ ფილტრი ცარიელია, ვაახლებთ ლაივში
+        if (!document.getElementById('filterStartDate').value) {
+        document.getElementById('btnFilter').click();
         }
         });
+        connection.start();
     </script>
 }
