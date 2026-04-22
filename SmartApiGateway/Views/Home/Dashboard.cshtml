@@ -76,7 +76,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.js"></script>
     <script>
-        // ჩარტების ინიციალიზაცია (გრადიენტებით)
+        // ჩარტების ინიციალიზაცია
         const trafficLabels = JSON.parse('@Html.Raw(JsonSerializer.Serialize(Model.ChartLabels))');
         const trafficData = JSON.parse('@Html.Raw(JsonSerializer.Serialize(Model.ChartData))');
 
@@ -98,8 +98,25 @@
         options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { position: 'bottom' } } }
         });
 
-        // ლოგიკა ფილტრაციისთვის
-        function updateDashboard(data) {
+        // მონაცემების განახლების ფუნქცია
+        async function refreshData() {
+        const start = document.getElementById('filterStartDate').value;
+        const end = document.getElementById('filterEndDate').value;
+        let url = '/Home/FilterData';
+        if (start || end) url += `?start=${start}&end=${end}`;
+            
+        try {
+        const response = await fetch(url);
+        if (response.ok) {
+        const data = await response.json();
+        updateDashboardUI(data);
+        }
+        } catch (err) {
+        console.error("Error fetching updates:", err);
+        }
+        }
+
+        function updateDashboardUI(data) {
         document.getElementById('statTotal').innerText = data.totalRequests;
         document.getElementById('statSuccess').innerText = data.successCount;
         document.getElementById('statClient').innerText = data.clientErrorCount;
@@ -107,10 +124,10 @@
 
         trafficChart.data.labels = data.chartLabels;
         trafficChart.data.datasets[0].data = data.chartData;
-        trafficChart.update();
+        trafficChart.update('none'); // 'none' აჩქარებს განახლებას ანიმაციის გარეშე
 
         statusChart.data.datasets[0].data = [data.successCount, data.clientErrorCount, data.serverErrorCount];
-        statusChart.update();
+        statusChart.update('none');
 
         const topIpsContainer = document.getElementById('topIpsContainer');
         topIpsContainer.innerHTML = '';
@@ -123,30 +140,28 @@
         }
         }
 
-        document.getElementById('btnFilter').addEventListener('click', async () => {
-        const start = document.getElementById('filterStartDate').value;
-        const end = document.getElementById('filterEndDate').value;
-        let url = '/Home/FilterData';
-        if (start || end) url += `?start=${start}&end=${end}`;
-            
-        const response = await fetch(url);
-        if (response.ok) updateDashboard(await response.json());
-        });
+        document.getElementById('btnFilter').addEventListener('click', refreshData);
 
         document.getElementById('btnClearFilter').addEventListener('click', () => {
         document.getElementById('filterStartDate').value = '';
         document.getElementById('filterEndDate').value = '';
-        document.getElementById('btnFilter').click();
+        refreshData();
         });
 
-        // SignalR LIVE განახლებებისთვის
-        const connection = new signalR.HubConnectionBuilder().withUrl("/trafficHub").build();
+        // SignalR LIVE - ავტომატური რე reconnect-ით
+        const connection = new signalR.HubConnectionBuilder()
+        .withUrl("/trafficHub")
+        .withAutomaticReconnect()
+        .build();
+
         connection.on("ReceiveTrafficUpdate", function () {
-        // თუ ფილტრი ცარიელია, ვაახლებთ ლაივში
-        if (!document.getElementById('filterStartDate').value) {
-        document.getElementById('btnFilter').click();
+        // მხოლოდ იმ შემთხვევაში ვაახლებთ, თუ მომხმარებელს ფილტრი არ აქვს ჩართული
+        const isFiltering = document.getElementById('filterStartDate').value || document.getElementById('filterEndDate').value;
+        if (!isFiltering) {
+        refreshData();
         }
         });
-        connection.start();
+
+        connection.start().then(() => console.log("SignalR Connected!")).catch(err => console.error(err));
     </script>
 }

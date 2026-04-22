@@ -242,11 +242,11 @@ namespace SmartApiGateway.Middlewares
         /// Traffic log-ის შენახვა DB-ში და SignalR-ით broadcast-ი
         /// </summary>
         private static async Task LogAndBroadcastAsync(
-            IHubContext<TrafficHub> hub,
-            ApplicationDbContext db,
-            string ip, string url, string method, int status, long time)
+    IHubContext<TrafficHub> hub,
+    ApplicationDbContext db,
+    string ip, string url, string method, int status, long time)
         {
-            db.TrafficLogs.Add(new TrafficLog
+            var log = new TrafficLog
             {
                 IpAddress = ip,
                 RequestedUrl = url,
@@ -254,9 +254,12 @@ namespace SmartApiGateway.Middlewares
                 StatusCode = status,
                 ResponseTimeMs = time,
                 CreatedAt = DateTime.UtcNow
-            });
+            };
+
+            db.TrafficLogs.Add(log);
             await db.SaveChangesAsync();
 
+            // 1. სიგნალი ლოგების ცხრილისთვის (თუ გაქვს ასეთი)
             await hub.Clients.All.SendAsync("ReceiveLog", new
             {
                 ipAddress = ip,
@@ -265,6 +268,10 @@ namespace SmartApiGateway.Middlewares
                 status,
                 time
             });
+
+            // 2. კრიტიკული შესწორება: სიგნალი დეშბორდისთვის!
+            // Dashboard.cshtml სწორედ ამ სახელს ელოდება
+            await hub.Clients.All.SendAsync("ReceiveTrafficUpdate");
         }
     }
 }

@@ -13,7 +13,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// 2. Identity კონფიგურაცია — password policy განახლდა
+// 2. Identity კონფიგურაცია
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 {
     options.Password.RequireDigit = true;
@@ -34,18 +34,28 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.ExpireTimeSpan = TimeSpan.FromHours(8);
 });
 
-// 4. IHttpClientFactory — GatewayMiddleware-ისთვის
-//    (new HttpClient()-ის ნაცვლად socket exhaustion-ის თავიდან ასაცილებლად)
+// 4. CORS პოლიტიკა - ეს აუცილებელია SignalR-ისთვის ლოკალზეც და სერვერზეც
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy.AllowAnyHeader()
+              .AllowAnyMethod()
+              .SetIsOriginAllowed(_ => true) // ნებას რთავს ნებისმიერ origin-ს (localhost, render და ა.შ.)
+              .AllowCredentials(); // აუცილებელია SignalR-ისთვის
+    });
+});
+
+// 5. IHttpClientFactory
 builder.Services.AddHttpClient("gateway", client =>
 {
     client.Timeout = TimeSpan.FromSeconds(30);
     client.DefaultRequestHeaders.Add("X-Gateway-Source", "SmartApiGateway");
 });
 
-// 5. Rate Limiting — per-endpoint; 429 Too Many Requests-ს დააბრუნებს
+// 6. Rate Limiting
 builder.Services.AddRateLimiter(options =>
 {
-    // Fixed Window: 1 წუთში მაქსიმუმ 200 მოთხოვნა
     options.AddFixedWindowLimiter("gateway_limit", cfg =>
     {
         cfg.PermitLimit = 200;
@@ -57,20 +67,37 @@ builder.Services.AddRateLimiter(options =>
     options.OnRejected = async (ctx, token) =>
     {
         ctx.HttpContext.Response.StatusCode = 429;
-        ctx.HttpContext.Response.Headers["Retry-After"] = "60";
         await ctx.HttpContext.Response.WriteAsync(
             "{\"error\":\"Too Many Requests. გთხოვთ, 1 წუთში სცადოთ.\"}", token);
     };
 });
 
-// 6. Background Service — ძველი log-ების ავტომატური გასუფთავება
 builder.Services.AddHostedService<LogCleanupService>();
-
 builder.Services.AddControllersWithViews();
 builder.Services.AddMemoryCache();
-builder.Services.AddSignalR();
+builder.Services.AddSignalR(); // SignalR-ის რეგისტრაცია
 
 var app = builder.Build();
+
+// მონაცემთა ბაზის ავტომატური მიგრაცია (Render-ზე დაჰოსტვისას ძალიან გამოგადგება)
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        var context = services.GetRequiredService<ApplicationDbContext>();
+        if (context.Database.GetPendingMigrations().Any())
+        {
+            context.Database.Migrate();
+        }
+        await DbSeeder.SeedRolesAndAdminAsync(services);
+    }
+    catch (Exception ex)
+    {
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "შეცდომა ბაზის მომზადებისას.");
+    }
+}
 
 if (!app.Environment.IsDevelopment())
 {
@@ -80,38 +107,33 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
+
+// ... (ზედა ნაწილი უცვლელია) ...
+
 app.UseRouting();
-
-// Rate Limiter უნდა იყოს Authentication-ამდე
+app.UseCors("AllowAll");
 app.UseRateLimiter();
-
 app.UseAuthentication();
 app.UseAuthorization();
 
-// 1. კონტროლერების მარშრუტები (Dashboard, Login და სხვ.)
+app.MapHub<TrafficHub>("/trafficHub");
+
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
-// 2. SignalR Hub
-app.MapHub<TrafficHub>("/trafficHub");
-
-// 3. Gateway Middleware — ბოლოს, რომ შიდა მარშრუტები არ "დაბლოკოს"
-app.UseMiddleware<GatewayMiddleware>();
-
-// მონაცემთა ბაზის Seeding
-using (var scope = app.Services.CreateScope())
-{
-    var services = scope.ServiceProvider;
-    try
+// Gateway Middleware - დავამატეთ /Home/FilterData გამონაკლისებში
+app.UseWhen(context =>
+    !context.Request.Path.StartsWithSegments("/trafficHub") &&
+    !context.Request.Path.StartsWithSegments("/Home") &&
+    !context.Request.Path.StartsWithSegments("/Account") &&
+    !context.Request.Path.StartsWithSegments("/Endpoints") &&
+    !context.Request.Path.StartsWithSegments("/Users") &&
+    !context.Request.Path.StartsWithSegments("/Roles") &&
+    !context.Request.Path.StartsWithSegments("/BlockedIps"),
+    appBuilder =>
     {
-        await DbSeeder.SeedRolesAndAdminAsync(services);
-    }
-    catch (Exception ex)
-    {
-        var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "შეცდომა ბაზაში მონაცემების ჩაწერისას (Seeding).");
-    }
-}
+        appBuilder.UseMiddleware<GatewayMiddleware>();
+    });
 
 app.Run();
