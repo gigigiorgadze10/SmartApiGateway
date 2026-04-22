@@ -1,6 +1,12 @@
 ﻿@using Microsoft.AspNetCore.Identity
 @using SmartApiGateway.Data
 @inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+
+@{
+    var currentUser = await UserManager.GetUserAsync(User);
+    var displayUserName = currentUser?.UserName ?? User.Identity?.Name ?? "Guest";
+}
 
 <!DOCTYPE html>
 <html lang="ka">
@@ -75,12 +81,12 @@
                 <div class="flex items-center space-x-4">
                     <div class="flex items-center space-x-3 border-r border-slate-200 pr-4">
                         <div class="text-right hidden sm:block">
-                            <p class="text-sm font-bold text-slate-700 leading-none">@User.Identity?.Name</p>
-                            <p class="text-xs text-slate-400 mt-1">@((User.IsInRole("SuperAdmin")) ? "Super Admin" : "Administrator")</p>
-                        </div>
-                        <div class="w-9 h-9 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-500 font-bold uppercase">
-                            @(User.Identity?.Name?.Substring(0, 1) ?? "U")
-                        </div>
+    <p class="text-sm font-bold text-slate-700 leading-none">@displayUserName</p>
+    <p class="text-xs text-slate-400 mt-1">@((User.IsInRole("SuperAdmin")) ? "Super Admin" : "Administrator")</p>
+</div>
+<div class="w-9 h-9 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-500 font-bold uppercase">
+    @(displayUserName.Substring(0, 1).ToUpper())
+</div>
                     </div>
                     <form method="post" asp-controller="Account" asp-action="Logout" class="m-0">
                         <button type="submit" class="text-slate-500 hover:text-red-500 transition p-2 rounded-lg hover:bg-red-50 flex items-center" title="გასვლა">
