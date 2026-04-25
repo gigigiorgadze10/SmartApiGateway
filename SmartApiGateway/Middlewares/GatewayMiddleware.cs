@@ -120,6 +120,10 @@ namespace SmartApiGateway.Middlewares
                 {
                     if (header.Key.Equals("Transfer-Encoding", StringComparison.OrdinalIgnoreCase))
                         continue;
+
+                    if (header.Key.Equals("Content-Encoding", StringComparison.OrdinalIgnoreCase))
+                        continue;
+
                     context.Response.Headers.TryAdd(header.Key, header.Value.ToArray());
                 }
 
