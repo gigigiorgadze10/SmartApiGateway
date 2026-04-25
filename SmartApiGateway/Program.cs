@@ -6,6 +6,7 @@ using SmartApiGateway.Hubs;
 using SmartApiGateway.Middlewares;
 using SmartApiGateway.Services;
 using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.HttpOverrides;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,6 +24,14 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 })
 .AddEntityFrameworkStores<ApplicationDbContext>()
 .AddDefaultTokenProviders();
+
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+
+    options.KnownIPNetworks.Clear();
+    options.KnownProxies.Clear();
+});
 
 builder.Services.ConfigureApplicationCookie(options =>
 {
@@ -86,15 +95,12 @@ using (var scope = app.Services.CreateScope())
         try
         {
             var context = services.GetRequiredService<ApplicationDbContext>();
-
             logger.LogInformation("ბაზის მიგრაციების შემოწმება...");
             context.Database.Migrate();
-
             logger.LogInformation("სისტემური მონაცემების სიდირება...");
             await DbSeeder.SeedRolesAndAdminAsync(services);
-
             logger.LogInformation("ბაზა წარმატებით მომზადდა.");
-            break; 
+            break;
         }
         catch (Exception ex)
         {
@@ -104,6 +110,8 @@ using (var scope = app.Services.CreateScope())
         }
     }
 }
+
+app.UseForwardedHeaders();
 
 if (!app.Environment.IsDevelopment())
 {
@@ -133,8 +141,8 @@ app.UseWhen(context =>
     !context.Request.Path.StartsWithSegments("/Users") &&
     !context.Request.Path.StartsWithSegments("/Roles") &&
     !context.Request.Path.StartsWithSegments("/BlockedIps") &&
-    !context.Request.Path.StartsWithSegments("/Settings") && 
-    !context.Request.Path.StartsWithSegments("/lib") &&     
+    !context.Request.Path.StartsWithSegments("/Settings") &&
+    !context.Request.Path.StartsWithSegments("/lib") &&
     !context.Request.Path.StartsWithSegments("/css") &&
     !context.Request.Path.StartsWithSegments("/js"),
     appBuilder =>

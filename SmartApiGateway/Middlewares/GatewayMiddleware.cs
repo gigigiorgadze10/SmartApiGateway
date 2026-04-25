@@ -33,6 +33,16 @@ namespace SmartApiGateway.Middlewares
             _httpClientFactory = httpClientFactory;
         }
 
+        private string GetClientIp(HttpContext context)
+        {
+            var forwardedHeader = context.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+            if (!string.IsNullOrEmpty(forwardedHeader))
+            {
+                return forwardedHeader.Split(',')[0].Trim();
+            }
+            return context.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
+        }
+
         public async Task InvokeAsync(HttpContext context)
         {
             var path = context.Request.Path.Value ?? "";
@@ -44,7 +54,7 @@ namespace SmartApiGateway.Middlewares
                 return;
             }
 
-            var clientIp = context.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
+            var clientIp = GetClientIp(context);
 
             using var scope = _scopeFactory.CreateScope();
             var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -213,9 +223,9 @@ namespace SmartApiGateway.Middlewares
         }
 
         private static async Task LogAndBroadcastAsync(
-    IHubContext<TrafficHub> hub,
-    ApplicationDbContext db,
-    string ip, string url, string method, int status, long time)
+            IHubContext<TrafficHub> hub,
+            ApplicationDbContext db,
+            string ip, string url, string method, int status, long time)
         {
             var log = new TrafficLog
             {
