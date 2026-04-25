@@ -4,12 +4,14 @@ namespace SmartApiGateway.Models
 {
     public class DashboardViewModel
     {
+        // დაამატეთ ეს ხაზი
         public int TotalRequests { get; set; }
         public int BlockedIpsCount { get; set; }
         public double AverageResponseTime { get; set; }
         public List<TrafficLog> RecentLogs { get; set; } = new();
 
         public string ActiveFilter { get; set; } = "24h";
+        public int EndpointLimit { get; set; } = 10;
 
         public List<string> ChartLabels { get; set; } = new();
         public List<long> ChartData { get; set; } = new();
@@ -29,7 +31,8 @@ namespace SmartApiGateway.Models
     {
         public string Path { get; set; } = string.Empty;
         public int SuccessCount { get; set; }
-        public int ErrorCount { get; set; }
+        public int ClientErrorCount { get; set; } // 4xx (ახალი)
+        public int ServerErrorCount { get; set; } // 5xx (ახალი)
         public int TotalCount { get; set; }
     }
 }

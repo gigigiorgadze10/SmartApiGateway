@@ -8,11 +8,11 @@
     <h2 class="text-xl font-bold text-slate-800">Overview</h2>
     
     <div class="flex flex-wrap gap-2">
-        <a href="?filter=1h" class="px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 @(Model.ActiveFilter == "1h" ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/30" : "bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200")">1 საათი</a>
-        <a href="?filter=24h" class="px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 @(Model.ActiveFilter == "24h" ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/30" : "bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200")">24 საათი</a>
-        <a href="?filter=7d" class="px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 @(Model.ActiveFilter == "7d" ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/30" : "bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200")">7 დღე</a>
-        <a href="?filter=30d" class="px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 @(Model.ActiveFilter == "30d" ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/30" : "bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200")">30 დღე</a>
-        <a href="?filter=all" class="px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 @(Model.ActiveFilter == "all" ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/30" : "bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200")">All Time</a>
+        <a href="?filter=1h&limit=@Model.EndpointLimit" class="px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 @(Model.ActiveFilter == "1h" ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/30" : "bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200")">1 საათი</a>
+        <a href="?filter=24h&limit=@Model.EndpointLimit" class="px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 @(Model.ActiveFilter == "24h" ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/30" : "bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200")">24 საათი</a>
+        <a href="?filter=7d&limit=@Model.EndpointLimit" class="px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 @(Model.ActiveFilter == "7d" ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/30" : "bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200")">7 დღე</a>
+        <a href="?filter=30d&limit=@Model.EndpointLimit" class="px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 @(Model.ActiveFilter == "30d" ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/30" : "bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200")">30 დღე</a>
+        <a href="?filter=all&limit=@Model.EndpointLimit" class="px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 @(Model.ActiveFilter == "all" ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/30" : "bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200")">All Time</a>
     </div>
 </div>
 
@@ -69,17 +69,28 @@
 </div>
 
 <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 mb-8">
-    <h3 class="text-lg font-bold text-slate-800 mb-6 flex items-center">
-        <i data-lucide="route" class="w-5 h-5 text-blue-500 mr-2"></i> ენდპოინტების აქტივობა (Top 10)
-    </h3>
+    <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-6 gap-4">
+        <h3 class="text-lg font-bold text-slate-800 flex items-center">
+            <i data-lucide="route" class="w-5 h-5 text-blue-500 mr-2"></i> ენდპოინტების აქტივობა
+        </h3>
+        <div class="flex items-center space-x-1 bg-slate-50 p-1.5 rounded-xl border border-slate-200">
+            <span class="text-xs font-bold text-slate-400 px-2 uppercase tracking-wider hidden sm:block">რაოდენობა:</span>
+            <a href="?filter=@Model.ActiveFilter&limit=10" class="px-3 py-1.5 rounded-lg text-sm font-bold transition-all @(Model.EndpointLimit == 10 ? "bg-white text-blue-600 shadow-sm border border-slate-200/50" : "text-slate-500 hover:bg-slate-200/50 hover:text-slate-700")">10</a>
+            <a href="?filter=@Model.ActiveFilter&limit=50" class="px-3 py-1.5 rounded-lg text-sm font-bold transition-all @(Model.EndpointLimit == 50 ? "bg-white text-blue-600 shadow-sm border border-slate-200/50" : "text-slate-500 hover:bg-slate-200/50 hover:text-slate-700")">50</a>
+            <a href="?filter=@Model.ActiveFilter&limit=100" class="px-3 py-1.5 rounded-lg text-sm font-bold transition-all @(Model.EndpointLimit == 100 ? "bg-white text-blue-600 shadow-sm border border-slate-200/50" : "text-slate-500 hover:bg-slate-200/50 hover:text-slate-700")">100</a>
+            <a href="?filter=@Model.ActiveFilter&limit=0" class="px-3 py-1.5 rounded-lg text-sm font-bold transition-all @(Model.EndpointLimit == 0 ? "bg-white text-blue-600 shadow-sm border border-slate-200/50" : "text-slate-500 hover:bg-slate-200/50 hover:text-slate-700")">ყველა</a>
+        </div>
+    </div>
+    
     <div class="overflow-x-auto">
         <table class="w-full text-left border-collapse">
             <thead>
                 <tr class="bg-slate-50 text-slate-500 text-sm border-b border-slate-100">
                     <th class="p-4 font-semibold rounded-tl-xl">მარშრუტი (Path)</th>
-                    <th class="p-4 font-semibold text-center">სულ მოთხოვნა</th>
-                    <th class="p-4 font-semibold text-center">წარმატებული</th>
-                    <th class="p-4 font-semibold text-center rounded-tr-xl">წარუმატებელი</th>
+                    <th class="p-4 font-semibold text-center">სულ</th>
+                    <th class="p-4 font-semibold text-center">2xx (OK)</th>
+                    <th class="p-4 font-semibold text-center">4xx (კლიენტი)</th>
+                    <th class="p-4 font-semibold text-center rounded-tr-xl">5xx (სერვერი)</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-slate-50">
@@ -87,20 +98,80 @@
                 {
                     <tr class="hover:bg-slate-50/80 transition-colors">
                         <td class="p-4 text-sm font-medium text-slate-700 flex items-center">
-                            <span class="w-2 h-2 rounded-full mr-3 @(stat.ErrorCount > 0 ? "bg-red-500" : "bg-emerald-500")"></span>
+                            <span class="w-2 h-2 rounded-full mr-3 @(stat.ServerErrorCount > 0 ? "bg-red-500" : stat.ClientErrorCount > 0 ? "bg-amber-500" : "bg-emerald-500")"></span>
                             @stat.Path
                         </td>
                         <td class="p-4 text-sm text-center font-bold text-slate-700">@stat.TotalCount</td>
                         <td class="p-4 text-center">
-                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700">
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold @(stat.SuccessCount > 0 ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-400")">
                                 @stat.SuccessCount
                             </span>
                         </td>
                         <td class="p-4 text-center">
-                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold @(stat.ErrorCount > 0 ? "bg-red-100 text-red-700" : "bg-slate-100 text-slate-500")">
-                                @stat.ErrorCount
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold @(stat.ClientErrorCount > 0 ? "bg-amber-100 text-amber-700" : "bg-slate-100 text-slate-400")">
+                                @stat.ClientErrorCount
                             </span>
                         </td>
+                        <td class="p-4 text-center">
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold @(stat.ServerErrorCount > 0 ? "bg-red-100 text-red-700" : "bg-slate-100 text-slate-400")">
+                                @stat.ServerErrorCount
+                            </span>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 mb-8">
+    <h3 class="text-lg font-bold text-slate-800 mb-6 flex items-center">
+        <i data-lucide="list" class="w-5 h-5 text-indigo-500 mr-2"></i> ბოლო მოთხოვნები (Live)
+    </h3>
+    <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+            <thead>
+                <tr class="bg-slate-50 text-slate-500 text-sm border-b border-slate-100">
+                    <th class="p-4 font-semibold rounded-tl-xl w-24">დრო</th>
+                    <th class="p-4 font-semibold">მარშრუტი & მეთოდი</th>
+                    <th class="p-4 font-semibold text-center w-32">სტატუს კოდი</th>
+                    <th class="p-4 font-semibold text-center w-32">ხანგრძლივობა</th>
+                    <th class="p-4 font-semibold rounded-tr-xl w-40">IP მისამართი</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-50">
+                @foreach (var log in Model.RecentLogs)
+                {
+                    <tr class="hover:bg-slate-50/80 transition-colors">
+                        <td class="p-4 text-sm text-slate-500">@log.CreatedAt.ToLocalTime().ToString("HH:mm:ss")</td>
+                        <td class="p-4 text-sm font-medium text-slate-700 flex items-center mt-1">
+                            @{
+                                string methodColor = log.HttpMethod == "GET" ? "bg-blue-100 text-blue-700" :
+                                                     log.HttpMethod == "POST" ? "bg-emerald-100 text-emerald-700" :
+                                                     log.HttpMethod == "PUT" ? "bg-amber-100 text-amber-700" :
+                                                     log.HttpMethod == "DELETE" ? "bg-red-100 text-red-700" : "bg-slate-100 text-slate-600";
+                            }
+                            <span class="text-[10px] uppercase font-black px-2 py-1 rounded mr-3 @methodColor tracking-wider">
+                                @log.HttpMethod
+                            </span>
+                            @log.RequestedUrl
+                        </td>
+                        <td class="p-4 text-center">
+                            @{
+                                string statusClass = log.StatusCode >= 500 ? "bg-red-100 text-red-700 border border-red-200" :
+                                                     log.StatusCode >= 400 ? "bg-amber-100 text-amber-700 border border-amber-200" :
+                                                     log.StatusCode >= 200 && log.StatusCode < 300 ? "bg-emerald-100 text-emerald-700 border border-emerald-200" :
+                                                     "bg-slate-100 text-slate-600";
+                            }
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold shadow-sm @statusClass">
+                                <span class="w-1.5 h-1.5 rounded-full mr-2 @(log.StatusCode >= 500 ? "bg-red-500" : log.StatusCode >= 400 ? "bg-amber-500" : "bg-emerald-500")"></span>
+                                @log.StatusCode
+                            </span>
+                        </td>
+                        <td class="p-4 text-center text-sm font-medium text-slate-600">
+                            @log.ResponseTimeMs <span class="text-xs text-slate-400">ms</span>
+                        </td>
+                        <td class="p-4 text-sm text-slate-500 font-mono">@log.IpAddress</td>
                     </tr>
                 }
             </tbody>
@@ -133,18 +204,14 @@
         options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { position: 'bottom' } } }
         });
 
-        // SignalR LIVE - ვაკეთებთ რეფრეშს ახალი ტრაფიკის შემოსვლისას (მხოლოდ მაშინ თუ დღევანდელზე ვართ)
         const connection = new signalR.HubConnectionBuilder()
         .withUrl("/trafficHub")
         .withAutomaticReconnect()
         .build();
 
         connection.on("ReceiveTrafficUpdate", function () {
-        // თუ მომხმარებელი "1h" ან "24h" ფილტრზეა, გვერდი ავტომატურად განახლდება (რბილად)
         const activeFilter = '@Model.ActiveFilter';
         if (activeFilter === "1h" || activeFilter === "24h") {
-        // რადგან Custom API ფეჩი ამოვიღეთ, შეგვიძლია უბრალოდ ტოტალ რიცხვები გავზარდოთ კლიენტზე,
-        // ან პატარა შეტყობინება ვაჩვენოთ. სიმარტივისთვის გვერდს ვარეფრეშებთ.
         window.location.reload();
         }
         });
