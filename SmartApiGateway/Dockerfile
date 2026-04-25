@@ -3,11 +3,12 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
 # ვაკოპირებთ csproj ფაილს და ვიწერთ ბიბლიოთეკებს
-COPY ["SmartApiGateway.csproj", "./"]
-RUN dotnet restore "SmartApiGateway.csproj"
+COPY ["SmartApiGateway/SmartApiGateway.csproj", "SmartApiGateway/"]
+RUN dotnet restore "SmartApiGateway/SmartApiGateway.csproj"
 
 # ვაკოპირებთ სრულ კოდს და ვაკეთებთ ფაბლიშს
 COPY . .
+WORKDIR "/src/SmartApiGateway"
 RUN dotnet publish "SmartApiGateway.csproj" -c Release -o /app/publish
 
 # 2. გაშვების ეტაპი (მხოლოდ Runtime, რომ სერვერი მსუბუქი იყოს)
