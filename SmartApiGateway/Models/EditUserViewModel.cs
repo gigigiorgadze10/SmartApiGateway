@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace SmartApiGateway.Models
 {
@@ -20,7 +19,6 @@ namespace SmartApiGateway.Models
         [Display(Name = "როლი")]
         public string? SelectedRole { get; set; }
 
-        // ეს არის ის ლისტი, რომელსაც Controller-ში ვითხოვთ და ერორს აგდებდა
         public IList<string> Roles { get; set; } = new List<string>();
     }
 }

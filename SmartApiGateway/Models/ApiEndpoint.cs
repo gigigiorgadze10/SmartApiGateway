@@ -1,5 +1,4 @@
-﻿using System;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using SmartApiGateway.Data;
 
@@ -26,7 +25,6 @@ namespace SmartApiGateway.Models
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-        // ვინ შექმნა ეს მარშრუტი?
         public string? CreatedById { get; set; }
 
         [ForeignKey("CreatedById")]

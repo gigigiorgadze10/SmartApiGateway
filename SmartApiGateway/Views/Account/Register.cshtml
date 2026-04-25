@@ -36,7 +36,6 @@
                 <div asp-validation-summary="ModelOnly"
                      class="text-red-600 text-sm bg-red-50 p-3 rounded-xl border border-red-100"></div>
 
-                @* სახელი / გვარი *@
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-semibold text-slate-700 mb-2">სახელი</label>
@@ -54,7 +53,6 @@
                     </div>
                 </div>
 
-                @* ელ-ფოსტა *@
                 <div>
                     <label class="block text-sm font-semibold text-slate-700 mb-2">ელ-ფოსტა</label>
                     <input asp-for="Email" type="email"
@@ -64,7 +62,6 @@
                     <span asp-validation-for="Email" class="text-red-500 text-xs mt-1 block"></span>
                 </div>
 
-                @* პაროლი *@
                 <div>
                     <label class="block text-sm font-semibold text-slate-700 mb-2">პაროლი</label>
                     <input asp-for="Password" type="password"
@@ -77,7 +74,6 @@
                     </p>
                 </div>
 
-                @* პაროლის გამეორება *@
                 <div>
                     <label class="block text-sm font-semibold text-slate-700 mb-2">გაიმეორეთ პაროლი</label>
                     <input asp-for="ConfirmPassword" type="password"

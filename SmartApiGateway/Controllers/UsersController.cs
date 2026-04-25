@@ -3,8 +3,6 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using SmartApiGateway.Data;
 using SmartApiGateway.Models;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace SmartApiGateway.Controllers
 {
@@ -63,7 +61,6 @@ namespace SmartApiGateway.Controllers
             var user = await _userManager.FindByIdAsync(model.Id);
             if (user == null) return NotFound();
 
-            // 1. სწორი გზა Username-ის შესაცვლელად
             if (user.UserName != model.UserName)
             {
                 var setUserNameResult = await _userManager.SetUserNameAsync(user, model.UserName);
@@ -75,7 +72,6 @@ namespace SmartApiGateway.Controllers
                 }
             }
 
-            // 2. სწორი გზა Email-ის შესაცვლელად
             if (user.Email != model.Email)
             {
                 var setEmailResult = await _userManager.SetEmailAsync(user, model.Email);
@@ -87,7 +83,6 @@ namespace SmartApiGateway.Controllers
                 }
             }
 
-            // 3. როლების განახლება
             var currentRoles = await _userManager.GetRolesAsync(user);
             await _userManager.RemoveFromRolesAsync(user, currentRoles);
 
@@ -96,7 +91,6 @@ namespace SmartApiGateway.Controllers
                 await _userManager.AddToRoleAsync(user, model.SelectedRole);
             }
 
-            // 4. თუ მომხმარებელმა საკუთარი პროფილის მონაცემები შეცვალა, ეგრევე ვანახლებთ Session/Cookie-ს!
             if (user.Id == _userManager.GetUserId(User))
             {
                 await _signInManager.RefreshSignInAsync(user);
@@ -112,7 +106,6 @@ namespace SmartApiGateway.Controllers
             var user = await _userManager.FindByIdAsync(id);
             if (user != null)
             {
-                // დაცვა: სუპერ ადმინი არ წაიშალოს შემთხვევით
                 var roles = await _userManager.GetRolesAsync(user);
                 if (!roles.Contains("SuperAdmin"))
                 {

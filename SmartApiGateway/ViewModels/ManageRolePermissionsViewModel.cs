@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace SmartApiGateway.ViewModels
+﻿namespace SmartApiGateway.ViewModels
 {
     public class ManageRolePermissionsViewModel
     {

@@ -1,5 +1,4 @@
-﻿using System;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace SmartApiGateway.Models
 {
@@ -8,11 +7,11 @@ namespace SmartApiGateway.Models
         [Key]
         public int Id { get; set; }
 
-        public string IpAddress { get; set; } = string.Empty; // <-- დაემატა საწყისი მნიშვნელობა
+        public string IpAddress { get; set; } = string.Empty;
 
-        public string RequestedUrl { get; set; } = string.Empty; // <-- დაემატა საწყისი მნიშვნელობა
+        public string RequestedUrl { get; set; } = string.Empty;
 
-        public string HttpMethod { get; set; } = string.Empty; // <-- დაემატა საწყისი მნიშვნელობა
+        public string HttpMethod { get; set; } = string.Empty;
 
         public int StatusCode { get; set; }
 

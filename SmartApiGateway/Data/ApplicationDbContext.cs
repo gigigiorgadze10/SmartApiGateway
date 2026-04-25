@@ -19,7 +19,6 @@ namespace SmartApiGateway.Data
         {
             base.OnModelCreating(builder);
 
-            // ვიცავთ სისტემას: თუ იუზერი წაიშალა, მის მიერ შექმნილი ენდპოინტები არ წაიშალოს
             builder.Entity<ApiEndpoint>()
                 .HasOne(e => e.CreatedBy)
                 .WithMany()

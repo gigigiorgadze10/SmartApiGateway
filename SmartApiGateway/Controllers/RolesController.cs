@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using System.Threading.Tasks;
 
 namespace SmartApiGateway.Controllers
 {
@@ -43,7 +42,7 @@ namespace SmartApiGateway.Controllers
             if (string.IsNullOrWhiteSpace(newName)) return RedirectToAction(nameof(Index));
 
             var role = await _roleManager.FindByIdAsync(id);
-            if (role != null && role.Name != "SuperAdmin") // სუპერადმინის სახელის შეცვლა არ შეიძლება
+            if (role != null && role.Name != "SuperAdmin")
             {
                 role.Name = newName;
                 await _roleManager.UpdateAsync(role);
@@ -56,7 +55,7 @@ namespace SmartApiGateway.Controllers
         public async Task<IActionResult> Delete(string id)
         {
             var role = await _roleManager.FindByIdAsync(id);
-            if (role != null && role.Name != "SuperAdmin") // სუპერადმინს ვერ წავშლით
+            if (role != null && role.Name != "SuperAdmin")
             {
                 await _roleManager.DeleteAsync(role);
             }

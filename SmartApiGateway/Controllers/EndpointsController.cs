@@ -1,15 +1,12 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SmartApiGateway.Data;
 using SmartApiGateway.Models;
 using System.Security.Claims;
-using System.Threading.Tasks;
 
 namespace SmartApiGateway.Controllers
 {
-    // წვდომა აქვს SuperAdmin-ს და Admin-ს
     [Authorize(Roles = "SuperAdmin, Admin")]
     public class EndpointsController : Controller
     {
@@ -22,7 +19,6 @@ namespace SmartApiGateway.Controllers
 
         public async Task<IActionResult> Index()
         {
-            // Include(e => e.CreatedBy) საჭიროა, რომ გავიგოთ ვინ დაამატა
             var endpoints = await _context.ApiEndpoints.Include(e => e.CreatedBy).ToListAsync();
             return View(endpoints);
         }
@@ -38,7 +34,6 @@ namespace SmartApiGateway.Controllers
         {
             if (ModelState.IsValid)
             {
-                // ვიმახსოვრებთ იმ იუზერის ID-ს, ვინც ამატებს ენდპოინტს
                 endpoint.CreatedById = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
                 _context.ApiEndpoints.Add(endpoint);
@@ -48,14 +43,12 @@ namespace SmartApiGateway.Controllers
             return View(endpoint);
         }
 
-        // რედაქტირების გვერდის ჩატვირთვა
         [HttpGet]
         public async Task<IActionResult> Edit(int id)
         {
             var endpoint = await _context.ApiEndpoints.FindAsync(id);
             if (endpoint == null) return NotFound();
 
-            // დაცვა: ჩვეულებრივ ადმინს არ შეუძლია სხვისი ენდპოინტის შეცვლა
             var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (!User.IsInRole("SuperAdmin") && endpoint.CreatedById != currentUserId)
             {
@@ -65,7 +58,6 @@ namespace SmartApiGateway.Controllers
             return View(endpoint);
         }
 
-        // რედაქტირებული მონაცემების შენახვა
         [HttpPost]
         public async Task<IActionResult> Edit(int id, ApiEndpoint model)
         {

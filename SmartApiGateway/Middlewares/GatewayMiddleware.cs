@@ -16,7 +16,6 @@ namespace SmartApiGateway.Middlewares
         private readonly IServiceScopeFactory _scopeFactory;
         private static readonly ConcurrentDictionary<int, int> _rotationIndices = new();
 
-        // შიდა პანელის მარშრუტები — Gateway-ი ამ prefix-ებს გამოტოვებს
         private static readonly string[] _internalPrefixes =
         {
             "/trafficHub", "/lib", "/css", "/js", "/favicon.ico",
@@ -38,7 +37,6 @@ namespace SmartApiGateway.Middlewares
         {
             var path = context.Request.Path.Value ?? "";
 
-            // თუ მოთხოვნა შიდა პანელზეა ან root-ზე — პირდაპირ გავატაროთ
             if (path == "/" || _internalPrefixes.Any(p =>
                     path.StartsWith(p, StringComparison.OrdinalIgnoreCase)))
             {
@@ -53,7 +51,6 @@ namespace SmartApiGateway.Middlewares
             var cache = scope.ServiceProvider.GetRequiredService<IMemoryCache>();
             var hub = scope.ServiceProvider.GetRequiredService<IHubContext<TrafficHub>>();
 
-            // 1. IP Blacklist — cache-ში ვინახავთ 30 წამი
             if (await IsIpBlockedAsync(dbContext, cache, clientIp))
             {
                 context.Response.StatusCode = 403;
@@ -61,18 +58,15 @@ namespace SmartApiGateway.Middlewares
                 return;
             }
 
-            // 2. Endpoint lookup — cache-ში ვინახავთ, DB-ზე ყოველ request-ზე არ ვდივართ
             string requestPath = path.TrimEnd('/');
             var endpoint = await FindEndpointAsync(dbContext, cache, requestPath);
 
             if (endpoint == null)
             {
-                // ბაზაში მარშრუტი ვერ მოიძებნა — კონტროლერებს გავატანთ (404 და სხვ.)
                 await _next(context);
                 return;
             }
 
-            // 3. Load Balancing — Round Robin
             var availableUrls = endpoint.GetTargetUrls();
             int targetIndex = _rotationIndices.AddOrUpdate(
                 endpoint.Id, 0, (_, old) => (old + 1) % availableUrls.Length);
@@ -83,7 +77,6 @@ namespace SmartApiGateway.Middlewares
                 : "";
             string targetUrl = $"{selectedBaseUrl.TrimEnd('/')}{suffix}{context.Request.QueryString}";
 
-            // 4. Response Caching — მხოლოდ GET მოთხოვნებისთვის
             string cacheKey = $"GW_{targetUrl}";
             if (HttpMethods.IsGet(context.Request.Method) &&
                 cache.TryGetValue(cacheKey, out string? cached))
@@ -97,7 +90,6 @@ namespace SmartApiGateway.Middlewares
                 return;
             }
 
-            // 5. Proxy — downstream სერვისზე გაგზავნა
             var stopwatch = Stopwatch.StartNew();
             int statusCode = 500;
 
@@ -114,16 +106,13 @@ namespace SmartApiGateway.Middlewares
                 context.Response.StatusCode = statusCode;
                 context.Response.Headers["X-Cache"] = "MISS";
 
-                // Downstream-ის response headers-ის კოპირება
                 foreach (var header in response.Headers)
                 {
-                    // Transfer-Encoding-ი ASP.NET-მა თავად უნდა განსაზღვროს
                     if (header.Key.Equals("Transfer-Encoding", StringComparison.OrdinalIgnoreCase))
                         continue;
                     context.Response.Headers.TryAdd(header.Key, header.Value.ToArray());
                 }
 
-                // Content-Type-ის გადაცემა
                 if (response.Content.Headers.ContentType != null)
                     context.Response.ContentType = response.Content.Headers.ContentType.ToString();
 
@@ -154,17 +143,11 @@ namespace SmartApiGateway.Middlewares
             }
         }
 
-        // =================== Helper Methods ===================
-
-        /// <summary>
-        /// Proxy request-ის build — body, headers და forwarding meta-data
-        /// </summary>
         private static HttpRequestMessage BuildProxyRequest(
             HttpContext context, string targetUrl, string clientIp)
         {
             var msg = new HttpRequestMessage(new HttpMethod(context.Request.Method), targetUrl);
 
-            // POST / PUT / PATCH — body-ის კოპირება
             if (!HttpMethods.IsGet(context.Request.Method) &&
                 !HttpMethods.IsHead(context.Request.Method) &&
                 !HttpMethods.IsDelete(context.Request.Method) &&
@@ -178,8 +161,6 @@ namespace SmartApiGateway.Middlewares
                 }
             }
 
-            // Original request headers-ის კოპირება
-            // (Content-* headers msg.Content-ზე გადადის, არა msg.Headers-ზე)
             foreach (var header in context.Request.Headers)
             {
                 if (header.Key.StartsWith("Content-", StringComparison.OrdinalIgnoreCase))
@@ -189,7 +170,6 @@ namespace SmartApiGateway.Middlewares
                 msg.Headers.TryAddWithoutValidation(header.Key, header.Value.ToArray());
             }
 
-            // Gateway meta-headers
             msg.Headers.TryAddWithoutValidation("X-Forwarded-For", clientIp);
             msg.Headers.TryAddWithoutValidation(
                 "X-Forwarded-Host", context.Request.Host.ToString());
@@ -198,9 +178,6 @@ namespace SmartApiGateway.Middlewares
             return msg;
         }
 
-        /// <summary>
-        /// IP Blacklist — cache-ით (30 წამი) — DB-ზე ყოველ request-ზე არ ვდივართ
-        /// </summary>
         private static async Task<bool> IsIpBlockedAsync(
             ApplicationDbContext db, IMemoryCache cache, string ip)
         {
@@ -216,9 +193,6 @@ namespace SmartApiGateway.Middlewares
             return set!.Contains(ip);
         }
 
-        /// <summary>
-        /// Endpoint lookup — cache-ით (30 წამი) — AsEnumerable()-ის ნაცვლად
-        /// </summary>
         private static async Task<ApiEndpoint?> FindEndpointAsync(
             ApplicationDbContext db, IMemoryCache cache, string requestPath)
         {
@@ -238,9 +212,6 @@ namespace SmartApiGateway.Middlewares
                     e.RoutePath.TrimEnd('/') + "/", StringComparison.OrdinalIgnoreCase));
         }
 
-        /// <summary>
-        /// Traffic log-ის შენახვა DB-ში და SignalR-ით broadcast-ი
-        /// </summary>
         private static async Task LogAndBroadcastAsync(
     IHubContext<TrafficHub> hub,
     ApplicationDbContext db,
@@ -259,7 +230,6 @@ namespace SmartApiGateway.Middlewares
             db.TrafficLogs.Add(log);
             await db.SaveChangesAsync();
 
-            // 1. სიგნალი ლოგების ცხრილისთვის (თუ გაქვს ასეთი)
             await hub.Clients.All.SendAsync("ReceiveLog", new
             {
                 ipAddress = ip,
@@ -269,8 +239,6 @@ namespace SmartApiGateway.Middlewares
                 time
             });
 
-            // 2. კრიტიკული შესწორება: სიგნალი დეშბორდისთვის!
-            // Dashboard.cshtml სწორედ ამ სახელს ელოდება
             await hub.Clients.All.SendAsync("ReceiveTrafficUpdate");
         }
     }

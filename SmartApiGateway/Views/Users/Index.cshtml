@@ -17,7 +17,6 @@
         </a>
     </div>
 
-    @* შეტყობინებების ბლოკი *@
     @if (TempData["Success"] != null)
     {
         <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-xl mb-6 shadow-sm flex items-center">
@@ -62,12 +61,10 @@
                         </td>
                         <td class="p-4 text-slate-500 text-sm font-monospace">@user.Email</td>
                         <td class="p-4 text-right space-x-2">
-                            @* რედაქტირების ღილაკი *@
                             <a asp-action="Edit" asp-route-id="@user.Id" class="inline-flex items-center justify-center text-blue-500 hover:text-blue-700 p-2 rounded-lg hover:bg-blue-50 transition" title="რედაქტირება">
                                 <i data-lucide="edit-3" class="w-5 h-5"></i>
                             </a>
 
-                            @* წაშლის ღილაკი - იძახებს ახალ მოდალს JS-ის ნაცვლად *@
                             <button type="button" onclick="openDeleteModal('@user.Id', '@user.UserName')" class="inline-flex items-center justify-center text-red-500 hover:text-red-700 p-2 rounded-lg hover:bg-red-50 transition" title="წაშლა">
                                 <i data-lucide="trash-2" class="w-5 h-5"></i>
                             </button>
@@ -121,12 +118,10 @@
 
 @section Scripts {
     <script>
-        // Lucide აიკონები
         if (typeof lucide !== 'undefined') {
             lucide.createIcons();
         }
 
-        // მოდალის მართვის ლოგიკა
         const modal = document.getElementById('deleteModal');
         const backdrop = document.getElementById('modalBackdrop');
         const panel = document.getElementById('modalPanel');
@@ -134,14 +129,11 @@
         const deleteUserName = document.getElementById('deleteUserName');
 
         function openDeleteModal(userId, userName) {
-            // ფორმის Action-ის განახლება
             deleteForm.action = `/Users/Delete/${userId}`;
             deleteUserName.textContent = userName;
 
-            // ვაჩვენებთ მოდალს
             modal.classList.remove('hidden');
             
-            // პატარა დაყოვნება ანიმაციისთვის
             setTimeout(() => {
                 backdrop.classList.remove('opacity-0');
                 backdrop.classList.add('opacity-100');
@@ -152,14 +144,12 @@
         }
 
         function closeDeleteModal() {
-            // ვაბრუნებთ ანიმაციის კლასებს
             backdrop.classList.remove('opacity-100');
             backdrop.classList.add('opacity-0');
             
             panel.classList.remove('opacity-100', 'translate-y-0', 'sm:scale-100');
             panel.classList.add('opacity-0', 'translate-y-4', 'sm:translate-y-0', 'sm:scale-95');
 
-            // ანიმაციის დასრულების მერე ვმალავთ (Duration-ის მიხედვით)
             setTimeout(() => {
                 modal.classList.add('hidden');
             }, 300);

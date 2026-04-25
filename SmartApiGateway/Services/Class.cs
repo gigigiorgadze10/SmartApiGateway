@@ -3,19 +3,13 @@ using SmartApiGateway.Data;
 
 namespace SmartApiGateway.Services
 {
-    /// <summary>
-    /// Background Service — ყოველ 24 საათში ერთხელ 30 დღეზე ძველ Traffic Log-ებს შლის.
-    /// ეს ასუფთავებს TrafficLogs ცხრილს და Dashboard-ს სიჩქარეს ინარჩუნებს.
-    /// </summary>
     public class LogCleanupService : BackgroundService
     {
         private readonly IServiceScopeFactory _scopeFactory;
         private readonly ILogger<LogCleanupService> _logger;
 
-        // რამდენ დღეზე ძველი log-ები წაიშალოს
         private const int RetentionDays = 30;
 
-        // რამდენ ხანში ერთხელ გაეშვას
         private readonly TimeSpan _interval = TimeSpan.FromHours(24);
 
         public LogCleanupService(
@@ -31,7 +25,6 @@ namespace SmartApiGateway.Services
             _logger.LogInformation(
                 "Log Cleanup Service გაეშვა. Retention: {Days} დღე.", RetentionDays);
 
-            // პირველი გაშვება — app-ის სტარტიდან 1 წუთში (არ გვინდა მყისიერად გაეშვას)
             await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
 
             while (!stoppingToken.IsCancellationRequested)
@@ -50,7 +43,6 @@ namespace SmartApiGateway.Services
 
                 var cutoff = DateTime.UtcNow.AddDays(-RetentionDays);
 
-                // EF Core ExecuteDeleteAsync — მასობრივი წაშლა ყოველი entity-ის load-ის გარეშე
                 int deleted = await db.TrafficLogs
                     .Where(t => t.CreatedAt < cutoff)
                     .ExecuteDeleteAsync(ct);
@@ -64,7 +56,6 @@ namespace SmartApiGateway.Services
             }
             catch (OperationCanceledException)
             {
-                // სერვისი ჩამოიშალა — ეს ნორმალურია
             }
             catch (Exception ex)
             {

@@ -186,7 +186,6 @@
         const trafficLabels = JSON.parse('@Html.Raw(JsonSerializer.Serialize(Model.ChartLabels))');
         const trafficData = JSON.parse('@Html.Raw(JsonSerializer.Serialize(Model.ChartData))');
 
-        // ჩარტების კონფიგურაცია
         const ctxTraffic = document.getElementById('trafficChart').getContext('2d');
         let gradient = ctxTraffic.createLinearGradient(0, 0, 0, 400);
         gradient.addColorStop(0, 'rgba(99, 102, 241, 0.5)');
@@ -205,18 +204,13 @@
         options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { position: 'bottom' } } }
         });
 
-        // --------------------------------------------------------
-        // SignalR LIVE - დინამიური განახლება რეფრეშის გარეშე!
-        // --------------------------------------------------------
         const connection = new signalR.HubConnectionBuilder()
         .withUrl("/trafficHub")
         .withAutomaticReconnect()
         .build();
 
-        // ვიჭერთ Gateway-დან გამოგზავნილ ლოგს
         connection.on("ReceiveLog", function (log) {
             
-        // 1. ვაახლებთ ზედა სტატისტიკის რიცხვებს დინამიურად
         let totalEl = document.getElementById('statTotal');
         totalEl.innerText = parseInt(totalEl.innerText) + 1;
 
@@ -233,10 +227,8 @@
         el.innerText = parseInt(el.innerText) + 1;
         statusChart.data.datasets[0].data[2]++;
         }
-        statusChart.update(); // დონატ ჩარტის განახლება
+        statusChart.update();
 
-        // 2. ვამატებთ ახალ ლოგს "ბოლო მოთხოვნების" ცხრილის თავში
-        // ვიპოვოთ ბოლო მოთხოვნების ცხრილის <tbody> (ის გვერდზე მეორე ცხრილია)
         const tables = document.querySelectorAll('table');
         const logsTbody = tables[tables.length - 1].querySelector('tbody');
 
@@ -274,13 +266,11 @@
                 
         logsTbody.insertAdjacentHTML('afterbegin', newRowHTML);
                 
-        // თუ ცხრილში 100-ზე მეტი ჩანაწერია, ბოლოს ვშლით
         if(logsTbody.children.length > 100) {
         logsTbody.removeChild(logsTbody.lastChild);
         }
         }
 
-        // 3. ვაახლებთ ტრაფიკის ხაზოვან ჩარტს
         if(trafficChart) {
         const now = new Date();
         const timeStr = now.toLocaleTimeString('ka-GE', { hour: '2-digit', minute:'2-digit' });

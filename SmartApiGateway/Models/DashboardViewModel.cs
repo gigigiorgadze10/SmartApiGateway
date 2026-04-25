@@ -1,10 +1,7 @@
-﻿using System.Collections.Generic;
-
-namespace SmartApiGateway.Models
+﻿namespace SmartApiGateway.Models
 {
     public class DashboardViewModel
     {
-        // დაამატეთ ეს ხაზი
         public int TotalRequests { get; set; }
         public int BlockedIpsCount { get; set; }
         public double AverageResponseTime { get; set; }
@@ -22,17 +19,15 @@ namespace SmartApiGateway.Models
 
         public Dictionary<string, int> TopIps { get; set; } = new();
 
-        // ახალი: ენდპოინტების სტატისტიკა
         public List<EndpointStat> EndpointStats { get; set; } = new();
     }
 
-    // დამხმარე კლასი ენდპოინტებისთვის
     public class EndpointStat
     {
         public string Path { get; set; } = string.Empty;
         public int SuccessCount { get; set; }
-        public int ClientErrorCount { get; set; } // 4xx (ახალი)
-        public int ServerErrorCount { get; set; } // 5xx (ახალი)
+        public int ClientErrorCount { get; set; } // 4xx
+        public int ServerErrorCount { get; set; } // 5xx
         public int TotalCount { get; set; }
     }
 }

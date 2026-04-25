@@ -35,13 +35,10 @@ namespace SmartApiGateway.Controllers
         {
             if (!ModelState.IsValid) return View(model);
 
-            // 1. ვპოულობთ იუზერს იმეილით
             var user = await _userManager.FindByEmailAsync(model.Email);
 
             if (user != null)
             {
-                // 2. ვიყენებთ ნაპოვნი იუზერის UserName-ს (იქნება ეს იმეილი თუ "adminovich") 
-                // და ვამოწმებთ პაროლს
                 var result = await _signInManager.PasswordSignInAsync(
                     user.UserName!,
                     model.Password,
@@ -60,7 +57,6 @@ namespace SmartApiGateway.Controllers
                 }
             }
 
-            // ზოგადი შეცდომა უსაფრთხოებისთვის
             ModelState.AddModelError(string.Empty, "არასწორი ელ-ფოსტა ან პაროლი.");
             return View(model);
         }
@@ -78,11 +74,11 @@ namespace SmartApiGateway.Controllers
 
             var user = new ApplicationUser
             {
-                UserName = model.Email, // რეგისტრაციისას UserName და Email ერთი და იგივეა
+                UserName = model.Email,
                 Email = model.Email,
                 FirstName = model.FirstName,
                 LastName = model.LastName,
-                EmailConfirmed = true // სიდერის მსგავსად, ავტომატურად ვადასტურებთ
+                EmailConfirmed = true
             };
 
             var result = await _userManager.CreateAsync(user, model.Password);

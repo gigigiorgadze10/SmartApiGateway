@@ -2,13 +2,11 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using SmartApiGateway.ViewModels;
-using System.Linq;
 using System.Security.Claims;
-using System.Threading.Tasks;
 
 namespace SmartApiGateway.Controllers
 {
-    [Authorize(Roles = "SuperAdmin")] // მხოლოდ სუპერ ადმინს შეუძლია მართვა
+    [Authorize(Roles = "SuperAdmin")]
     public class PermissionsController : Controller
     {
         private readonly RoleManager<IdentityRole> _roleManager;
@@ -27,7 +25,6 @@ namespace SmartApiGateway.Controllers
             var existingClaims = await _roleManager.GetClaimsAsync(role);
             var model = new ManageRolePermissionsViewModel { RoleId = roleId, RoleName = role.Name ?? string.Empty };
 
-            // აქ ვწერთ სისტემაში არსებულ ყველა შესაძლო უფლებას (უფრო მეტის დამატებაც შეგიძლია)
             var allPermissions = new[] { "ViewDashboard", "ManageEndpoints", "ManageRoles", "ManageUsers", "ViewLogs" };
 
             foreach (var permission in allPermissions)
@@ -51,13 +48,11 @@ namespace SmartApiGateway.Controllers
 
             var claims = await _roleManager.GetClaimsAsync(role);
 
-            // ვშლით ძველ უფლებებს
             foreach (var claim in claims)
             {
                 await _roleManager.RemoveClaimAsync(role, claim);
             }
 
-            // ვამატებთ ახალ მონიშნულ უფლებებს
             var selectedClaims = model.RoleClaims.Where(c => c.Selected).ToList();
             foreach (var claim in selectedClaims)
             {

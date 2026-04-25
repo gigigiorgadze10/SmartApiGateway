@@ -9,11 +9,9 @@ using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 1. PostgreSQL კავშირი
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// 2. Identity კონფიგურაცია
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 {
     options.Password.RequireDigit = true;
@@ -25,7 +23,6 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 .AddEntityFrameworkStores<ApplicationDbContext>()
 .AddDefaultTokenProviders();
 
-// 3. Cookie / Access Denied კონფიგურაცია
 builder.Services.ConfigureApplicationCookie(options =>
 {
     options.LoginPath = "/Account/Login";
@@ -34,26 +31,23 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.ExpireTimeSpan = TimeSpan.FromHours(8);
 });
 
-// 4. CORS პოლიტიკა - ეს აუცილებელია SignalR-ისთვის ლოკალზეც და სერვერზეც
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
     {
         policy.AllowAnyHeader()
               .AllowAnyMethod()
-              .SetIsOriginAllowed(_ => true) // ნებას რთავს ნებისმიერ origin-ს (localhost, render და ა.შ.)
-              .AllowCredentials(); // აუცილებელია SignalR-ისთვის
+              .SetIsOriginAllowed(_ => true)
+              .AllowCredentials();
     });
 });
 
-// 5. IHttpClientFactory
 builder.Services.AddHttpClient("gateway", client =>
 {
     client.Timeout = TimeSpan.FromSeconds(30);
     client.DefaultRequestHeaders.Add("X-Gateway-Source", "SmartApiGateway");
 });
 
-// 6. Rate Limiting
 builder.Services.AddRateLimiter(options =>
 {
     options.AddFixedWindowLimiter("gateway_limit", cfg =>
@@ -75,11 +69,10 @@ builder.Services.AddRateLimiter(options =>
 builder.Services.AddHostedService<LogCleanupService>();
 builder.Services.AddControllersWithViews();
 builder.Services.AddMemoryCache();
-builder.Services.AddSignalR(); // SignalR-ის რეგისტრაცია
+builder.Services.AddSignalR();
 
 var app = builder.Build();
 
-// მონაცემთა ბაზის ავტომატური მიგრაცია (Render-ზე დაჰოსტვისას ძალიან გამოგადგება)
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
@@ -108,8 +101,6 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 
-// ... (ზედა ნაწილი უცვლელია) ...
-
 app.UseRouting();
 app.UseCors("AllowAll");
 app.UseRateLimiter();
@@ -122,7 +113,6 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
-// Gateway Middleware - დავამატეთ /Home/FilterData გამონაკლისებში
 app.UseWhen(context =>
     !context.Request.Path.StartsWithSegments("/trafficHub") &&
     !context.Request.Path.StartsWithSegments("/Home") &&
