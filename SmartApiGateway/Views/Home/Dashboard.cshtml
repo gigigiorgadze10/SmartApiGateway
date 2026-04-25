@@ -186,6 +186,7 @@
         const trafficLabels = JSON.parse('@Html.Raw(JsonSerializer.Serialize(Model.ChartLabels))');
         const trafficData = JSON.parse('@Html.Raw(JsonSerializer.Serialize(Model.ChartData))');
 
+        // ჩარტების კონფიგურაცია
         const ctxTraffic = document.getElementById('trafficChart').getContext('2d');
         let gradient = ctxTraffic.createLinearGradient(0, 0, 0, 400);
         gradient.addColorStop(0, 'rgba(99, 102, 241, 0.5)');
@@ -204,18 +205,96 @@
         options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { position: 'bottom' } } }
         });
 
+        // --------------------------------------------------------
+        // SignalR LIVE - დინამიური განახლება რეფრეშის გარეშე!
+        // --------------------------------------------------------
         const connection = new signalR.HubConnectionBuilder()
         .withUrl("/trafficHub")
         .withAutomaticReconnect()
         .build();
 
-        connection.on("ReceiveTrafficUpdate", function () {
-        const activeFilter = '@Model.ActiveFilter';
-        if (activeFilter === "1h" || activeFilter === "24h") {
-        window.location.reload();
+        // ვიჭერთ Gateway-დან გამოგზავნილ ლოგს
+        connection.on("ReceiveLog", function (log) {
+            
+        // 1. ვაახლებთ ზედა სტატისტიკის რიცხვებს დინამიურად
+        let totalEl = document.getElementById('statTotal');
+        totalEl.innerText = parseInt(totalEl.innerText) + 1;
+
+        if (log.status >= 200 && log.status < 300) {
+        let el = document.getElementById('statSuccess');
+        el.innerText = parseInt(el.innerText) + 1;
+        statusChart.data.datasets[0].data[0]++;
+        } else if (log.status >= 400 && log.status < 500) {
+        let el = document.getElementById('statClient');
+        el.innerText = parseInt(el.innerText) + 1;
+        statusChart.data.datasets[0].data[1]++;
+        } else if (log.status >= 500) {
+        let el = document.getElementById('statServer');
+        el.innerText = parseInt(el.innerText) + 1;
+        statusChart.data.datasets[0].data[2]++;
+        }
+        statusChart.update(); // დონატ ჩარტის განახლება
+
+        // 2. ვამატებთ ახალ ლოგს "ბოლო მოთხოვნების" ცხრილის თავში
+        // ვიპოვოთ ბოლო მოთხოვნების ცხრილის <tbody> (ის გვერდზე მეორე ცხრილია)
+        const tables = document.querySelectorAll('table');
+        const logsTbody = tables[tables.length - 1].querySelector('tbody');
+
+        if(logsTbody) {
+        const now = new Date();
+        const timeStr = now.toLocaleTimeString('ka-GE', { hour12: false });
+                
+        let methodColor = log.method === "GET" ? "bg-blue-100 text-blue-700" :
+        log.method === "POST" ? "bg-emerald-100 text-emerald-700" :
+        log.method === "PUT" ? "bg-amber-100 text-amber-700" :
+        log.method === "DELETE" ? "bg-red-100 text-red-700" : "bg-slate-100 text-slate-600";
+                                  
+        let statusClass = log.status >= 500 ? "bg-red-100 text-red-700 border-red-200" :
+        log.status >= 400 ? "bg-amber-100 text-amber-700 border-amber-200" :
+        log.status >= 200 && log.status < 300 ? "bg-emerald-100 text-emerald-700 border-emerald-200" : "bg-slate-100 text-slate-600";
+                                  
+        let dotClass = log.status >= 500 ? "bg-red-500" : log.status >= 400 ? "bg-amber-500" : "bg-emerald-500";
+
+        const newRowHTML = `
+        <tr class="transition-colors bg-blue-50/70 hover:bg-slate-50">
+        <td class="p-4 text-sm text-slate-500">${timeStr}</td>
+        <td class="p-4 text-sm font-medium text-slate-700 flex items-center mt-1">
+        <span class="text-[10px] uppercase font-black px-2 py-1 rounded mr-3 ${methodColor} tracking-wider">${log.method}</span>
+        ${log.url}
+        </td>
+        <td class="p-4 text-center">
+        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold shadow-sm border ${statusClass}">
+        <span class="w-1.5 h-1.5 rounded-full mr-2 ${dotClass}"></span>${log.status}
+        </span>
+        </td>
+        <td class="p-4 text-center text-sm font-medium text-slate-600">${log.time} <span class="text-xs text-slate-400">ms</span></td>
+        <td class="p-4 text-sm text-slate-500 font-mono">${log.ipAddress}</td>
+        </tr>
+        `;
+                
+        logsTbody.insertAdjacentHTML('afterbegin', newRowHTML);
+                
+        // თუ ცხრილში 100-ზე მეტი ჩანაწერია, ბოლოს ვშლით
+        if(logsTbody.children.length > 100) {
+        logsTbody.removeChild(logsTbody.lastChild);
+        }
+        }
+
+        // 3. ვაახლებთ ტრაფიკის ხაზოვან ჩარტს
+        if(trafficChart) {
+        const now = new Date();
+        const timeStr = now.toLocaleTimeString('ka-GE', { hour: '2-digit', minute:'2-digit' });
+        trafficChart.data.labels.push(timeStr);
+        trafficChart.data.datasets[0].data.push(log.time);
+                
+        if(trafficChart.data.labels.length > 50) {
+        trafficChart.data.labels.shift();
+        trafficChart.data.datasets[0].data.shift();
+        }
+        trafficChart.update();
         }
         });
 
-        connection.start().then(() => console.log("SignalR Connected!")).catch(err => console.error(err));
+        connection.start().then(() => console.log("SignalR LIVE Connected!")).catch(err => console.error(err));
     </script>
 }
