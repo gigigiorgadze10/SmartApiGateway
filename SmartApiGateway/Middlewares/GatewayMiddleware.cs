@@ -177,6 +177,10 @@ namespace SmartApiGateway.Middlewares
                     continue;
                 if (header.Key.Equals("Host", StringComparison.OrdinalIgnoreCase))
                     continue;
+
+                if (header.Key.Equals("Accept-Encoding", StringComparison.OrdinalIgnoreCase))
+                    continue;
+
                 msg.Headers.TryAddWithoutValidation(header.Key, header.Value.ToArray());
             }
 
