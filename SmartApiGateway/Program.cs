@@ -19,6 +19,7 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
     options.Password.RequireNonAlphanumeric = false;
     options.Password.RequireUppercase = true;
     options.Password.RequireLowercase = true;
+    options.SignIn.RequireConfirmedAccount = false;
 })
 .AddEntityFrameworkStores<ApplicationDbContext>()
 .AddDefaultTokenProviders();
@@ -29,6 +30,8 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.AccessDeniedPath = "/Home/AccessDenied";
     options.SlidingExpiration = true;
     options.ExpireTimeSpan = TimeSpan.FromHours(8);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
 });
 
 builder.Services.AddCors(options =>
@@ -76,19 +79,29 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
-    try
+    var logger = services.GetRequiredService<ILogger<Program>>();
+
+    for (int i = 0; i < 5; i++)
     {
-        var context = services.GetRequiredService<ApplicationDbContext>();
-        if (context.Database.GetPendingMigrations().Any())
+        try
         {
+            var context = services.GetRequiredService<ApplicationDbContext>();
+
+            logger.LogInformation("ბაზის მიგრაციების შემოწმება...");
             context.Database.Migrate();
+
+            logger.LogInformation("სისტემური მონაცემების სიდირება...");
+            await DbSeeder.SeedRolesAndAdminAsync(services);
+
+            logger.LogInformation("ბაზა წარმატებით მომზადდა.");
+            break; 
         }
-        await DbSeeder.SeedRolesAndAdminAsync(services);
-    }
-    catch (Exception ex)
-    {
-        var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "შეცდომა ბაზის მომზადებისას.");
+        catch (Exception ex)
+        {
+            logger.LogError(ex, $"მცდელობა {i + 1}: შეცდომა ბაზის მომზადებისას. 5 წამში ვცდით ხელახლა...");
+            if (i == 4) throw;
+            await Task.Delay(5000);
+        }
     }
 }
 
@@ -100,7 +113,6 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
-
 app.UseRouting();
 app.UseCors("AllowAll");
 app.UseRateLimiter();
@@ -120,7 +132,11 @@ app.UseWhen(context =>
     !context.Request.Path.StartsWithSegments("/Endpoints") &&
     !context.Request.Path.StartsWithSegments("/Users") &&
     !context.Request.Path.StartsWithSegments("/Roles") &&
-    !context.Request.Path.StartsWithSegments("/BlockedIps"),
+    !context.Request.Path.StartsWithSegments("/BlockedIps") &&
+    !context.Request.Path.StartsWithSegments("/Settings") && 
+    !context.Request.Path.StartsWithSegments("/lib") &&     
+    !context.Request.Path.StartsWithSegments("/css") &&
+    !context.Request.Path.StartsWithSegments("/js"),
     appBuilder =>
     {
         appBuilder.UseMiddleware<GatewayMiddleware>();
