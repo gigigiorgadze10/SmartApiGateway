@@ -33,7 +33,7 @@
     {
         <div id="sidebar-overlay" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-40 hidden md:hidden transition-opacity"></div>
 
-        <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 text-slate-300 flex flex-col flex-shrink-0 transform -translate-x-full md:translate-x-0 md:relative transition-transform duration-300 ease-in-out shadow-2xl md:shadow-none">
+        <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 text-slate-300 flex flex-col flex-shrink-0 transform -translate-x-full md:translate-x-0 md:static transition-transform duration-300 ease-in-out shadow-2xl md:shadow-none">
             
             <div class="h-16 flex items-center justify-between px-6 bg-slate-950 border-b border-slate-800">
                 <div class="flex items-center">
@@ -80,7 +80,8 @@
             </div>
         </aside>
 
-        <div class="flex-1 flex flex-col min-w-0 bg-slate-50">
+        <div class="flex-1 flex flex-col min-w-0 bg-slate-50 relative z-10">
+            
             <div class="md:hidden flex items-center justify-between bg-white border-b border-slate-200 p-4 sticky top-0 z-30 shadow-sm">
                 <button id="mobile-menu-btn" class="p-2 -ml-2 text-slate-500 hover:bg-slate-100 rounded-lg transition">
                     <i data-lucide="menu" class="w-6 h-6"></i>
@@ -88,9 +89,10 @@
                 <div class="flex items-center">
                     <span class="text-slate-800 font-bold tracking-wide">Gateway<span class="text-blue-500">OS</span></span>
                 </div>
-                <div class="w-8"></div> </div>
+                <div class="w-8"></div> 
+            </div>
 
-            <header class="hidden md:flex h-16 bg-white border-b border-slate-200 items-center justify-end px-6 z-10 shadow-sm">
+            <header class="hidden md:flex h-16 bg-white border-b border-slate-200 items-center justify-end px-6 z-20 shadow-sm">
                 <div class="flex items-center space-x-4">
                     <div class="flex items-center space-x-3 border-r border-slate-200 pr-4">
                         <div class="text-right hidden sm:block">
