@@ -7,7 +7,6 @@
     var currentUser = await UserManager.GetUserAsync(User);
     var displayUserName = currentUser?.UserName ?? User.Identity?.Name ?? "Guest";
 }
-
 <!DOCTYPE html>
 <html lang="ka">
 <head>
@@ -21,7 +20,6 @@
     
     <style>
         body { font-family: 'Noto Sans Georgian', sans-serif; }
-        /* Custom Scrollbar */
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
@@ -33,12 +31,20 @@
 
     @if (SignInManager.IsSignedIn(User))
     {
-        <aside class="w-64 bg-slate-900 text-slate-300 flex flex-col hidden md:flex flex-shrink-0 transition-all duration-300">
-            <div class="h-16 flex items-center px-6 bg-slate-950 border-b border-slate-800">
-                <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white mr-3 shadow-lg shadow-blue-500/20">
-                    <i data-lucide="network" class="w-5 h-5"></i>
+        <div id="sidebar-overlay" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-40 hidden md:hidden transition-opacity"></div>
+
+        <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 text-slate-300 flex flex-col flex-shrink-0 transform -translate-x-full md:translate-x-0 md:relative transition-transform duration-300 ease-in-out shadow-2xl md:shadow-none">
+            
+            <div class="h-16 flex items-center justify-between px-6 bg-slate-950 border-b border-slate-800">
+                <div class="flex items-center">
+                    <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white mr-3 shadow-lg shadow-blue-500/20">
+                        <i data-lucide="network" class="w-5 h-5"></i>
+                    </div>
+                    <span class="text-white text-lg font-bold tracking-wide">Gateway<span class="text-blue-500">OS</span></span>
                 </div>
-                <span class="text-white text-lg font-bold tracking-wide">Gateway<span class="text-blue-500">OS</span></span>
+                <button id="close-sidebar-btn" class="md:hidden text-slate-400 hover:text-white transition">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
             </div>
 
             <nav class="flex-1 overflow-y-auto py-4 px-3 space-y-1">
@@ -75,18 +81,25 @@
         </aside>
 
         <div class="flex-1 flex flex-col min-w-0 bg-slate-50">
-            <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 z-10 shadow-sm">
+            <div class="md:hidden flex items-center justify-between bg-white border-b border-slate-200 p-4 sticky top-0 z-30 shadow-sm">
+                <button id="mobile-menu-btn" class="p-2 -ml-2 text-slate-500 hover:bg-slate-100 rounded-lg transition">
+                    <i data-lucide="menu" class="w-6 h-6"></i>
+                </button>
                 <div class="flex items-center">
-                    </div>
+                    <span class="text-slate-800 font-bold tracking-wide">Gateway<span class="text-blue-500">OS</span></span>
+                </div>
+                <div class="w-8"></div> </div>
+
+            <header class="hidden md:flex h-16 bg-white border-b border-slate-200 items-center justify-end px-6 z-10 shadow-sm">
                 <div class="flex items-center space-x-4">
                     <div class="flex items-center space-x-3 border-r border-slate-200 pr-4">
                         <div class="text-right hidden sm:block">
-    <p class="text-sm font-bold text-slate-700 leading-none">@displayUserName</p>
-    <p class="text-xs text-slate-400 mt-1">@((User.IsInRole("SuperAdmin")) ? "Super Admin" : "Administrator")</p>
-</div>
-<div class="w-9 h-9 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-500 font-bold uppercase">
-    @(displayUserName.Substring(0, 1).ToUpper())
-</div>
+                            <p class="text-sm font-bold text-slate-700 leading-none">@displayUserName</p>
+                            <p class="text-xs text-slate-400 mt-1">@((User.IsInRole("SuperAdmin")) ? "Super Admin" : "Administrator")</p>
+                        </div>
+                        <div class="w-9 h-9 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-500 font-bold uppercase">
+                            @(displayUserName.Substring(0, 1).ToUpper())
+                        </div>
                     </div>
                     <form method="post" asp-controller="Account" asp-action="Logout" class="m-0">
                         <button type="submit" class="text-slate-500 hover:text-red-500 transition p-2 rounded-lg hover:bg-red-50 flex items-center" title="გასვლა">
@@ -95,6 +108,20 @@
                     </form>
                 </div>
             </header>
+
+            <div class="md:hidden flex justify-between items-center p-4 bg-white border-b border-slate-200">
+                <div class="flex items-center space-x-3">
+                    <div class="w-8 h-8 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-500 font-bold uppercase">
+                        @(displayUserName.Substring(0, 1).ToUpper())
+                    </div>
+                    <span class="text-sm font-bold text-slate-700">@displayUserName</span>
+                </div>
+                <form method="post" asp-controller="Account" asp-action="Logout" class="m-0">
+                    <button type="submit" class="text-slate-500 hover:text-red-500 transition p-2 rounded-lg hover:bg-red-50 flex items-center">
+                        <i data-lucide="log-out" class="w-5 h-5"></i>
+                    </button>
+                </form>
+            </div>
 
             <main class="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
                 @RenderBody()
@@ -109,9 +136,28 @@
     }
 
     @await RenderSectionAsync("Scripts", required: false)
+    
     <script>
-        // აიკონების გააქტიურება
         if (typeof lucide !== 'undefined') { lucide.createIcons(); }
+
+        // ბურგერ მენიუს ლოგიკა
+        document.addEventListener("DOMContentLoaded", function () {
+            const sidebar = document.getElementById('sidebar');
+            const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+            const closeSidebarBtn = document.getElementById('close-sidebar-btn');
+            const overlay = document.getElementById('sidebar-overlay');
+
+            if (sidebar && mobileMenuBtn) {
+                function toggleSidebar() {
+                    sidebar.classList.toggle('-translate-x-full');
+                    overlay.classList.toggle('hidden');
+                }
+
+                mobileMenuBtn.addEventListener('click', toggleSidebar);
+                if (closeSidebarBtn) closeSidebarBtn.addEventListener('click', toggleSidebar);
+                if (overlay) overlay.addEventListener('click', toggleSidebar);
+            }
+        });
     </script>
 </body>
 </html>

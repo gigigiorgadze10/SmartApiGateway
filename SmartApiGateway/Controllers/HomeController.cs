@@ -31,14 +31,17 @@ namespace SmartApiGateway.Controllers
         {
             var query = _context.TrafficLogs.AsQueryable();
 
-            // 1. დროის ფილტრაცია
-            DateTime cutoff = DateTime.UtcNow.AddHours(-24);
-            if (filter == "1h") cutoff = DateTime.UtcNow.AddHours(-1);
-            else if (filter == "7d") cutoff = DateTime.UtcNow.AddDays(-7);
-            else if (filter == "30d") cutoff = DateTime.UtcNow.AddDays(-30);
-            else filter = "24h";
+            // 1. დროის ფილტრაცია (დამატებულია "all" მხარდაჭერა)
+            if (filter != "all")
+            {
+                DateTime cutoff = DateTime.UtcNow.AddHours(-24);
+                if (filter == "1h") cutoff = DateTime.UtcNow.AddHours(-1);
+                else if (filter == "7d") cutoff = DateTime.UtcNow.AddDays(-7);
+                else if (filter == "30d") cutoff = DateTime.UtcNow.AddDays(-30);
+                else filter = "24h";
 
-            query = query.Where(t => t.CreatedAt >= cutoff);
+                query = query.Where(t => t.CreatedAt >= cutoff);
+            }
 
             // 2. ძირითადი სტატისტიკა ფილტრის მიხედვით
             var totalRequests = await query.CountAsync();
@@ -48,12 +51,12 @@ namespace SmartApiGateway.Controllers
             // 3. ბოლო 20 მოთხოვნა ცხრილისთვის
             var recentLogs = await query.OrderByDescending(t => t.CreatedAt).Take(20).ToListAsync();
 
-            // 4. ისტორიული მონაცემები ხაზოვანი ჩარტისთვის (ვიღებთ ბოლო 50 წერტილს ქრონოლოგიურად)
+            // 4. ისტორიული მონაცემები ხაზოვანი ჩარტისთვის
             var chartLogs = recentLogs.OrderBy(t => t.CreatedAt).ToList();
             var chartLabels = chartLogs.Select(t => t.CreatedAt.ToLocalTime().ToString("HH:mm")).ToList();
             var chartData = chartLogs.Select(t => t.ResponseTimeMs).ToList();
 
-            // 5. სტატუს კოდების გადანაწილება (გამოყოფილი 4xx და 5xx)
+            // 5. სტატუს კოდების გადანაწილება
             var success = await query.CountAsync(t => t.StatusCode >= 200 && t.StatusCode < 300);
             var clientErr = await query.CountAsync(t => t.StatusCode >= 400 && t.StatusCode < 500);
             var serverErr = await query.CountAsync(t => t.StatusCode >= 500);
@@ -65,6 +68,20 @@ namespace SmartApiGateway.Controllers
                 .Take(5)
                 .Select(g => new { Ip = g.Key, Count = g.Count() })
                 .ToDictionaryAsync(k => k.Ip, v => v.Count);
+
+            // 7. ენდპოინტების სტატისტიკა (ახალი)
+            var endpointStats = await query
+                .GroupBy(t => t.RequestedUrl)
+                .Select(g => new EndpointStat
+                {
+                    Path = g.Key,
+                    SuccessCount = g.Count(t => t.StatusCode >= 200 && t.StatusCode < 300),
+                    ErrorCount = g.Count(t => t.StatusCode >= 400),
+                    TotalCount = g.Count()
+                })
+                .OrderByDescending(e => e.TotalCount)
+                .Take(10) // ტოპ 10 ენდპოინტი
+                .ToListAsync();
 
             var model = new DashboardViewModel
             {
@@ -78,7 +95,8 @@ namespace SmartApiGateway.Controllers
                 SuccessCount = success,
                 ClientErrorCount = clientErr,
                 ServerErrorCount = serverErr,
-                TopIps = topIps
+                TopIps = topIps,
+                EndpointStats = endpointStats // დამატებული 
             };
 
             return View(model);

@@ -4,19 +4,15 @@
     ViewData["Title"] = "სტატისტიკა";
 }
 
-<div class="mb-6 flex justify-between items-center bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
+<div class="mb-6 flex flex-col sm:flex-row sm:justify-between sm:items-center bg-white p-4 rounded-2xl shadow-sm border border-slate-100 gap-4">
     <h2 class="text-xl font-bold text-slate-800">Overview</h2>
-    <div class="flex items-center space-x-3">
-        <span class="text-sm font-medium text-slate-500">გაფილტრე:</span>
-        <input type="datetime-local" id="filterStartDate" class="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
-        <span class="text-slate-400">-</span>
-        <input type="datetime-local" id="filterEndDate" class="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none" />
-        <button id="btnFilter" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-md shadow-indigo-500/30 transition">
-            გაფილტვრა
-        </button>
-        <button id="btnClearFilter" class="bg-slate-100 hover:bg-slate-200 text-slate-600 px-4 py-2 rounded-lg text-sm font-bold transition">
-            გასუფთავება
-        </button>
+    
+    <div class="flex flex-wrap gap-2">
+        <a href="?filter=1h" class="px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 @(Model.ActiveFilter == "1h" ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/30" : "bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200")">1 საათი</a>
+        <a href="?filter=24h" class="px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 @(Model.ActiveFilter == "24h" ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/30" : "bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200")">24 საათი</a>
+        <a href="?filter=7d" class="px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 @(Model.ActiveFilter == "7d" ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/30" : "bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200")">7 დღე</a>
+        <a href="?filter=30d" class="px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 @(Model.ActiveFilter == "30d" ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/30" : "bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200")">30 დღე</a>
+        <a href="?filter=all" class="px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 @(Model.ActiveFilter == "all" ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/30" : "bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200")">All Time</a>
     </div>
 </div>
 
@@ -39,7 +35,7 @@
     </div>
 </div>
 
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
     <div class="lg:col-span-2 bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
         <h3 class="text-lg font-bold text-slate-800 mb-6 flex items-center">
             <i data-lucide="trending-up" class="w-5 h-5 text-indigo-500 mr-2"></i> ტრაფიკის დინამიკა
@@ -72,11 +68,50 @@
     </div>
 </div>
 
+<div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 mb-8">
+    <h3 class="text-lg font-bold text-slate-800 mb-6 flex items-center">
+        <i data-lucide="route" class="w-5 h-5 text-blue-500 mr-2"></i> ენდპოინტების აქტივობა (Top 10)
+    </h3>
+    <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+            <thead>
+                <tr class="bg-slate-50 text-slate-500 text-sm border-b border-slate-100">
+                    <th class="p-4 font-semibold rounded-tl-xl">მარშრუტი (Path)</th>
+                    <th class="p-4 font-semibold text-center">სულ მოთხოვნა</th>
+                    <th class="p-4 font-semibold text-center">წარმატებული</th>
+                    <th class="p-4 font-semibold text-center rounded-tr-xl">წარუმატებელი</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-50">
+                @foreach (var stat in Model.EndpointStats)
+                {
+                    <tr class="hover:bg-slate-50/80 transition-colors">
+                        <td class="p-4 text-sm font-medium text-slate-700 flex items-center">
+                            <span class="w-2 h-2 rounded-full mr-3 @(stat.ErrorCount > 0 ? "bg-red-500" : "bg-emerald-500")"></span>
+                            @stat.Path
+                        </td>
+                        <td class="p-4 text-sm text-center font-bold text-slate-700">@stat.TotalCount</td>
+                        <td class="p-4 text-center">
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700">
+                                @stat.SuccessCount
+                            </span>
+                        </td>
+                        <td class="p-4 text-center">
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold @(stat.ErrorCount > 0 ? "bg-red-100 text-red-700" : "bg-slate-100 text-slate-500")">
+                                @stat.ErrorCount
+                            </span>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.js"></script>
     <script>
-        // ჩარტების ინიციალიზაცია
         const trafficLabels = JSON.parse('@Html.Raw(JsonSerializer.Serialize(Model.ChartLabels))');
         const trafficData = JSON.parse('@Html.Raw(JsonSerializer.Serialize(Model.ChartData))');
 
@@ -98,67 +133,19 @@
         options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { position: 'bottom' } } }
         });
 
-        // მონაცემების განახლების ფუნქცია
-        async function refreshData() {
-        const start = document.getElementById('filterStartDate').value;
-        const end = document.getElementById('filterEndDate').value;
-        let url = '/Home/FilterData';
-        if (start || end) url += `?start=${start}&end=${end}`;
-            
-        try {
-        const response = await fetch(url);
-        if (response.ok) {
-        const data = await response.json();
-        updateDashboardUI(data);
-        }
-        } catch (err) {
-        console.error("Error fetching updates:", err);
-        }
-        }
-
-        function updateDashboardUI(data) {
-        document.getElementById('statTotal').innerText = data.totalRequests;
-        document.getElementById('statSuccess').innerText = data.successCount;
-        document.getElementById('statClient').innerText = data.clientErrorCount;
-        document.getElementById('statServer').innerText = data.serverErrorCount;
-
-        trafficChart.data.labels = data.chartLabels;
-        trafficChart.data.datasets[0].data = data.chartData;
-        trafficChart.update('none'); // 'none' აჩქარებს განახლებას ანიმაციის გარეშე
-
-        statusChart.data.datasets[0].data = [data.successCount, data.clientErrorCount, data.serverErrorCount];
-        statusChart.update('none');
-
-        const topIpsContainer = document.getElementById('topIpsContainer');
-        topIpsContainer.innerHTML = '';
-        for (const [ip, count] of Object.entries(data.topIps)) {
-        topIpsContainer.innerHTML += `
-        <div class="flex justify-between items-center bg-slate-50 p-3 rounded-xl border border-slate-100">
-        <span class="font-mono text-sm text-slate-700 font-medium">${ip}</span>
-        <span class="bg-indigo-100 text-indigo-700 py-1 px-3 rounded-full text-xs font-bold">${count} Req</span>
-        </div>`;
-        }
-        }
-
-        document.getElementById('btnFilter').addEventListener('click', refreshData);
-
-        document.getElementById('btnClearFilter').addEventListener('click', () => {
-        document.getElementById('filterStartDate').value = '';
-        document.getElementById('filterEndDate').value = '';
-        refreshData();
-        });
-
-        // SignalR LIVE - ავტომატური რე reconnect-ით
+        // SignalR LIVE - ვაკეთებთ რეფრეშს ახალი ტრაფიკის შემოსვლისას (მხოლოდ მაშინ თუ დღევანდელზე ვართ)
         const connection = new signalR.HubConnectionBuilder()
         .withUrl("/trafficHub")
         .withAutomaticReconnect()
         .build();
 
         connection.on("ReceiveTrafficUpdate", function () {
-        // მხოლოდ იმ შემთხვევაში ვაახლებთ, თუ მომხმარებელს ფილტრი არ აქვს ჩართული
-        const isFiltering = document.getElementById('filterStartDate').value || document.getElementById('filterEndDate').value;
-        if (!isFiltering) {
-        refreshData();
+        // თუ მომხმარებელი "1h" ან "24h" ფილტრზეა, გვერდი ავტომატურად განახლდება (რბილად)
+        const activeFilter = '@Model.ActiveFilter';
+        if (activeFilter === "1h" || activeFilter === "24h") {
+        // რადგან Custom API ფეჩი ამოვიღეთ, შეგვიძლია უბრალოდ ტოტალ რიცხვები გავზარდოთ კლიენტზე,
+        // ან პატარა შეტყობინება ვაჩვენოთ. სიმარტივისთვის გვერდს ვარეფრეშებთ.
+        window.location.reload();
         }
         });
 

@@ -9,19 +9,27 @@ namespace SmartApiGateway.Models
         public double AverageResponseTime { get; set; }
         public List<TrafficLog> RecentLogs { get; set; } = new();
 
-        // ახალი: ფილტრი
         public string ActiveFilter { get; set; } = "24h";
 
-        // ახალი: ჩარტების ისტორიული მონაცემები
         public List<string> ChartLabels { get; set; } = new();
         public List<long> ChartData { get; set; } = new();
 
-        // ახალი: გამოყოფილი სტატუს კოდები
-        public int SuccessCount { get; set; } // 2xx
-        public int ClientErrorCount { get; set; } // 4xx (მაგ: 404, 403, 429)
-        public int ServerErrorCount { get; set; } // 5xx (მაგ: 500, 502)
+        public int SuccessCount { get; set; }
+        public int ClientErrorCount { get; set; }
+        public int ServerErrorCount { get; set; }
 
-        // ახალი: Top IP-ების სტატისტიკა
         public Dictionary<string, int> TopIps { get; set; } = new();
+
+        // ახალი: ენდპოინტების სტატისტიკა
+        public List<EndpointStat> EndpointStats { get; set; } = new();
+    }
+
+    // დამხმარე კლასი ენდპოინტებისთვის
+    public class EndpointStat
+    {
+        public string Path { get; set; } = string.Empty;
+        public int SuccessCount { get; set; }
+        public int ErrorCount { get; set; }
+        public int TotalCount { get; set; }
     }
 }
