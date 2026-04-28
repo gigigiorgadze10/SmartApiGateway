@@ -1,6 +1,7 @@
 ﻿@using Microsoft.AspNetCore.Identity
 @using SmartApiGateway.Data
-@using System.Security.Claims  
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Localization
 @inject SignInManager<ApplicationUser> SignInManager
 @inject UserManager<ApplicationUser> UserManager
 
@@ -12,9 +13,19 @@
     {
         return User.IsInRole("SuperAdmin") || User.HasClaim(c => c.Type == "Permission" && c.Value == permissionValue);
     }
+
+    // --- დამატებული ლოგიკა ორენოვნებისთვის ---
+    var requestCulture = Context.Features.Get<IRequestCultureFeature>();
+    bool isEnglish = requestCulture?.RequestCulture.UICulture.Name == "en";
+
+    string Translate(string ka, string en)
+    {
+        return isEnglish ? en : ka;
+    }
+    // ----------------------------------------
 }
 <!DOCTYPE html>
-<html lang="ka">
+<html lang="@(isEnglish ? "en" : "ka")">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -56,36 +67,36 @@
             <nav class="flex-1 overflow-y-auto py-4 px-3 space-y-1">
                 @if (HasPermission("ViewDashboard"))
                 {
-                    <p class="px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 mt-4">მონიტორინგი</p>
+                    <p class="px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 mt-4">@Translate("მონიტორინგი", "Monitoring")</p>
                     <a href="/Home/Dashboard" class="flex items-center px-3 py-2.5 rounded-lg hover:bg-slate-800 hover:text-white transition group @(ViewContext.RouteData.Values["Action"]?.ToString() == "Dashboard" ? "bg-blue-600 text-white shadow-md shadow-blue-900/20" : "")">
-                        <i data-lucide="layout-dashboard" class="w-5 h-5 mr-3 group-hover:scale-110 transition-transform"></i> მთავარი
+                        <i data-lucide="layout-dashboard" class="w-5 h-5 mr-3 group-hover:scale-110 transition-transform"></i> @Translate("მთავარი", "Dashboard")
                     </a>
                 }
 
                 @if (HasPermission("ManageEndpoints"))
                 {
-                    <p class="px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 mt-6">მართვა</p>
+                    <p class="px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 mt-6">@Translate("მართვა", "Management")</p>
                     <a href="/Endpoints" class="flex items-center px-3 py-2.5 rounded-lg hover:bg-slate-800 hover:text-white transition group @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Endpoints" ? "bg-slate-800 text-white" : "")">
-                        <i data-lucide="route" class="w-5 h-5 mr-3 group-hover:scale-110 transition-transform text-green-400"></i> მარშრუტები
+                        <i data-lucide="route" class="w-5 h-5 mr-3 group-hover:scale-110 transition-transform text-green-400"></i> @Translate("მარშრუტები", "Endpoints")
                     </a>
                     <a href="/BlockedIps" class="flex items-center px-3 py-2.5 rounded-lg hover:bg-slate-800 hover:text-white transition group @(ViewContext.RouteData.Values["Controller"]?.ToString() == "BlockedIps" ? "bg-slate-800 text-white" : "")">
-                        <i data-lucide="shield-ban" class="w-5 h-5 mr-3 group-hover:scale-110 transition-transform text-red-400"></i> დაბლოკილი IP
+                        <i data-lucide="shield-ban" class="w-5 h-5 mr-3 group-hover:scale-110 transition-transform text-red-400"></i> @Translate("დაბლოკილი IP", "Blocked IPs")
                     </a>
                 }
 
                 @if (HasPermission("ManageUsers") || HasPermission("ManageRoles"))
                 {
-                    <p class="px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 mt-6">სისტემა</p>
+                    <p class="px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 mt-6">@Translate("სისტემა", "System")</p>
                     @if (HasPermission("ManageUsers"))
                     {
                         <a href="/Users" class="flex items-center px-3 py-2.5 rounded-lg hover:bg-slate-800 hover:text-white transition group @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Users" ? "bg-slate-800 text-white" : "")">
-                            <i data-lucide="users" class="w-5 h-5 mr-3 group-hover:scale-110 transition-transform text-blue-400"></i> მომხმარებლები
+                            <i data-lucide="users" class="w-5 h-5 mr-3 group-hover:scale-110 transition-transform text-blue-400"></i> @Translate("მომხმარებლები", "Users")
                         </a>
                     }
                     @if (HasPermission("ManageRoles"))
                     {
                         <a href="/Roles" class="flex items-center px-3 py-2.5 rounded-lg hover:bg-slate-800 hover:text-white transition group @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Roles" ? "bg-slate-800 text-white" : "")">
-                            <i data-lucide="key" class="w-5 h-5 mr-3 group-hover:scale-110 transition-transform text-amber-400"></i> როლები
+                            <i data-lucide="key" class="w-5 h-5 mr-3 group-hover:scale-110 transition-transform text-amber-400"></i> @Translate("როლები", "Roles")
                         </a>
                     }
                 }
@@ -93,7 +104,7 @@
 
             <div class="p-4 border-t border-slate-800">
                 <a href="/Settings" class="flex items-center px-3 py-2.5 rounded-lg hover:bg-slate-800 hover:text-white transition group">
-                    <i data-lucide="settings" class="w-5 h-5 mr-3 group-hover:rotate-90 transition-transform"></i> პარამეტრები
+                    <i data-lucide="settings" class="w-5 h-5 mr-3 group-hover:rotate-90 transition-transform"></i> @Translate("პარამეტრები", "Settings")
                 </a>
             </div>
         </aside>
@@ -111,6 +122,23 @@
             </div>
 
             <header class="hidden md:flex h-16 bg-white border-b border-slate-200 items-center justify-end px-6 z-20 shadow-sm">
+                
+                <div class="flex items-center space-x-4 mr-4 pr-4 border-r border-slate-200">
+                    <form id="langForm" asp-controller="Home" asp-action="SetLanguage" method="post" class="m-0 flex items-center">
+                        <input type="hidden" name="returnUrl" value="@Context.Request.Path" />
+                        <i data-lucide="globe" class="w-4 h-4 text-slate-400 mr-2"></i>
+                        <select name="culture" onchange="document.getElementById('langForm').submit();" class="bg-transparent text-sm font-semibold text-slate-600 focus:outline-none cursor-pointer">
+                            @if(isEnglish){
+                                <option value="ka">🇬🇪 KA</option>
+                                <option value="en" selected>🇬🇧 EN</option>
+                            }else{
+                                <option value="ka" selected>🇬🇪 KA</option>
+                                <option value="en">🇬🇧 EN</option>
+                            }
+                        </select>
+                    </form>
+                </div>
+
                 <div class="flex items-center space-x-4">
                     <div class="flex items-center space-x-3 border-r border-slate-200 pr-4">
                         <div class="text-right hidden sm:block">
@@ -122,26 +150,12 @@
                         </div>
                     </div>
                     <form method="post" asp-controller="Account" asp-action="Logout" class="m-0">
-                        <button type="submit" class="text-slate-500 hover:text-red-500 transition p-2 rounded-lg hover:bg-red-50 flex items-center" title="გასვლა">
+                        <button type="submit" class="text-slate-500 hover:text-red-500 transition p-2 rounded-lg hover:bg-red-50 flex items-center" title="@Translate("გასვლა", "Logout")">
                             <i data-lucide="log-out" class="w-5 h-5"></i>
                         </button>
                     </form>
                 </div>
             </header>
-
-            <div class="md:hidden flex justify-between items-center p-4 bg-white border-b border-slate-200">
-                <div class="flex items-center space-x-3">
-                    <div class="w-8 h-8 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-500 font-bold uppercase">
-                        @(displayUserName.Substring(0, 1).ToUpper())
-                    </div>
-                    <span class="text-sm font-bold text-slate-700">@displayUserName</span>
-                </div>
-                <form method="post" asp-controller="Account" asp-action="Logout" class="m-0">
-                    <button type="submit" class="text-slate-500 hover:text-red-500 transition p-2 rounded-lg hover:bg-red-50 flex items-center">
-                        <i data-lucide="log-out" class="w-5 h-5"></i>
-                    </button>
-                </form>
-            </div>
 
             <main class="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
                 @RenderBody()

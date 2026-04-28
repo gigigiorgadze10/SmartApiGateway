@@ -121,6 +121,12 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
+var supportedCultures = new[] { "ka", "en" };
+var localizationOptions = new RequestLocalizationOptions()
+    .SetDefaultCulture("ka")
+    .AddSupportedCultures(supportedCultures)
+    .AddSupportedUICultures(supportedCultures);
+app.UseRequestLocalization(localizationOptions);
 app.UseRouting();
 app.UseCors("AllowAll");
 app.UseRateLimiter();
