@@ -6,6 +6,11 @@
 @{
     var currentUser = await UserManager.GetUserAsync(User);
     var displayUserName = currentUser?.UserName ?? User.Identity?.Name ?? "Guest";
+
+    bool HasPermission(string permissionValue)
+    {
+        return User.IsInRole("SuperAdmin") || User.HasClaim(c => c.Type == "Permission" && c.Value == permissionValue);
+    }
 }
 <!DOCTYPE html>
 <html lang="ka">
@@ -48,28 +53,40 @@
             </div>
 
             <nav class="flex-1 overflow-y-auto py-4 px-3 space-y-1">
-                <p class="px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 mt-4">მონიტორინგი</p>
-                <a href="/Home/Dashboard" class="flex items-center px-3 py-2.5 rounded-lg hover:bg-slate-800 hover:text-white transition group @(ViewContext.RouteData.Values["Action"]?.ToString() == "Dashboard" ? "bg-blue-600 text-white shadow-md shadow-blue-900/20" : "")">
-                    <i data-lucide="layout-dashboard" class="w-5 h-5 mr-3 group-hover:scale-110 transition-transform"></i> მთავარი
-                </a>
+                @if (HasPermission("ViewDashboard"))
+                {
+                    <p class="px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 mt-4">მონიტორინგი</p>
+                    <a href="/Home/Dashboard" class="flex items-center px-3 py-2.5 rounded-lg hover:bg-slate-800 hover:text-white transition group @(ViewContext.RouteData.Values["Action"]?.ToString() == "Dashboard" ? "bg-blue-600 text-white shadow-md shadow-blue-900/20" : "")">
+                        <i data-lucide="layout-dashboard" class="w-5 h-5 mr-3 group-hover:scale-110 transition-transform"></i> მთავარი
+                    </a>
+                }
 
-                <p class="px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 mt-6">მართვა</p>
-                <a href="/Endpoints" class="flex items-center px-3 py-2.5 rounded-lg hover:bg-slate-800 hover:text-white transition group @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Endpoints" ? "bg-slate-800 text-white" : "")">
-                    <i data-lucide="route" class="w-5 h-5 mr-3 group-hover:scale-110 transition-transform text-green-400"></i> მარშრუტები
-                </a>
-                <a href="/BlockedIps" class="flex items-center px-3 py-2.5 rounded-lg hover:bg-slate-800 hover:text-white transition group @(ViewContext.RouteData.Values["Controller"]?.ToString() == "BlockedIps" ? "bg-slate-800 text-white" : "")">
-                    <i data-lucide="shield-ban" class="w-5 h-5 mr-3 group-hover:scale-110 transition-transform text-red-400"></i> დაბლოკილი IP
-                </a>
+                @if (HasPermission("ManageEndpoints"))
+                {
+                    <p class="px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 mt-6">მართვა</p>
+                    <a href="/Endpoints" class="flex items-center px-3 py-2.5 rounded-lg hover:bg-slate-800 hover:text-white transition group @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Endpoints" ? "bg-slate-800 text-white" : "")">
+                        <i data-lucide="route" class="w-5 h-5 mr-3 group-hover:scale-110 transition-transform text-green-400"></i> მარშრუტები
+                    </a>
+                    <a href="/BlockedIps" class="flex items-center px-3 py-2.5 rounded-lg hover:bg-slate-800 hover:text-white transition group @(ViewContext.RouteData.Values["Controller"]?.ToString() == "BlockedIps" ? "bg-slate-800 text-white" : "")">
+                        <i data-lucide="shield-ban" class="w-5 h-5 mr-3 group-hover:scale-110 transition-transform text-red-400"></i> დაბლოკილი IP
+                    </a>
+                }
 
-                @if (User.IsInRole("SuperAdmin"))
+                @if (HasPermission("ManageUsers") || HasPermission("ManageRoles"))
                 {
                     <p class="px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 mt-6">სისტემა</p>
-                    <a href="/Users" class="flex items-center px-3 py-2.5 rounded-lg hover:bg-slate-800 hover:text-white transition group @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Users" ? "bg-slate-800 text-white" : "")">
-                        <i data-lucide="users" class="w-5 h-5 mr-3 group-hover:scale-110 transition-transform text-blue-400"></i> მომხმარებლები
-                    </a>
-                    <a href="/Roles" class="flex items-center px-3 py-2.5 rounded-lg hover:bg-slate-800 hover:text-white transition group @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Roles" ? "bg-slate-800 text-white" : "")">
-                        <i data-lucide="key" class="w-5 h-5 mr-3 group-hover:scale-110 transition-transform text-amber-400"></i> როლები
-                    </a>
+                    @if (HasPermission("ManageUsers"))
+                    {
+                        <a href="/Users" class="flex items-center px-3 py-2.5 rounded-lg hover:bg-slate-800 hover:text-white transition group @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Users" ? "bg-slate-800 text-white" : "")">
+                            <i data-lucide="users" class="w-5 h-5 mr-3 group-hover:scale-110 transition-transform text-blue-400"></i> მომხმარებლები
+                        </a>
+                    }
+                    @if (HasPermission("ManageRoles"))
+                    {
+                        <a href="/Roles" class="flex items-center px-3 py-2.5 rounded-lg hover:bg-slate-800 hover:text-white transition group @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Roles" ? "bg-slate-800 text-white" : "")">
+                            <i data-lucide="key" class="w-5 h-5 mr-3 group-hover:scale-110 transition-transform text-amber-400"></i> როლები
+                        </a>
+                    }
                 }
             </nav>
 
@@ -97,7 +114,7 @@
                     <div class="flex items-center space-x-3 border-r border-slate-200 pr-4">
                         <div class="text-right hidden sm:block">
                             <p class="text-sm font-bold text-slate-700 leading-none">@displayUserName</p>
-                            <p class="text-xs text-slate-400 mt-1">@((User.IsInRole("SuperAdmin")) ? "Super Admin" : "Administrator")</p>
+                            <p class="text-xs text-slate-400 mt-1">@(User.IsInRole("SuperAdmin") ? "Super Admin" : string.Join(", ", User.Claims.Where(c => c.Type == ClaimTypes.Role).Select(c => c.Value)))</p>
                         </div>
                         <div class="w-9 h-9 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-500 font-bold uppercase">
                             @(displayUserName.Substring(0, 1).ToUpper())
