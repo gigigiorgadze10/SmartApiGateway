@@ -15,7 +15,7 @@
         </span>
         @T("სისტემის როლები", "System Roles")
     </h1>
-    <button onclick="openCreateModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-indigo-600/30 transition duration-200 flex items-center">
+    <button type="button" onclick="openModal('createModal')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-indigo-600/30 transition duration-200 flex items-center">
         <i data-lucide="plus" class="w-5 h-5 mr-2"></i> @T("ახალი როლი", "New Role")
     </button>
 </div>
@@ -43,15 +43,12 @@
                 @if (!isSuperAdmin)
                 {
                     <div class="flex space-x-2">
-                        <button onclick="openEditModal('@role.Id', '@role.Name')" class="flex-1 flex items-center justify-center bg-amber-50 hover:bg-amber-100 text-amber-600 font-bold py-2.5 rounded-xl transition">
+                        <button type="button" onclick="openEditModal('@role.Id', '@role.Name')" class="flex-1 flex items-center justify-center bg-amber-50 hover:bg-amber-100 text-amber-600 font-bold py-2.5 rounded-xl transition">
                             <i data-lucide="edit" class="w-4 h-4 mr-2"></i> @T("შეცვლა", "Edit")
                         </button>
-                        <form asp-action="Delete" method="post" class="flex-1" id="delete-form-@role.Id">
-                            <input type="hidden" name="id" value="@role.Id" />
-                            <button type="button" onclick="confirmDelete('@role.Id')" class="w-full flex items-center justify-center bg-red-50 hover:bg-red-100 text-red-600 font-bold py-2.5 rounded-xl transition">
-                                <i data-lucide="trash-2" class="w-4 h-4 mr-2"></i> @T("წაშლა", "Delete")
-                            </button>
-                        </form>
+                        <button type="button" onclick="openDeleteModal('@role.Id', '@role.Name')" class="flex-1 flex items-center justify-center bg-red-50 hover:bg-red-100 text-red-600 font-bold py-2.5 rounded-xl transition">
+                            <i data-lucide="trash-2" class="w-4 h-4 mr-2"></i> @T("წაშლა", "Delete")
+                        </button>
                     </div>
                 }
             </div>
@@ -59,86 +56,179 @@
     }
 </div>
 
-<form id="createForm" asp-action="Create" method="post" class="hidden">
-    <input type="hidden" id="createRoleName" name="roleName" />
-</form>
 
-<form id="editForm" asp-action="Edit" method="post" class="hidden">
-    <input type="hidden" id="editRoleId" name="id" />
-    <input type="hidden" id="editRoleName" name="newName" />
-</form>
+<div id="createModal" class="fixed inset-0 z-[100] hidden" aria-modal="true" role="dialog">
+    <div class="modal-backdrop fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity opacity-0 cursor-pointer" onclick="closeModal('createModal')"></div>
+    <div class="fixed inset-0 z-10 overflow-y-auto pointer-events-none">
+        <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
+            <div class="modal-panel relative transform overflow-hidden rounded-3xl bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-md border border-slate-100 opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95 pointer-events-auto">
+                <form asp-action="Create" method="post">
+                    <div class="bg-slate-50 border-b border-slate-100 px-6 py-4 flex items-center justify-between">
+                        <h3 class="text-lg font-bold text-slate-800 flex items-center">
+                            <span class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 inline-flex items-center justify-center mr-3">
+                                <i data-lucide="shield-plus" class="w-4 h-4"></i>
+                            </span>
+                            @T("ახალი როლი", "New Role")
+                        </h3>
+                        <button type="button" class="text-slate-400 hover:text-slate-600 hover:bg-slate-200/50 p-2 rounded-lg transition" onclick="closeModal('createModal')">
+                            <i data-lucide="x" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+                    <div class="px-6 py-6">
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">@T("როლის სახელი", "Role Name")</label>
+                        <input type="text" name="roleName" required class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition text-sm" placeholder="@T("შეიყვანეთ სახელი...", "Enter name...")" />
+                    </div>
+                    <div class="bg-slate-50 border-t border-slate-100 px-6 py-4 flex flex-col-reverse sm:flex-row sm:justify-end gap-2 sm:gap-3">
+                        <button type="button" class="w-full sm:w-auto px-5 py-2.5 rounded-xl text-sm font-bold text-slate-600 bg-white border border-slate-200 hover:bg-slate-100 transition shadow-sm" onclick="closeModal('createModal')">
+                            @T("გაუქმება", "Cancel")
+                        </button>
+                        <button type="submit" class="w-full sm:w-auto px-5 py-2.5 rounded-xl text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 transition shadow-md shadow-indigo-600/30">
+                            @T("შენახვა", "Save")
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div id="editModal" class="fixed inset-0 z-[100] hidden" aria-modal="true" role="dialog">
+    <div class="modal-backdrop fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity opacity-0 cursor-pointer" onclick="closeModal('editModal')"></div>
+    <div class="fixed inset-0 z-10 overflow-y-auto pointer-events-none">
+        <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
+            <div class="modal-panel relative transform overflow-hidden rounded-3xl bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-md border border-slate-100 opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95 pointer-events-auto">
+                <form asp-action="Edit" method="post">
+                    <input type="hidden" id="editRoleId" name="id" />
+                    <div class="bg-slate-50 border-b border-slate-100 px-6 py-4 flex items-center justify-between">
+                        <h3 class="text-lg font-bold text-slate-800 flex items-center">
+                            <span class="w-8 h-8 rounded-full bg-amber-100 text-amber-600 inline-flex items-center justify-center mr-3">
+                                <i data-lucide="edit-2" class="w-4 h-4"></i>
+                            </span>
+                            @T("როლის რედაქტირება", "Edit Role")
+                        </h3>
+                        <button type="button" class="text-slate-400 hover:text-slate-600 hover:bg-slate-200/50 p-2 rounded-lg transition" onclick="closeModal('editModal')">
+                            <i data-lucide="x" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+                    <div class="px-6 py-6">
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">@T("ახალი სახელი", "New Name")</label>
+                        <input type="text" name="newName" id="editRoleName" required class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-amber-500 outline-none transition text-sm" />
+                    </div>
+                    <div class="bg-slate-50 border-t border-slate-100 px-6 py-4 flex flex-col-reverse sm:flex-row sm:justify-end gap-2 sm:gap-3">
+                        <button type="button" class="w-full sm:w-auto px-5 py-2.5 rounded-xl text-sm font-bold text-slate-600 bg-white border border-slate-200 hover:bg-slate-100 transition shadow-sm" onclick="closeModal('editModal')">
+                            @T("გაუქმება", "Cancel")
+                        </button>
+                        <button type="submit" class="w-full sm:w-auto px-5 py-2.5 rounded-xl text-sm font-bold text-white bg-amber-500 hover:bg-amber-600 transition shadow-md shadow-amber-500/30">
+                            @T("განახლება", "Update")
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div id="deleteModal" class="fixed inset-0 z-[100] hidden" aria-modal="true" role="dialog">
+    <div class="modal-backdrop fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity opacity-0 cursor-pointer" onclick="closeModal('deleteModal')"></div>
+    <div class="fixed inset-0 z-10 overflow-y-auto pointer-events-none">
+        <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
+            <div class="modal-panel relative transform overflow-hidden rounded-3xl bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-md border border-slate-100 opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95 pointer-events-auto">
+                <form asp-action="Delete" method="post">
+                    <input type="hidden" id="deleteRoleId" name="id" />
+                    <div class="bg-slate-50 border-b border-slate-100 px-6 py-4 flex items-center justify-between">
+                        <h3 class="text-lg font-bold text-slate-800 flex items-center">
+                            <span class="w-8 h-8 rounded-full bg-red-100 text-red-500 inline-flex items-center justify-center mr-3">
+                                <i data-lucide="alert-triangle" class="w-4 h-4"></i>
+                            </span>
+                            @T("როლის წაშლა", "Delete Role")
+                        </h3>
+                        <button type="button" class="text-slate-400 hover:text-slate-600 hover:bg-slate-200/50 p-2 rounded-lg transition" onclick="closeModal('deleteModal')">
+                            <i data-lucide="x" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+                    <div class="px-6 py-6">
+                        <p class="text-sm text-slate-600 leading-relaxed">
+                            @T("ნამდვილად გსურთ როლის", "Are you sure you want to delete role") <strong id="deleteRoleName" class="text-slate-800 font-black"></strong> @T("წაშლა? ამ მოქმედების უკან დაბრუნება შეუძლებელია.", "? This action cannot be undone.")
+                        </p>
+                    </div>
+                    <div class="bg-slate-50 border-t border-slate-100 px-6 py-4 flex flex-col-reverse sm:flex-row sm:justify-end gap-2 sm:gap-3">
+                        <button type="button" class="w-full sm:w-auto px-5 py-2.5 rounded-xl text-sm font-bold text-slate-600 bg-white border border-slate-200 hover:bg-slate-100 transition shadow-sm" onclick="closeModal('deleteModal')">
+                            @T("გაუქმება", "Cancel")
+                        </button>
+                        <button type="submit" class="w-full sm:w-auto px-5 py-2.5 rounded-xl text-sm font-bold text-white bg-red-500 hover:bg-red-600 transition shadow-md shadow-red-500/30">
+                            @T("დიახ, წაშალე", "Yes, Delete")
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 
 @section Scripts {
     <script>
-        const t_newRole = '@T("ახალი როლი", "New Role")';
-        const t_enterRoleName = '@T("შეიყვანეთ როლის სახელი...", "Enter role name...")';
-        const t_save = '@T("შენახვა", "Save")';
-        const t_cancel = '@T("გაუქმება", "Cancel")';
-        const t_required = '@T("სახელის შეყვანა სავალდებულოა!", "Name is required!")';
+        function openModal(modalId) {
+            const modal = document.getElementById(modalId);
+            const backdrop = modal.querySelector('.modal-backdrop');
+            const panel = modal.querySelector('.modal-panel');
 
-        const t_editRole = '@T("როლის რედაქტირება", "Edit Role")';
-        const t_update = '@T("განახლება", "Update")';
-
-        const t_areYouSure = '@T("დარწმუნებული ხართ?", "Are you sure?")';
-        const t_deleteWarning = '@T("ამ როლის წაშლა შეუქცევადი პროცესია!", "Deleting this role is irreversible!")';
-        const t_yesDelete = '@T("დიახ, წაშალე!", "Yes, delete it!")';
-
-        function openCreateModal() {
-            Swal.fire({
-                title: t_newRole,
-                input: 'text',
-                inputPlaceholder: t_enterRoleName,
-                showCancelButton: true,
-                confirmButtonText: t_save,
-                cancelButtonText: t_cancel,
-                confirmButtonColor: '#4f46e5',
-                inputValidator: (value) => {
-                    if (!value) return t_required
-                }
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    document.getElementById('createRoleName').value = result.value;
-                    document.getElementById('createForm').submit();
-                }
-            });
+            modal.classList.remove('hidden');
+            
+            setTimeout(() => {
+                backdrop.classList.remove('opacity-0');
+                backdrop.classList.add('opacity-100');
+                
+                panel.classList.remove('opacity-0', 'translate-y-4', 'sm:translate-y-0', 'sm:scale-95');
+                panel.classList.add('opacity-100', 'translate-y-0', 'sm:scale-100');
+            }, 10);
+            
+            if(modalId === 'createModal') {
+                modal.querySelector('input[name="roleName"]').value = '';
+                setTimeout(() => modal.querySelector('input[name="roleName"]').focus(), 200);
+            }
         }
 
-        function openEditModal(id, oldName) {
-            Swal.fire({
-                title: t_editRole,
-                input: 'text',
-                inputValue: oldName,
-                showCancelButton: true,
-                confirmButtonText: t_update,
-                cancelButtonText: t_cancel,
-                confirmButtonColor: '#f59e0b',
-                inputValidator: (value) => {
-                    if (!value) return t_required
-                }
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    document.getElementById('editRoleId').value = id;
-                    document.getElementById('editRoleName').value = result.value;
-                    document.getElementById('editForm').submit();
-                }
-            });
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            const backdrop = modal.querySelector('.modal-backdrop');
+            const panel = modal.querySelector('.modal-panel');
+
+            backdrop.classList.remove('opacity-100');
+            backdrop.classList.add('opacity-0');
+            
+            panel.classList.remove('opacity-100', 'translate-y-0', 'sm:scale-100');
+            panel.classList.add('opacity-0', 'translate-y-4', 'sm:translate-y-0', 'sm:scale-95');
+
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300); 
         }
 
-        function confirmDelete(id) {
-            Swal.fire({
-                title: t_areYouSure,
-                text: t_deleteWarning,
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#ef4444',
-                cancelButtonColor: '#94a3b8',
-                confirmButtonText: t_yesDelete,
-                cancelButtonText: t_cancel
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    document.getElementById('delete-form-' + id).submit();
-                }
-            });
+        function openEditModal(id, name) {
+            document.getElementById('editRoleId').value = id;
+            document.getElementById('editRoleName').value = name;
+            openModal('editModal');
+            setTimeout(() => document.getElementById('editRoleName').focus(), 200);
         }
+
+        function openDeleteModal(id, name) {
+            document.getElementById('deleteRoleId').value = id;
+            document.getElementById('deleteRoleName').innerText = name;
+            openModal('deleteModal');
+        }
+        
+        document.addEventListener('keydown', function(event) {
+            if (event.key === "Escape") {
+                const modals = ['createModal', 'editModal', 'deleteModal'];
+                modals.forEach(id => {
+                    const modal = document.getElementById(id);
+                    if (!modal.classList.contains('hidden')) {
+                        closeModal(id);
+                    }
+                });
+            }
+        });
     </script>
 }
