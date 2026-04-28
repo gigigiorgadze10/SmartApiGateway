@@ -103,11 +103,9 @@
                                     <td class="p-4 pr-6 text-right">
                                         @if (canUnlock)
                                         {
-                                            <form asp-action="Delete" asp-route-id="@ip.Id" method="post" onsubmit="return confirm('@T("ნამდვილად გსურთ ბლოკის მოხსნა?", "Are you sure you want to unblock?")');">
-                                                <button type="submit" class="p-2 text-slate-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition shadow-sm border border-transparent hover:border-green-100" title="@T("ბლოკის მოხსნა", "Unblock")">
-                                                    <i data-lucide="unlock" class="w-5 h-5"></i>
-                                                </button>
-                                            </form>
+                                            <button type="button" onclick="openUnblockModal('@ip.Id', '@ip.IpAddress')" class="p-2 text-slate-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition shadow-sm border border-transparent hover:border-green-100" title="@T("ბლოკის მოხსნა", "Unblock")">
+                                                <i data-lucide="unlock" class="w-5 h-5"></i>
+                                            </button>
                                         }
                                         else
                                         {
@@ -124,6 +122,88 @@
     </div>
 </div>
 
+<div id="unblockModal" class="fixed inset-0 z-[100] hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity opacity-0 cursor-pointer" id="unblockModalBackdrop" onclick="closeUnblockModal()"></div>
+
+    <div class="fixed inset-0 z-10 overflow-y-auto pointer-events-none">
+        <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
+            <div id="unblockModalPanel" class="relative transform overflow-hidden rounded-3xl bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-md border border-slate-100 opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95 pointer-events-auto">
+                
+                <div class="bg-slate-50 border-b border-slate-100 px-6 py-4 flex items-center justify-between">
+                    <h3 class="text-lg font-bold text-slate-800 flex items-center" id="modal-title">
+                        <span class="w-8 h-8 rounded-full bg-green-100 text-green-600 inline-flex items-center justify-center mr-3">
+                            <i data-lucide="unlock" class="w-4 h-4"></i>
+                        </span>
+                        @T("ბლოკის მოხსნა", "Unblock IP")
+                    </h3>
+                    <button type="button" class="text-slate-400 hover:text-slate-600 hover:bg-slate-200/50 p-2 rounded-lg transition" onclick="closeUnblockModal()">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+
+                <div class="px-6 py-6">
+                    <p class="text-sm text-slate-600 leading-relaxed">
+                        @T("ნამდვილად გსურთ ბლოკის მოხსნა IP მისამართისთვის:", "Are you sure you want to unblock the IP address:")
+                        <strong id="unblockIpText" class="text-slate-800 font-mono bg-slate-100 px-1.5 py-0.5 rounded ml-1"></strong>@T("?", "?")
+                    </p>
+                </div>
+
+                <div class="bg-slate-50 border-t border-slate-100 px-6 py-4 flex flex-col-reverse sm:flex-row sm:justify-end gap-2 sm:gap-3">
+                    <button type="button" class="w-full sm:w-auto px-5 py-2.5 rounded-xl text-sm font-bold text-slate-600 bg-white border border-slate-200 hover:bg-slate-100 transition shadow-sm" onclick="closeUnblockModal()">
+                        @T("გაუქმება", "Cancel")
+                    </button>
+                    <form id="unblockForm" method="post" action="">
+                        <button type="submit" class="w-full sm:w-auto px-5 py-2.5 rounded-xl text-sm font-bold text-white bg-green-500 hover:bg-green-600 transition shadow-md shadow-green-500/30 flex items-center justify-center">
+                            <i data-lucide="unlock" class="w-4 h-4 mr-2"></i> @T("დიახ, მოხსენი", "Yes, Unblock")
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
-    <script>lucide.createIcons();</script>
+    <script>
+        lucide.createIcons();
+
+        const unblockModal = document.getElementById('unblockModal');
+        const unblockBackdrop = document.getElementById('unblockModalBackdrop');
+        const unblockPanel = document.getElementById('unblockModalPanel');
+        const unblockForm = document.getElementById('unblockForm');
+        const unblockIpText = document.getElementById('unblockIpText');
+
+        function openUnblockModal(id, ip) {
+            unblockForm.action = '/BlockedIps/Delete/' + id;
+            unblockIpText.textContent = ip;
+
+            unblockModal.classList.remove('hidden');
+            
+            setTimeout(() => {
+                unblockBackdrop.classList.remove('opacity-0');
+                unblockBackdrop.classList.add('opacity-100');
+                
+                unblockPanel.classList.remove('opacity-0', 'translate-y-4', 'sm:translate-y-0', 'sm:scale-95');
+                unblockPanel.classList.add('opacity-100', 'translate-y-0', 'sm:scale-100');
+            }, 10);
+        }
+
+        function closeUnblockModal() {
+            unblockBackdrop.classList.remove('opacity-100');
+            unblockBackdrop.classList.add('opacity-0');
+            
+            unblockPanel.classList.remove('opacity-100', 'translate-y-0', 'sm:scale-100');
+            unblockPanel.classList.add('opacity-0', 'translate-y-4', 'sm:translate-y-0', 'sm:scale-95');
+
+            setTimeout(() => {
+                unblockModal.classList.add('hidden');
+            }, 300);
+        }
+        
+        document.addEventListener('keydown', function(event) {
+            if (event.key === "Escape" && !unblockModal.classList.contains('hidden')) {
+                closeUnblockModal();
+            }
+        });
+    </script>
 }
