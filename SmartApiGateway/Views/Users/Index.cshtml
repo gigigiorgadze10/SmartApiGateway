@@ -1,19 +1,23 @@
 ﻿@using Microsoft.AspNetCore.Identity
 @using SmartApiGateway.Data
+@using Microsoft.AspNetCore.Localization
 @model IEnumerable<ApplicationUser>
 
 @{
     ViewData["Title"] = "მომხმარებლები";
+    var requestCulture = Context.Features.Get<IRequestCultureFeature>();
+    bool isEn = requestCulture?.RequestCulture.UICulture.Name == "en";
+    string T(string ka, string en) => isEn ? en : ka;
 }
 
 <div class="container-fluid">
     <div class="flex justify-between items-center mb-6">
         <div>
-            <h2 class="text-2xl font-bold text-slate-800">სისტემის მომხმარებლები</h2>
-            <p class="text-slate-500 text-sm mt-1">მართეთ მომხმარებლის ანგარიშები და მათი უფლებები</p>
+            <h2 class="text-2xl font-bold text-slate-800">@T("სისტემის მომხმარებლები", "System Users")</h2>
+            <p class="text-slate-500 text-sm mt-1">@T("მართეთ მომხმარებლის ანგარიშები და მათი უფლებები", "Manage user accounts and permissions")</p>
         </div>
         <a href="/Account/Register" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition flex items-center shadow-md">
-            <i data-lucide="user-plus" class="w-4 h-4 mr-2"></i> ახალი მომხმარებელი
+            <i data-lucide="user-plus" class="w-4 h-4 mr-2"></i> @T("ახალი მომხმარებელი", "New User")
         </a>
     </div>
 
@@ -36,9 +40,9 @@
         <table class="w-full text-left border-collapse">
             <thead>
                 <tr class="bg-slate-50 border-b border-slate-200 text-slate-600 uppercase text-xs font-bold">
-                    <th class="p-4">მომხმარებელი</th>
+                    <th class="p-4">@T("მომხმარებელი", "User")</th>
                     <th class="p-4">Email</th>
-                    <th class="p-4 text-right">მოქმედება</th>
+                    <th class="p-4 text-right">@T("მოქმედება", "Action")</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-slate-100">
@@ -54,18 +58,18 @@
                                     <span class="font-semibold text-slate-700 block">@user.UserName</span>
                                     @if (user.UserName == User.Identity?.Name)
                                     {
-                                        <span class="text-[10px] bg-blue-600 text-white px-1.5 py-0.5 rounded uppercase">თქვენ</span>
+                                        <span class="text-[10px] bg-blue-600 text-white px-1.5 py-0.5 rounded uppercase">@T("თქვენ", "You")</span>
                                     }
                                 </div>
                             </div>
                         </td>
-                        <td class="p-4 text-slate-500 text-sm font-monospace">@user.Email</td>
+                        <td class="p-4 text-slate-500 text-sm font-mono">@user.Email</td>
                         <td class="p-4 text-right space-x-2">
-                            <a asp-action="Edit" asp-route-id="@user.Id" class="inline-flex items-center justify-center text-blue-500 hover:text-blue-700 p-2 rounded-lg hover:bg-blue-50 transition" title="რედაქტირება">
+                            <a asp-action="Edit" asp-route-id="@user.Id" class="inline-flex items-center justify-center text-blue-500 hover:text-blue-700 p-2 rounded-lg hover:bg-blue-50 transition" title="@T("რედაქტირება", "Edit")">
                                 <i data-lucide="edit-3" class="w-5 h-5"></i>
                             </a>
 
-                            <button type="button" onclick="openDeleteModal('@user.Id', '@user.UserName')" class="inline-flex items-center justify-center text-red-500 hover:text-red-700 p-2 rounded-lg hover:bg-red-50 transition" title="წაშლა">
+                            <button type="button" onclick="openDeleteModal('@user.Id', '@user.UserName')" class="inline-flex items-center justify-center text-red-500 hover:text-red-700 p-2 rounded-lg hover:bg-red-50 transition" title="@T("წაშლა", "Delete")">
                                 <i data-lucide="trash-2" class="w-5 h-5"></i>
                             </button>
                         </td>
@@ -88,7 +92,7 @@
                         <span class="w-8 h-8 rounded-full bg-red-100 text-red-500 inline-flex items-center justify-center mr-3">
                             <i data-lucide="alert-triangle" class="w-4 h-4"></i>
                         </span>
-                        მომხმარებლის წაშლა
+                        @T("მომხმარებლის წაშლა", "Delete User")
                     </h3>
                     <button type="button" class="text-slate-400 hover:text-slate-600 hover:bg-slate-200/50 p-2 rounded-lg transition" onclick="closeDeleteModal()">
                         <i data-lucide="x" class="w-5 h-5"></i>
@@ -97,17 +101,17 @@
 
                 <div class="px-6 py-6">
                     <p class="text-sm text-slate-600 leading-relaxed">
-                        ნამდვილად გსურთ მომხმარებლის <strong id="deleteUserName" class="text-slate-800"></strong> წაშლა? მონაცემები სამუდამოდ წაიშლება ბაზიდან და ამ მოქმედების უკან დაბრუნება შეუძლებელია.
+                        @T("ნამდვილად გსურთ მომხმარებლის", "Are you sure you want to delete user") <strong id="deleteUserName" class="text-slate-800"></strong> @T("წაშლა? მონაცემები სამუდამოდ წაიშლება ბაზიდან და ამ მოქმედების უკან დაბრუნება შეუძლებელია.", "? This action cannot be undone.")
                     </p>
                 </div>
 
                 <div class="bg-slate-50 border-t border-slate-100 px-6 py-4 flex flex-col-reverse sm:flex-row sm:justify-end gap-2 sm:gap-3">
                     <button type="button" class="w-full sm:w-auto px-5 py-2.5 rounded-xl text-sm font-bold text-slate-600 bg-white border border-slate-200 hover:bg-slate-100 transition shadow-sm" onclick="closeDeleteModal()">
-                        გაუქმება
+                        @T("გაუქმება", "Cancel")
                     </button>
                     <form id="deleteForm" method="post" action="">
                         <button type="submit" class="w-full sm:w-auto px-5 py-2.5 rounded-xl text-sm font-bold text-white bg-red-500 hover:bg-red-600 transition shadow-md shadow-red-500/30">
-                            დიახ, წაშალე
+                            @T("დიახ, წაშალე", "Yes, delete")
                         </button>
                     </form>
                 </div>

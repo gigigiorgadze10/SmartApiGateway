@@ -1,51 +1,64 @@
-﻿@{
+﻿@using Microsoft.AspNetCore.Localization
+@{
     Layout = null;
     ViewData["Title"] = "წვდომა შეზღუდულია";
+    var requestCulture = Context.Features.Get<IRequestCultureFeature>();
+    bool isEn = requestCulture?.RequestCulture.UICulture.Name == "en";
+    string T(string ka, string en) => isEn ? en : ka;
 }
-
 <!DOCTYPE html>
-<html lang="ka">
+<html lang="@(isEn ? "en" : "ka")">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Smart Gateway</title>
+    <title>@T("წვდომა შეზღუდულია", "Access Denied") - Smart Gateway</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Georgian:wght@400;500;700;900&display=swap" rel="stylesheet">
-    <style>body { font-family: 'Noto Sans Georgian', sans-serif; }</style>
-</head>
-<body class="bg-slate-50 flex items-center justify-center min-h-screen relative overflow-hidden">
+    <style>
+        body {
+        font-family: 'Noto Sans Georgian', sans-serif;
+        }</style>
+    </head>
+    <body class="bg-slate-50 flex items-center justify-center min-h-screen relative overflow-hidden">
     
-    <div class="absolute -top-1/4 -left-1/4 w-1/2 h-1/2 bg-red-400/20 rounded-full blur-3xl pointer-events-none"></div>
-    <div class="absolute top-3/4 -right-1/4 w-1/2 h-1/2 bg-orange-400/20 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute -top-1/4 -left-1/4 w-1/2 h-1/2 bg-red-400/20 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute top-3/4 -right-1/4 w-1/2 h-1/2 bg-orange-400/20 rounded-full blur-3xl pointer-events-none"></div>
 
-    <div class="bg-white/80 backdrop-blur-xl p-10 rounded-3xl shadow-2xl border border-white max-w-lg w-full text-center z-10 mx-4 relative overflow-hidden">
-        
-        <div class="absolute top-0 left-0 right-0 h-2 bg-repeating-linear-gradient"
-             style="background-image: repeating-linear-gradient(45deg, #ef4444, #ef4444 10px, #fca5a5 10px, #fca5a5 20px);"></div>
-
-        <div class="w-24 h-24 bg-red-50 text-red-500 rounded-full mx-auto flex items-center justify-center mb-6 border-4 border-red-100 shadow-inner">
-            <i data-lucide="shield-alert" class="w-12 h-12"></i>
+        <div class="absolute top-6 right-6 z-20">
+            <form asp-controller="Home" asp-action="SetLanguage" method="post" class="bg-white/80 backdrop-blur border border-slate-200 rounded-lg p-1 shadow-sm flex items-center">
+                <input type="hidden" name="returnUrl" value="/Home/AccessDenied" />
+                <button type="submit" name="culture" value="ka" class="px-2 py-1 text-xs font-bold rounded @(!isEn ? "bg-slate-100 text-blue-600" : "text-slate-500 hover:bg-slate-50")">GE</button>
+                <button type="submit" name="culture" value="en" class="px-2 py-1 text-xs font-bold rounded @(isEn ? "bg-slate-100 text-blue-600" : "text-slate-500 hover:bg-slate-50")">EN</button>
+            </form>
         </div>
-        
-        <h1 class="text-6xl font-black text-slate-800 tracking-tighter mb-2">403</h1>
-        <h2 class="text-2xl font-bold text-slate-700 mb-4">წვდომა შეზღუდულია</h2>
-        
-        <p class="text-slate-500 mb-8 leading-relaxed">
-            უკაცრავად, თქვენ არ გაქვთ საკმარისი უფლებები (როლი) ამ გვერდის სანახავად.
-            თუ ფიქრობთ, რომ ეს შეცდომაა, დაუკავშირდით <span class="font-bold text-slate-700">Super Admin</span>-ს.
-        </p>
-        
-        <div class="flex flex-col sm:flex-row gap-3 justify-center">
-            <a href="javascript:history.back()" class="px-6 py-3 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-bold rounded-xl transition flex items-center justify-center">
-                <i data-lucide="arrow-left" class="w-4 h-4 mr-2"></i> უკან დაბრუნება
-            </a>
-            <a href="/Home/Dashboard" class="px-6 py-3 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl transition shadow-lg flex items-center justify-center">
-                <i data-lucide="layout-dashboard" class="w-4 h-4 mr-2"></i> მთავარი გვერდი
-            </a>
-        </div>
-    </div>
 
-    <script>lucide.createIcons();</script>
-</body>
+        <div class="bg-white/80 backdrop-blur-xl p-10 rounded-3xl shadow-2xl border border-white max-w-lg w-full text-center z-10 mx-4 relative overflow-hidden">
+        
+            <div class="absolute top-0 left-0 right-0 h-2 bg-repeating-linear-gradient"
+                 style="background-image: repeating-linear-gradient(45deg, #ef4444, #ef4444 10px, #fca5a5 10px, #fca5a5 20px);"></div>
+
+            <div class="w-24 h-24 bg-red-50 text-red-500 rounded-full mx-auto flex items-center justify-center mb-6 border-4 border-red-100 shadow-inner">
+                <i data-lucide="shield-alert" class="w-12 h-12"></i>
+            </div>
+        
+            <h1 class="text-6xl font-black text-slate-800 tracking-tighter mb-2">403</h1>
+            <h2 class="text-2xl font-bold text-slate-700 mb-4">@T("წვდომა შეზღუდულია", "Access Denied")</h2>
+        
+            <p class="text-slate-500 mb-8 leading-relaxed">
+                @T("უკაცრავად, თქვენ არ გაქვთ საკმარისი უფლებები (როლი) ამ გვერდის სანახავად. თუ ფიქრობთ, რომ ეს შეცდომაა, დაუკავშირდით", "Sorry, you do not have sufficient permissions (role) to view this page. If you believe this is an error, please contact the") <span class="font-bold text-slate-700">Super Admin</span>.
+            </p>
+        
+            <div class="flex flex-col sm:flex-row gap-3 justify-center">
+                <a href="javascript:history.back()" class="px-6 py-3 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-bold rounded-xl transition flex items-center justify-center">
+                    <i data-lucide="arrow-left" class="w-4 h-4 mr-2"></i> @T("უკან დაბრუნება", "Go Back")
+                </a>
+                <a href="/Home/Dashboard" class="px-6 py-3 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl transition shadow-lg flex items-center justify-center">
+                    <i data-lucide="layout-dashboard" class="w-4 h-4 mr-2"></i> @T("მთავარი გვერდი", "Dashboard")
+                </a>
+            </div>
+        </div>
+
+        <script>lucide.createIcons();</script>
+    </body>
 </html>

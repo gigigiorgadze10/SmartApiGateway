@@ -1,13 +1,18 @@
 ﻿@model SmartApiGateway.Models.ApiEndpoint
+@using Microsoft.AspNetCore.Localization
+
 @{
     ViewData["Title"] = "ახალი მარშრუტი";
+    var requestCulture = Context.Features.Get<IRequestCultureFeature>();
+    bool isEn = requestCulture?.RequestCulture.UICulture.Name == "en";
+    string T(string ka, string en) => isEn ? en : ka;
 }
 
 <div class="max-w-2xl mx-auto">
     <div class="mb-6 flex items-center text-sm text-slate-500">
-        <a href="/Endpoints" class="hover:text-blue-600 transition">მარშრუტები</a>
+        <a href="/Endpoints" class="hover:text-blue-600 transition">@T("მარშრუტები", "Endpoints")</a>
         <i data-lucide="chevron-right" class="w-4 h-4 mx-2"></i>
-        <span class="font-semibold text-slate-800">დამატება</span>
+        <span class="font-semibold text-slate-800">@T("დამატება", "Add")</span>
     </div>
 
     <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-200">
@@ -15,29 +20,29 @@
             <span class="w-10 h-10 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center mr-3">
                 <i data-lucide="route" class="w-5 h-5"></i>
             </span>
-            ახალი მარშრუტის შექმნა
+            @T("ახალი მარშრუტის შექმნა", "Create New Endpoint")
         </h2>
 
         <form asp-action="Create" method="post" class="space-y-6">
             <div asp-validation-summary="ModelOnly" class="text-red-500 text-sm"></div>
 
             <div>
-                <label asp-for="RoutePath" class="block text-sm font-semibold text-slate-700 mb-2"></label>
-                <input asp-for="RoutePath" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition font-mono text-sm" placeholder="მაგ: /api/users" />
+                <label asp-for="RoutePath" class="block text-sm font-semibold text-slate-700 mb-2">@T("მარშრუტი (Route Path)", "Route Path")</label>
+                <input asp-for="RoutePath" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition font-mono text-sm" placeholder="@T("მაგ:", "e.g:") /api/users" />
                 <span asp-validation-for="RoutePath" class="text-red-500 text-xs mt-1 block"></span>
-                <p class="text-xs text-slate-400 mt-2">ამ მისამართზე შემოსულ ტრაფიკს სისტემა დაიჭერს.</p>
+                <p class="text-xs text-slate-400 mt-2">@T("ამ მისამართზე შემოსულ ტრაფიკს სისტემა დაიჭერს.", "Traffic coming to this address will be intercepted.")</p>
             </div>
 
             <div>
-                <label asp-for="TargetUrl" class="block text-sm font-semibold text-slate-700 mb-2"></label>
-                <textarea asp-for="TargetUrl" rows="2" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition font-mono text-sm" placeholder="მაგ: https://server1.com/api, https://server2.com/api"></textarea>
+                <label asp-for="TargetUrl" class="block text-sm font-semibold text-slate-700 mb-2">@T("სამიზნე (Target URL)", "Target URL")</label>
+                <textarea asp-for="TargetUrl" rows="2" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition font-mono text-sm" placeholder="@T("მაგ:", "e.g:") https://server1.com/api, https://server2.com/api"></textarea>
                 <span asp-validation-for="TargetUrl" class="text-red-500 text-xs mt-1 block"></span>
-                <p class="text-xs text-slate-400 mt-2">სად გავაგზავნოთ ტრაფიკი? Load Balancing-ისთვის გამოყავით მძიმით.</p>
+                <p class="text-xs text-slate-400 mt-2">@T("სად გავაგზავნოთ ტრაფიკი? Load Balancing-ისთვის გამოყავით მძიმით.", "Where to forward traffic? Separate with commas for Load Balancing.")</p>
             </div>
 
             <div>
-                <label asp-for="Description" class="block text-sm font-semibold text-slate-700 mb-2"></label>
-                <input asp-for="Description" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition" placeholder="რას აკეთებს ეს მარშრუტი?" />
+                <label asp-for="Description" class="block text-sm font-semibold text-slate-700 mb-2">@T("აღწერა", "Description")</label>
+                <input asp-for="Description" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition" placeholder="@T("რას აკეთებს ეს მარშრუტი?", "What does this route do?")" />
             </div>
 
             <div class="flex items-center p-4 bg-slate-50 rounded-xl border border-slate-200">
@@ -45,15 +50,15 @@
                     <input asp-for="IsActive" class="w-5 h-5 text-blue-600 bg-white border-slate-300 rounded focus:ring-blue-500 cursor-pointer" />
                 </div>
                 <div class="ml-3 text-sm">
-                    <label asp-for="IsActive" class="font-bold text-slate-700 cursor-pointer">მარშრუტი აქტიურია</label>
-                    <p class="text-slate-500 text-xs">მონიშვნის მოხსნის შემთხვევაში ტრაფიკი დაიბლოკება.</p>
+                    <label asp-for="IsActive" class="font-bold text-slate-700 cursor-pointer">@T("მარშრუტი აქტიურია", "Endpoint is Active")</label>
+                    <p class="text-slate-500 text-xs">@T("მონიშვნის მოხსნის შემთხვევაში ტრაფიკი დაიბლოკება.", "If unchecked, traffic will be blocked.")</p>
                 </div>
             </div>
 
             <div class="pt-4 flex justify-end space-x-3 border-t border-slate-100">
-                <a asp-action="Index" class="px-6 py-2.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-bold rounded-xl transition">გაუქმება</a>
+                <a asp-action="Index" class="px-6 py-2.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-bold rounded-xl transition">@T("გაუქმება", "Cancel")</a>
                 <button type="submit" class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg shadow-blue-500/30 transition flex items-center">
-                    <i data-lucide="save" class="w-4 h-4 mr-2"></i> შენახვა
+                    <i data-lucide="save" class="w-4 h-4 mr-2"></i> @T("შენახვა", "Save")
                 </button>
             </div>
         </form>

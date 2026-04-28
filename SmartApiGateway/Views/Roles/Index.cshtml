@@ -1,7 +1,11 @@
 ﻿@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.Localization
 @model IEnumerable<IdentityRole>
 @{
     ViewData["Title"] = "როლები";
+    var requestCulture = Context.Features.Get<IRequestCultureFeature>();
+    bool isEn = requestCulture?.RequestCulture.UICulture.Name == "en";
+    string T(string ka, string en) => isEn ? en : ka;
 }
 
 <div class="flex justify-between items-center mb-8">
@@ -9,10 +13,10 @@
         <span class="bg-indigo-600 text-white w-12 h-12 flex items-center justify-center rounded-2xl mr-4 shadow-lg shadow-indigo-600/30">
             <i data-lucide="shield" class="w-6 h-6"></i>
         </span>
-        სისტემის როლები
+        @T("სისტემის როლები", "System Roles")
     </h1>
     <button onclick="openCreateModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-indigo-600/30 transition duration-200 flex items-center">
-        <i data-lucide="plus" class="w-5 h-5 mr-2"></i> ახალი როლი
+        <i data-lucide="plus" class="w-5 h-5 mr-2"></i> @T("ახალი როლი", "New Role")
     </button>
 </div>
 
@@ -33,19 +37,19 @@
             <div class="space-y-3">
                 <a asp-controller="Permissions" asp-action="Manage" asp-route-roleId="@role.Id"
                        class="w-full flex items-center justify-center bg-slate-50 hover:bg-indigo-50 hover:text-indigo-700 text-slate-600 font-bold py-2.5 rounded-xl border border-slate-200 transition">
-                    <i data-lucide="key" class="w-4 h-4 mr-2"></i> უფლებების მართვა
+                    <i data-lucide="key" class="w-4 h-4 mr-2"></i> @T("უფლებების მართვა", "Manage Permissions")
                 </a>
                 
                 @if (!isSuperAdmin)
                 {
                     <div class="flex space-x-2">
                         <button onclick="openEditModal('@role.Id', '@role.Name')" class="flex-1 flex items-center justify-center bg-amber-50 hover:bg-amber-100 text-amber-600 font-bold py-2.5 rounded-xl transition">
-                            <i data-lucide="edit" class="w-4 h-4 mr-2"></i> შეცვლა
+                            <i data-lucide="edit" class="w-4 h-4 mr-2"></i> @T("შეცვლა", "Edit")
                         </button>
                         <form asp-action="Delete" method="post" class="flex-1" id="delete-form-@role.Id">
                             <input type="hidden" name="id" value="@role.Id" />
                             <button type="button" onclick="confirmDelete('@role.Id')" class="w-full flex items-center justify-center bg-red-50 hover:bg-red-100 text-red-600 font-bold py-2.5 rounded-xl transition">
-                                <i data-lucide="trash-2" class="w-4 h-4 mr-2"></i> წაშლა
+                                <i data-lucide="trash-2" class="w-4 h-4 mr-2"></i> @T("წაშლა", "Delete")
                             </button>
                         </form>
                     </div>
@@ -66,17 +70,30 @@
 
 @section Scripts {
     <script>
+        const t_newRole = '@T("ახალი როლი", "New Role")';
+        const t_enterRoleName = '@T("შეიყვანეთ როლის სახელი...", "Enter role name...")';
+        const t_save = '@T("შენახვა", "Save")';
+        const t_cancel = '@T("გაუქმება", "Cancel")';
+        const t_required = '@T("სახელის შეყვანა სავალდებულოა!", "Name is required!")';
+
+        const t_editRole = '@T("როლის რედაქტირება", "Edit Role")';
+        const t_update = '@T("განახლება", "Update")';
+
+        const t_areYouSure = '@T("დარწმუნებული ხართ?", "Are you sure?")';
+        const t_deleteWarning = '@T("ამ როლის წაშლა შეუქცევადი პროცესია!", "Deleting this role is irreversible!")';
+        const t_yesDelete = '@T("დიახ, წაშალე!", "Yes, delete it!")';
+
         function openCreateModal() {
             Swal.fire({
-                title: 'ახალი როლი',
+                title: t_newRole,
                 input: 'text',
-                inputPlaceholder: 'შეიყვანეთ როლის სახელი...',
+                inputPlaceholder: t_enterRoleName,
                 showCancelButton: true,
-                confirmButtonText: 'შენახვა',
-                cancelButtonText: 'გაუქმება',
+                confirmButtonText: t_save,
+                cancelButtonText: t_cancel,
                 confirmButtonColor: '#4f46e5',
                 inputValidator: (value) => {
-                    if (!value) return 'სახელის შეყვანა სავალდებულოა!'
+                    if (!value) return t_required
                 }
             }).then((result) => {
                 if (result.isConfirmed) {
@@ -88,15 +105,15 @@
 
         function openEditModal(id, oldName) {
             Swal.fire({
-                title: 'როლის რედაქტირება',
+                title: t_editRole,
                 input: 'text',
                 inputValue: oldName,
                 showCancelButton: true,
-                confirmButtonText: 'განახლება',
-                cancelButtonText: 'გაუქმება',
+                confirmButtonText: t_update,
+                cancelButtonText: t_cancel,
                 confirmButtonColor: '#f59e0b',
                 inputValidator: (value) => {
-                    if (!value) return 'სახელის შეყვანა სავალდებულოა!'
+                    if (!value) return t_required
                 }
             }).then((result) => {
                 if (result.isConfirmed) {
@@ -109,14 +126,14 @@
 
         function confirmDelete(id) {
             Swal.fire({
-                title: 'დარწმუნებული ხართ?',
-                text: "ამ როლის წაშლა შეუქცევადი პროცესია!",
+                title: t_areYouSure,
+                text: t_deleteWarning,
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#ef4444',
                 cancelButtonColor: '#94a3b8',
-                confirmButtonText: 'დიახ, წაშალე!',
-                cancelButtonText: 'გაუქმება'
+                confirmButtonText: t_yesDelete,
+                cancelButtonText: t_cancel
             }).then((result) => {
                 if (result.isConfirmed) {
                     document.getElementById('delete-form-' + id).submit();

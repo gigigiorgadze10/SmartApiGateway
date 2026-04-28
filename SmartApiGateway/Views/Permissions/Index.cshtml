@@ -1,17 +1,21 @@
-﻿@{
-    ViewData["Title"] = "უფლებების მართვა";
+﻿@using Microsoft.AspNetCore.Localization
+@{
+    ViewData["Title"] = "უფლებების მატრიცა";
+    var requestCulture = Context.Features.Get<IRequestCultureFeature>();
+    bool isEn = requestCulture?.RequestCulture.UICulture.Name == "en";
+    string T(string ka, string en) => isEn ? en : ka;
 }
 
 <div class="mb-6">
-    <h1 class="text-2xl font-bold text-slate-800">წვდომის უფლებების მატრიცა</h1>
-    <p class="text-slate-500 text-sm mt-1">აქ განსაზღვრულია თუ რომელ როლს რა ქმედების შესრულება შეუძლია სისტემაში.</p>
+    <h1 class="text-2xl font-bold text-slate-800">@T("წვდომის უფლებების მატრიცა", "Access Permission Matrix")</h1>
+    <p class="text-slate-500 text-sm mt-1">@T("აქ განსაზღვრულია თუ რომელ როლს რა ქმედების შესრულება შეუძლია სისტემაში.", "This defines what actions each role can perform within the system.")</p>
 </div>
 
 <div class="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
     <table class="min-w-full divide-y divide-slate-200">
         <thead class="bg-slate-50">
             <tr>
-                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">უფლება / მოდული</th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">@T("უფლება / მოდული", "Permission / Module")</th>
                 <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-slate-500 uppercase tracking-wider">SuperAdmin</th>
                 <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-slate-500 uppercase tracking-wider">Admin</th>
                 <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-slate-500 uppercase tracking-wider">User</th>
@@ -19,25 +23,25 @@
         </thead>
         <tbody class="bg-white divide-y divide-slate-200">
             <tr class="hover:bg-slate-50">
-                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">სისტემური პარამეტრების შეცვლა</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">@T("სისტემური პარამეტრების შეცვლა", "Change System Settings")</td>
                 <td class="px-6 py-4 text-center"><i data-lucide="check-circle-2" class="w-5 h-5 text-green-500 mx-auto"></i></td>
                 <td class="px-6 py-4 text-center"><i data-lucide="x-circle" class="w-5 h-5 text-red-400 mx-auto"></i></td>
                 <td class="px-6 py-4 text-center"><i data-lucide="x-circle" class="w-5 h-5 text-red-400 mx-auto"></i></td>
             </tr>
             <tr class="hover:bg-slate-50">
-                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">მომხმარებლების და როლების მართვა</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">@T("მომხმარებლების და როლების მართვა", "Manage Users and Roles")</td>
                 <td class="px-6 py-4 text-center"><i data-lucide="check-circle-2" class="w-5 h-5 text-green-500 mx-auto"></i></td>
                 <td class="px-6 py-4 text-center"><i data-lucide="check-circle-2" class="w-5 h-5 text-green-500 mx-auto"></i></td>
                 <td class="px-6 py-4 text-center"><i data-lucide="x-circle" class="w-5 h-5 text-red-400 mx-auto"></i></td>
             </tr>
             <tr class="hover:bg-slate-50">
-                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">IP მისამართების დაბლოკვა (Blacklist)</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">@T("IP მისამართების დაბლოკვა (Blacklist)", "Block IP Addresses (Blacklist)")</td>
                 <td class="px-6 py-4 text-center"><i data-lucide="check-circle-2" class="w-5 h-5 text-green-500 mx-auto"></i></td>
                 <td class="px-6 py-4 text-center"><i data-lucide="check-circle-2" class="w-5 h-5 text-green-500 mx-auto"></i></td>
                 <td class="px-6 py-4 text-center"><i data-lucide="x-circle" class="w-5 h-5 text-red-400 mx-auto"></i></td>
             </tr>
             <tr class="hover:bg-slate-50">
-                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">დიაგრამების და ანალიტიკის ნახვა</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">@T("დიაგრამების და ანალიტიკის ნახვა", "View Charts and Analytics")</td>
                 <td class="px-6 py-4 text-center"><i data-lucide="check-circle-2" class="w-5 h-5 text-green-500 mx-auto"></i></td>
                 <td class="px-6 py-4 text-center"><i data-lucide="check-circle-2" class="w-5 h-5 text-green-500 mx-auto"></i></td>
                 <td class="px-6 py-4 text-center"><i data-lucide="check-circle-2" class="w-5 h-5 text-green-500 mx-auto"></i></td>

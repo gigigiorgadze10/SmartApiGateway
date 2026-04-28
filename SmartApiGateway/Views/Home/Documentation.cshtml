@@ -1,100 +1,112 @@
-﻿@{
+﻿@using Microsoft.AspNetCore.Localization
+@{
     Layout = null;
+    var requestCulture = Context.Features.Get<IRequestCultureFeature>();
+    bool isEn = requestCulture?.RequestCulture.UICulture.Name == "en";
+    string T(string ka, string en) => isEn ? en : ka;
 }
 <!DOCTYPE html>
-<html lang="ka">
+<html lang="@(isEn ? "en" : "ka")">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>დოკუმენტაცია - Smart API Gateway</title>
+    <title>@T("დოკუმენტაცია", "Documentation") - Smart API Gateway</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Georgian:wght@400;500;700;900&display=swap" rel="stylesheet">
     <style>
         body {
         font-family: 'Noto Sans Georgian', sans-serif;
-        }
-    </style>
-</head>
-<body class="bg-slate-50 text-slate-800 min-h-screen">
+        }</style>
+    </head>
+    <body class="bg-slate-50 text-slate-800 min-h-screen">
 
-    <nav class="bg-white border-b border-slate-200 p-4">
-        <div class="max-w-4xl mx-auto flex items-center justify-between">
-            <div class="flex items-center space-x-2">
-                <div class="w-8 h-8 bg-blue-600 rounded flex items-center justify-center text-white">
-                    <i data-lucide="network" class="w-4 h-4"></i>
-                </div>
-                <span class="font-bold text-slate-800">Smart Gateway</span>
-            </div>
-            <a href="/" class="text-sm font-medium text-slate-500 hover:text-blue-600 flex items-center transition">
-                <i data-lucide="arrow-left" class="w-4 h-4 mr-1"></i> მთავარ გვერდზე დაბრუნება
-            </a>
-        </div>
-    </nav>
-
-    <main class="max-w-4xl mx-auto py-12 px-4">
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 md:p-12">
-            
-            <header class="mb-10">
-                <h1 class="text-3xl md:text-4xl font-black text-slate-900 mb-4">ტექნიკური დოკუმენტაცია</h1>
-                <p class="text-lg text-slate-500 leading-relaxed">
-                    გაეცანით სისტემის არქიტექტურას, გამოყენებულ ტექნოლოგიებსა და უსაფრთხოების ფილტრებს. ეს დოკუმენტაცია დაგეხმარებათ Gateway-ს სწორად კონფიგურაციაში.
-                </p>
-            </header>
-
-            <div class="space-y-12">
-                <section>
-                    <h2 class="text-xl font-bold text-slate-800 mb-4 flex items-center border-b border-slate-100 pb-2">
-                        <i data-lucide="cpu" class="w-5 h-5 mr-2 text-blue-500"></i> გამოყენებული ტექნოლოგიები
-                    </h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                            <h3 class="font-bold text-slate-700 mb-1">Back-End (C#)</h3>
-                            <p class="text-sm text-slate-500">ASP.NET Core 8.0 უზრუნველყოფს მოთხოვნების სწრაფ და პარალელურ დამუშავებას.</p>
-                        </div>
-                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                            <h3 class="font-bold text-slate-700 mb-1">Database & ORM</h3>
-                            <p class="text-sm text-slate-500">PostgreSQL Cloud (Neon.tech) + Entity Framework Core ლოგებისა და კონფიგურაციისთვის.</p>
-                        </div>
-                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                            <h3 class="font-bold text-slate-700 mb-1">Real-Time Data</h3>
-                            <p class="text-sm text-slate-500">SignalR WebSockets გამოიყენება Dashboard-ის მყისიერი (Live) განახლებისთვის.</p>
-                        </div>
-                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                            <h3 class="font-bold text-slate-700 mb-1">Front-End</h3>
-                            <p class="text-sm text-slate-500">Tailwind CSS მოქნილი დიზაინისთვის და Lucide იკონები ვიზუალისთვის.</p>
-                        </div>
+        <nav class="bg-white border-b border-slate-200 p-4">
+            <div class="max-w-4xl mx-auto flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                    <div class="w-8 h-8 bg-blue-600 rounded flex items-center justify-center text-white">
+                        <i data-lucide="network" class="w-4 h-4"></i>
                     </div>
-                </section>
+                    <span class="font-bold text-slate-800">Smart Gateway</span>
+                </div>
+            
+                <div class="flex items-center gap-4">
+                    <form asp-action="SetLanguage" method="post" class="m-0 flex items-center bg-slate-50 border border-slate-200 rounded-lg p-1 shadow-sm">
+                        <input type="hidden" name="returnUrl" value="/Home/Documentation" />
+                        <button type="submit" name="culture" value="ka" class="px-2 py-1 text-xs font-bold rounded @(!isEn ? "bg-white shadow text-blue-600" : "text-slate-500")">GE</button>
+                        <button type="submit" name="culture" value="en" class="px-2 py-1 text-xs font-bold rounded @(isEn ? "bg-white shadow text-blue-600" : "text-slate-500")">EN</button>
+                    </form>
 
-                <section>
-                    <h2 class="text-xl font-bold text-slate-800 mb-4 flex items-center border-b border-slate-100 pb-2">
-                        <i data-lucide="git-merge" class="w-5 h-5 mr-2 text-green-500"></i> მუშაობის პრინციპი (Pipeline)
-                    </h2>
-                    <ul class="space-y-4">
-                        <li class="flex items-start">
-                            <div class="w-8 h-8 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center font-bold text-sm shrink-0 mr-3">1</div>
-                            <p class="text-slate-600 pt-1"><strong>მოთხოვნის მიღება:</strong> სისტემა იღებს მოთხოვნას და <code>X-Forwarded-For</code> ჰედერით ადგენს კლიენტის რეალურ IP მისამართს.</p>
-                        </li>
-                        <li class="flex items-start">
-                            <div class="w-8 h-8 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center font-bold text-sm shrink-0 mr-3">2</div>
-                            <p class="text-slate-600 pt-1"><strong>უსაფრთხოების ფილტრი:</strong> მოწმდება <code>MemoryCache</code> და ბაზა. თუ IP მოიძებნა შავ სიაში, ბრუნდება <code class="text-red-500 bg-red-50 px-1 rounded">403 Forbidden</code>.</p>
-                        </li>
-                        <li class="flex items-start">
-                            <div class="w-8 h-8 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center font-bold text-sm shrink-0 mr-3">3</div>
-                            <p class="text-slate-600 pt-1"><strong>რუტინგი:</strong> Gateway პოულობს შესაბამის Endpoint-ს და აყალიბებს Proxy მოთხოვნას (აშორებს Gzip მოთხოვნებს ტექსტის წაკითხვადობისთვის).</p>
-                        </li>
-                        <li class="flex items-start">
-                            <div class="w-8 h-8 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center font-bold text-sm shrink-0 mr-3">4</div>
-                            <p class="text-slate-600 pt-1"><strong>ლოგირება:</strong> პასუხის მიღებისთანავე ინახება ლოგი ბაზაში (Response Time, Status) და იგზავნება SignalR შეტყობინება პანელში.</p>
-                        </li>
-                    </ul>
-                </section>
-
+                    <a href="/" class="text-sm font-medium text-slate-500 hover:text-blue-600 flex items-center transition">
+                        <i data-lucide="arrow-left" class="w-4 h-4 mr-1"></i> <span class="hidden sm:inline">@T("მთავარ გვერდზე დაბრუნება", "Back to Home")</span>
+                    </a>
+                </div>
             </div>
-        </div>
-    </main>
+        </nav>
 
-    <script>lucide.createIcons();</script>
-</body>
+        <main class="max-w-4xl mx-auto py-12 px-4">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 md:p-12">
+            
+                <header class="mb-10">
+                    <h1 class="text-3xl md:text-4xl font-black text-slate-900 mb-4">@T("ტექნიკური დოკუმენტაცია", "Technical Documentation")</h1>
+                    <p class="text-lg text-slate-500 leading-relaxed">
+                        @T("გაეცანით სისტემის არქიტექტურას, გამოყენებულ ტექნოლოგიებსა და უსაფრთხოების ფილტრებს. ეს დოკუმენტაცია დაგეხმარებათ Gateway-ს სწორად კონფიგურაციაში.", "Explore the system architecture, technologies used, and security filters. This documentation will help you configure the Gateway correctly.")
+                    </p>
+                </header>
+
+                <div class="space-y-12">
+                    <section>
+                        <h2 class="text-xl font-bold text-slate-800 mb-4 flex items-center border-b border-slate-100 pb-2">
+                            <i data-lucide="cpu" class="w-5 h-5 mr-2 text-blue-500"></i> @T("გამოყენებული ტექნოლოგიები", "Technologies Used")
+                        </h2>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                                <h3 class="font-bold text-slate-700 mb-1">Back-End (C#)</h3>
+                                <p class="text-sm text-slate-500">@T("ASP.NET Core 8.0 უზრუნველყოფს მოთხოვნების სწრაფ და პარალელურ დამუშავებას.", "ASP.NET Core 8.0 ensures fast and concurrent request processing.")</p>
+                            </div>
+                            <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                                <h3 class="font-bold text-slate-700 mb-1">Database & ORM</h3>
+                                <p class="text-sm text-slate-500">@T("PostgreSQL Cloud (Neon.tech) + Entity Framework Core ლოგებისა და კონფიგურაციისთვის.", "PostgreSQL Cloud (Neon.tech) + Entity Framework Core for logs and configuration.")</p>
+                            </div>
+                            <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                                <h3 class="font-bold text-slate-700 mb-1">Real-Time Data</h3>
+                                <p class="text-sm text-slate-500">@T("SignalR WebSockets გამოიყენება Dashboard-ის მყისიერი (Live) განახლებისთვის.", "SignalR WebSockets are used for instant (Live) Dashboard updates.")</p>
+                            </div>
+                            <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                                <h3 class="font-bold text-slate-700 mb-1">Front-End</h3>
+                                <p class="text-sm text-slate-500">@T("Tailwind CSS მოქნილი დიზაინისთვის და Lucide იკონები ვიზუალისთვის.", "Tailwind CSS for flexible design and Lucide for visual icons.")</p>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section>
+                        <h2 class="text-xl font-bold text-slate-800 mb-4 flex items-center border-b border-slate-100 pb-2">
+                            <i data-lucide="git-merge" class="w-5 h-5 mr-2 text-green-500"></i> @T("მუშაობის პრინციპი (Pipeline)", "Working Principle (Pipeline)")
+                        </h2>
+                        <ul class="space-y-4">
+                            <li class="flex items-start">
+                                <div class="w-8 h-8 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center font-bold text-sm shrink-0 mr-3">1</div>
+                                <p class="text-slate-600 pt-1"><strong>@T("მოთხოვნის მიღება:", "Request Interception:")</strong> @T("სისტემა იღებს მოთხოვნას და X-Forwarded-For ჰედერით ადგენს კლიენტის რეალურ IP მისამართს.", "The system intercepts the request and determines the client's real IP address via the X-Forwarded-For header.")</p>
+                            </li>
+                            <li class="flex items-start">
+                                <div class="w-8 h-8 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center font-bold text-sm shrink-0 mr-3">2</div>
+                                <p class="text-slate-600 pt-1"><strong>@T("უსაფრთხოების ფილტრი:", "Security Filter:")</strong> @T("მოწმდება MemoryCache და ბაზა. თუ IP მოიძებნა შავ სიაში, ბრუნდება", "MemoryCache and the database are checked. If the IP is found in the blacklist, it returns") <code class="text-red-500 bg-red-50 px-1 rounded">403 Forbidden</code>.</p>
+                            </li>
+                            <li class="flex items-start">
+                                <div class="w-8 h-8 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center font-bold text-sm shrink-0 mr-3">3</div>
+                                <p class="text-slate-600 pt-1"><strong>@T("რუტინგი:", "Routing:")</strong> @T("Gateway პოულობს შესაბამის Endpoint-ს და აყალიბებს Proxy მოთხოვნას (აშორებს Gzip მოთხოვნებს ტექსტის წაკითხვადობისთვის).", "The Gateway finds the corresponding Endpoint and builds a Proxy request (stripping Gzip requests for text readability).")</p>
+                            </li>
+                            <li class="flex items-start">
+                                <div class="w-8 h-8 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center font-bold text-sm shrink-0 mr-3">4</div>
+                                <p class="text-slate-600 pt-1"><strong>@T("ლოგირება:", "Logging:")</strong> @T("პასუხის მიღებისთანავე ინახება ლოგი ბაზაში (Response Time, Status) და იგზავნება SignalR შეტყობინება პანელში.", "Upon receiving a response, a log is saved in the database (Response Time, Status) and a SignalR message is sent to the dashboard.")</p>
+                            </li>
+                        </ul>
+                    </section>
+
+                </div>
+            </div>
+        </main>
+
+        <script>lucide.createIcons();</script>
+    </body>
 </html>

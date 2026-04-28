@@ -1,80 +1,108 @@
 ﻿@model SmartApiGateway.ViewModels.LoginViewModel
+@using Microsoft.AspNetCore.Localization
+
 @{
     ViewData["Title"] = "სისტემაში შესვლა";
+    Layout = null; 
+    
+    var requestCulture = Context.Features.Get<IRequestCultureFeature>();
+    bool isEn = requestCulture?.RequestCulture.UICulture.Name == "en";
+    string T(string ka, string en) => isEn ? en : ka;
 }
 
-<div class="min-h-screen flex items-center justify-center relative bg-slate-50">
-    <div class="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-        <div class="absolute -top-1/4 -left-1/4 w-1/2 h-1/2 bg-blue-400/20 rounded-full blur-3xl"></div>
-        <div class="absolute top-3/4 -right-1/4 w-1/2 h-1/2 bg-indigo-400/20 rounded-full blur-3xl"></div>
-    </div>
-
-    <div class="w-full max-w-md bg-white/80 backdrop-blur-xl p-8 rounded-3xl shadow-2xl border border-white z-10 mx-4">
-        <div class="text-center mb-8">
-            <div class="w-16 h-16 bg-blue-600 rounded-2xl mx-auto flex items-center justify-center text-white shadow-lg shadow-blue-500/30 mb-4 transform -rotate-6 hover:rotate-0 transition duration-300">
-                <i data-lucide="network" class="w-8 h-8"></i>
-            </div>
-            <h2 class="text-2xl font-black text-slate-800">კეთილი იყოს თქვენი მობრძანება</h2>
-            <p class="text-slate-500 text-sm mt-2">შეიყვანეთ მონაცემები პანელში შესასვლელად</p>
+<!DOCTYPE html>
+<html lang="@(isEn ? "en" : "ka")">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@T("შესვლა", "Login") - Smart Gateway</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Georgian:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+        font-family: 'Noto Sans Georgian', sans-serif;
+        }</style>
+    </head>
+    <body class="min-h-screen flex items-center justify-center relative bg-slate-50">
+        <div class="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+            <div class="absolute -top-1/4 -left-1/4 w-1/2 h-1/2 bg-blue-400/20 rounded-full blur-3xl"></div>
+            <div class="absolute top-3/4 -right-1/4 w-1/2 h-1/2 bg-indigo-400/20 rounded-full blur-3xl"></div>
         </div>
 
-        @if (TempData["Success"] != null)
-        {
-            <div class="mb-4 bg-emerald-50 border border-emerald-200 text-emerald-600 p-3 rounded-xl text-sm font-medium text-center">
-                @TempData["Success"]
-            </div>
-        }
+        <div class="absolute top-6 right-6 z-20">
+            <form asp-controller="Home" asp-action="SetLanguage" method="post" class="bg-white/80 backdrop-blur border border-slate-200 rounded-lg p-1 shadow-sm flex items-center">
+                <input type="hidden" name="returnUrl" value="/Account/Login" />
+                <button type="submit" name="culture" value="ka" class="px-2 py-1 text-xs font-bold rounded @(!isEn ? "bg-slate-100 text-blue-600" : "text-slate-500 hover:bg-slate-50")">GE</button>
+                <button type="submit" name="culture" value="en" class="px-2 py-1 text-xs font-bold rounded @(isEn ? "bg-slate-100 text-blue-600" : "text-slate-500 hover:bg-slate-50")">EN</button>
+            </form>
+        </div>
 
-        <form asp-action="Login" method="post" class="space-y-5">
-            <div asp-validation-summary="ModelOnly" class="text-red-500 text-sm bg-red-50 p-3 rounded-lg border border-red-100"></div>
-
-            <div>
-                <label class="block text-sm font-semibold text-slate-600 mb-1.5 ml-1">ელ. ფოსტა</label>
-                <div class="relative">
-                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <i data-lucide="mail" class="w-5 h-5 text-slate-400"></i>
-                    </div>
-                    <input asp-for="Email" class="w-full pl-10 p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition" placeholder="admin@gateway.com" />
+        <div class="w-full max-w-md bg-white/80 backdrop-blur-xl p-8 rounded-3xl shadow-2xl border border-white z-10 mx-4">
+            <div class="text-center mb-8">
+                <div class="w-16 h-16 bg-blue-600 rounded-2xl mx-auto flex items-center justify-center text-white shadow-lg shadow-blue-500/30 mb-4 transform -rotate-6 hover:rotate-0 transition duration-300">
+                    <i data-lucide="network" class="w-8 h-8"></i>
                 </div>
-                <span asp-validation-for="Email" class="text-red-500 text-xs ml-1 mt-1 block"></span>
+                <h2 class="text-2xl font-black text-slate-800">@T("კეთილი იყოს თქვენი მობრძანება", "Welcome Back")</h2>
+                <p class="text-slate-500 text-sm mt-2">@T("შეიყვანეთ მონაცემები პანელში შესასვლელად", "Enter your credentials to access the dashboard")</p>
             </div>
 
-            <div>
-                <label class="block text-sm font-semibold text-slate-600 mb-1.5 ml-1">პაროლი</label>
-                <div class="relative">
-                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <i data-lucide="lock" class="w-5 h-5 text-slate-400"></i>
-                    </div>
-                    <input asp-for="Password" type="password" class="w-full pl-10 p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition" placeholder="••••••••" />
+            @if (TempData["Success"] != null)
+            {
+                <div class="mb-4 bg-emerald-50 border border-emerald-200 text-emerald-600 p-3 rounded-xl text-sm font-medium text-center">
+                    @TempData["Success"]
                 </div>
-                <span asp-validation-for="Password" class="text-red-500 text-xs ml-1 mt-1 block"></span>
-            </div>
+            }
 
-            <div class="flex items-center justify-between pl-1">
-                <label class="flex items-center cursor-pointer">
-                    <input asp-for="RememberMe" type="checkbox" class="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
-                    <span class="ml-2 text-sm text-slate-600 font-medium">დამიმახსოვრე</span>
-                </label>
-                <a asp-action="ForgotPassword" class="text-sm font-semibold text-blue-600 hover:text-blue-700 transition">
-                    დაგავიწყდათ პაროლი?
-                </a>
-            </div>
+            <form asp-action="Login" method="post" class="space-y-5">
+                <div asp-validation-summary="ModelOnly" class="text-red-500 text-sm bg-red-50 p-3 rounded-lg border border-red-100"></div>
 
-            <button type="submit" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3.5 rounded-xl transition flex items-center justify-center group shadow-lg">
-                სისტემაში შესვლა
-                <i data-lucide="arrow-right" class="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform"></i>
-            </button>
+                <div>
+                    <label class="block text-sm font-semibold text-slate-600 mb-1.5 ml-1">@T("ელ. ფოსტა", "Email Address")</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i data-lucide="mail" class="w-5 h-5 text-slate-400"></i>
+                        </div>
+                        <input asp-for="Email" class="w-full pl-10 p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition" placeholder="admin@gateway.com" />
+                    </div>
+                    <span asp-validation-for="Email" class="text-red-500 text-xs ml-1 mt-1 block"></span>
+                </div>
 
-            <div class="text-center mt-6">
-                <p class="text-sm text-slate-500">
-                    არ გაქვთ ანგარიში?
-                    <a href="/Account/Register" class="text-blue-600 hover:text-blue-700 font-bold transition">რეგისტრაცია</a>
-                </p>
-            </div>
-        </form>
-    </div>
-</div>
+                <div>
+                    <label class="block text-sm font-semibold text-slate-600 mb-1.5 ml-1">@T("პაროლი", "Password")</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i data-lucide="lock" class="w-5 h-5 text-slate-400"></i>
+                        </div>
+                        <input asp-for="Password" type="password" class="w-full pl-10 p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition" placeholder="••••••••" />
+                    </div>
+                    <span asp-validation-for="Password" class="text-red-500 text-xs ml-1 mt-1 block"></span>
+                </div>
 
-@section Scripts {
-    <partial name="_ValidationScriptsPartial" />
-}
+                <div class="flex items-center justify-between pl-1">
+                    <label class="flex items-center cursor-pointer">
+                        <input asp-for="RememberMe" type="checkbox" class="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
+                        <span class="ml-2 text-sm text-slate-600 font-medium">@T("დამიმახსოვრე", "Remember Me")</span>
+                    </label>
+                    <a asp-action="ForgotPassword" class="text-sm font-semibold text-blue-600 hover:text-blue-700 transition">
+                        @T("დაგავიწყდათ პაროლი?", "Forgot Password?")
+                    </a>
+                </div>
+
+                <button type="submit" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3.5 rounded-xl transition flex items-center justify-center group shadow-lg">
+                    @T("სისტემაში შესვლა", "Sign In")
+                    <i data-lucide="arrow-right" class="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform"></i>
+                </button>
+
+                <div class="text-center mt-6">
+                    <p class="text-sm text-slate-500">
+                        @T("არ გაქვთ ანგარიში?", "Don't have an account?")
+                        <a href="/Account/Register" class="text-blue-600 hover:text-blue-700 font-bold transition">@T("რეგისტრაცია", "Sign Up")</a>
+                    </p>
+                </div>
+            </form>
+        </div>
+    
+        <script>lucide.createIcons();</script>
+    </body>
+</html>
