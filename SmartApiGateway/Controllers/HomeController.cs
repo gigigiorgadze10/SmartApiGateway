@@ -23,6 +23,12 @@ namespace SmartApiGateway.Controllers
             return View();
         }
 
+        [AllowAnonymous]
+        public IActionResult Documentation()
+        {
+            return View();
+        }
+
         [Authorize]
         public async Task<IActionResult> Dashboard(string filter = "24h", int limit = 10)
         {
