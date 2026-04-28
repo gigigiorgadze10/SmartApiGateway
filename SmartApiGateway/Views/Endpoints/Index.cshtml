@@ -1,18 +1,22 @@
 ﻿@model IEnumerable<SmartApiGateway.Models.ApiEndpoint>
 @using System.Security.Claims
+@using Microsoft.AspNetCore.Localization
 
 @{
     ViewData["Title"] = "მარშრუტები";
+    var requestCulture = Context.Features.Get<IRequestCultureFeature>();
+    bool isEn = requestCulture?.RequestCulture.UICulture.Name == "en";
+    string T(string ka, string en) => isEn ? en : ka;
 }
 
 <div class="container-fluid max-w-7xl mx-auto">
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
         <div>
-            <h2 class="text-2xl font-bold text-slate-800">API ენდპოინტები</h2>
-            <p class="text-slate-500 text-sm mt-1">მართეთ ტრაფიკის მარშრუტიზაცია და Load Balancing</p>
+            <h2 class="text-2xl font-bold text-slate-800">API @T("ენდპოინტები", "Endpoints")</h2>
+            <p class="text-slate-500 text-sm mt-1">@T("მართეთ ტრაფიკის მარშრუტიზაცია", "Manage traffic routing") და Load Balancing</p>
         </div>
         <a asp-action="Create" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl transition flex items-center font-semibold shadow-lg shadow-blue-500/30">
-            <i data-lucide="plus" class="w-5 h-5 mr-2"></i> ახალი მარშრუტი
+            <i data-lucide="plus" class="w-5 h-5 mr-2"></i> @T("ახალი მარშრუტი", "New Endpoint")
         </a>
     </div>
 
@@ -21,17 +25,17 @@
             <table class="w-full text-left border-collapse">
                 <thead>
                     <tr class="bg-slate-50/50 border-b border-slate-200 text-slate-500 uppercase text-[11px] font-black tracking-wider">
-                        <th class="p-4 pl-6">მარშრუტი</th>
+                        <th class="p-4 pl-6">@T("მარშრუტი", "Route")</th>
                         <th class="p-4">Target URL</th>
-                        <th class="p-4 text-center">სტატუსი</th>
-                        <th class="p-4">ავტორი</th>
-                        <th class="p-4 pr-6 text-right">მოქმედება</th>
+                        <th class="p-4 text-center">@T("სტატუსი", "Status")</th>
+                        <th class="p-4">@T("ავტორი", "Author")</th>
+                        <th class="p-4 pr-6 text-right">@T("მოქმედება", "Action")</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
                     @if (!Model.Any())
                     {
-                        <tr><td colspan="5" class="p-8 text-center text-slate-400">მარშრუტები ჯერ არ დამატებულა</td></tr>
+                        <tr><td colspan="5" class="p-8 text-center text-slate-400">@T("მარშრუტები ჯერ არ დამატებულა", "No endpoints added yet")</td></tr>
                     }
                     @foreach (var item in Model)
                     {
@@ -47,11 +51,11 @@
                             <td class="p-4 text-center">
                                 @if (item.IsActive)
                                 {
-                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-[10px] font-bold bg-green-100 text-green-700 uppercase">აქტიური</span>
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-[10px] font-bold bg-green-100 text-green-700 uppercase">@T("აქტიური", "Active")</span>
                                 }
                                 else
                                 {
-                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-[10px] font-bold bg-slate-100 text-slate-500 uppercase">გათიშული</span>
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-[10px] font-bold bg-slate-100 text-slate-500 uppercase">@T("გათიშული", "Inactive")</span>
                                 }
                             </td>
                             <td class="p-4">
@@ -66,7 +70,7 @@
                                 }
                                 else
                                 {
-                                    <span class="text-xs font-bold text-slate-400">სისტემა</span>
+                                    <span class="text-xs font-bold text-slate-400">@T("სისტემა", "System")</span>
                                 }
                             </td>
                             
@@ -74,18 +78,18 @@
                                 <div class="flex justify-end items-center gap-1">
                                     @if (canEdit)
                                     {
-                                        <a asp-action="Edit" asp-route-id="@item.Id" class="inline-flex p-2 text-slate-400 hover:text-amber-500 hover:bg-amber-50 rounded-lg transition items-center justify-center" title="რედაქტირება">
+                                        <a asp-action="Edit" asp-route-id="@item.Id" class="inline-flex p-2 text-slate-400 hover:text-amber-500 hover:bg-amber-50 rounded-lg transition items-center justify-center" title="@T("რედაქტირება", "Edit")">
                                             <i data-lucide="edit-2" class="w-4 h-4"></i>
                                         </a>
-                                        <form asp-action="Delete" asp-route-id="@item.Id" method="post" class="m-0" onsubmit="return confirm('წავშალოთ მარშრუტი?');">
-                                            <button type="submit" class="inline-flex p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition items-center justify-center" title="წაშლა">
+                                        <form asp-action="Delete" asp-route-id="@item.Id" method="post" class="m-0" onsubmit="return confirm('@T("წავშალოთ მარშრუტი?", "Delete endpoint?")');">
+                                            <button type="submit" class="inline-flex p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition items-center justify-center" title="@T("წაშლა", "Delete")">
                                                 <i data-lucide="trash-2" class="w-4 h-4"></i>
                                             </button>
                                         </form>
                                     }
                                     else
                                     {
-                                        <span class="text-[10px] text-slate-400 bg-slate-50 px-2 py-1 rounded border border-slate-100 uppercase font-bold">მხოლოდ ნახვა</span>
+                                        <span class="text-[10px] text-slate-400 bg-slate-50 px-2 py-1 rounded border border-slate-100 uppercase font-bold">@T("მხოლოდ ნახვა", "View Only")</span>
                                     }
                                 </div>
                             </td>
