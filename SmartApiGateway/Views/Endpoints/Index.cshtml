@@ -1,5 +1,6 @@
 ﻿@model IEnumerable<SmartApiGateway.Models.ApiEndpoint>
 @using System.Security.Claims
+
 @{
     ViewData["Title"] = "მარშრუტები";
 }
@@ -68,22 +69,25 @@
                                     <span class="text-xs font-bold text-slate-400">სისტემა</span>
                                 }
                             </td>
-                            <td class="p-4 pr-6 text-right space-x-1">
-                                @if (canEdit)
-                                {
-                                    <a asp-action="Edit" asp-route-id="@item.Id" class="inline-block p-2 text-slate-400 hover:text-amber-500 hover:bg-amber-50 rounded-lg transition" title="რედაქტირება">
-                                        <i data-lucide="edit-2" class="w-4 h-4"></i>
-                                    </a>
-                                    <form asp-action="Delete" asp-route-id="@item.Id" method="post" class="inline" onsubmit="return confirm('წავშალოთ მარშრუტი?');">
-                                        <button type="submit" class="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition" title="წაშლა">
-                                            <i data-lucide="trash-2" class="w-4 h-4"></i>
-                                        </button>
-                                    </form>
-                                }
-                                else
-                                {
-                                    <span class="text-[10px] text-slate-400 bg-slate-50 px-2 py-1 rounded border border-slate-100 uppercase font-bold">მხოლოდ ნახვა</span>
-                                }
+                            
+                            <td class="p-4 pr-6">
+                                <div class="flex justify-end items-center gap-1">
+                                    @if (canEdit)
+                                    {
+                                        <a asp-action="Edit" asp-route-id="@item.Id" class="inline-flex p-2 text-slate-400 hover:text-amber-500 hover:bg-amber-50 rounded-lg transition items-center justify-center" title="რედაქტირება">
+                                            <i data-lucide="edit-2" class="w-4 h-4"></i>
+                                        </a>
+                                        <form asp-action="Delete" asp-route-id="@item.Id" method="post" class="m-0" onsubmit="return confirm('წავშალოთ მარშრუტი?');">
+                                            <button type="submit" class="inline-flex p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition items-center justify-center" title="წაშლა">
+                                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                            </button>
+                                        </form>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-[10px] text-slate-400 bg-slate-50 px-2 py-1 rounded border border-slate-100 uppercase font-bold">მხოლოდ ნახვა</span>
+                                    }
+                                </div>
                             </td>
                         </tr>
                     }
