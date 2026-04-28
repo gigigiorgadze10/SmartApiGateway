@@ -18,6 +18,13 @@
             <p class="text-slate-500 text-sm mt-2">შეიყვანეთ მონაცემები პანელში შესასვლელად</p>
         </div>
 
+        @if (TempData["Success"] != null)
+        {
+            <div class="mb-4 bg-emerald-50 border border-emerald-200 text-emerald-600 p-3 rounded-xl text-sm font-medium text-center">
+                @TempData["Success"]
+            </div>
+        }
+
         <form asp-action="Login" method="post" class="space-y-5">
             <div asp-validation-summary="ModelOnly" class="text-red-500 text-sm bg-red-50 p-3 rounded-lg border border-red-100"></div>
 
@@ -48,6 +55,9 @@
                     <input asp-for="RememberMe" type="checkbox" class="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
                     <span class="ml-2 text-sm text-slate-600 font-medium">დამიმახსოვრე</span>
                 </label>
+                <a asp-action="ForgotPassword" class="text-sm font-semibold text-blue-600 hover:text-blue-700 transition">
+                    დაგავიწყდათ პაროლი?
+                </a>
             </div>
 
             <button type="submit" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3.5 rounded-xl transition flex items-center justify-center group shadow-lg">
