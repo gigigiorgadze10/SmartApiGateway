@@ -1,0 +1,101 @@
+﻿@{
+    ViewData["Title"] = "Live Terminal";
+}
+
+<div class="h-[calc(100vh-8rem)] w-full bg-[#0a0a0a] rounded-2xl shadow-2xl overflow-hidden border border-slate-800 flex flex-col font-mono relative">
+    
+    <!-- ტერმინალის Header -->
+    <div class="bg-slate-900 h-10 border-b border-slate-800 flex items-center px-4 shrink-0">
+        <div class="flex space-x-2">
+            <div class="w-3 h-3 rounded-full bg-red-500/80"></div>
+            <div class="w-3 h-3 rounded-full bg-amber-500/80"></div>
+            <div class="w-3 h-3 rounded-full bg-emerald-500/80"></div>
+        </div>
+        <div class="mx-auto text-slate-500 text-xs tracking-wider flex items-center">
+            <i data-lucide="terminal" class="w-3 h-3 mr-2"></i> root@gateway:~# live-traffic --watch
+        </div>
+    </div>
+
+    <!-- ტერმინალის Output -->
+    <div id="terminal-output" class="p-6 flex-1 overflow-y-auto text-sm leading-relaxed space-y-1.5 custom-scrollbar">
+        <div class="text-slate-500 mb-4">
+            [SYS] Initializing Smart Gateway Matrix...<br/>
+            [SYS] Connected to SignalR Hub. Listening for live traffic...
+        </div>
+    </div>
+    
+    <!-- Pulse ანიმაცია -->
+    <div class="absolute bottom-4 right-6 flex items-center space-x-2">
+        <span class="relative flex h-2 w-2">
+          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+          <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+        </span>
+        <span class="text-emerald-500 text-xs font-bold uppercase tracking-widest">Live</span>
+    </div>
+</div>
+
+<style>
+    /* სქროლის დამალვა/გალამაზება სპეციალურად ტერმინალისთვის */
+    .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+</style>
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.js"></script>
+    <script>
+        const terminalOutput = document.getElementById('terminal-output');
+        const MAX_LINES = 100; // რამდენი ხაზი შევინახოთ
+
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("/trafficHub")
+            .withAutomaticReconnect()
+            .build();
+
+        function appendToTerminal(log) {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute:'2-digit', second:'2-digit' });
+            
+            // ფერების ლოგიკა ტერმინალისთვის
+            let methodColor = log.method === "GET" ? "text-blue-400" :
+                              log.method === "POST" ? "text-emerald-400" :
+                              log.method === "PUT" ? "text-amber-400" :
+                              log.method === "DELETE" ? "text-red-400" : "text-slate-400";
+
+            let statusColor = log.status >= 500 ? "text-red-500 font-bold bg-red-500/10 px-1 rounded" :
+                              log.status >= 400 ? "text-amber-500 font-bold" :
+                              log.status >= 200 && log.status < 300 ? "text-emerald-500" : "text-slate-400";
+
+            const lineHTML = `
+                <div class="flex items-start hover:bg-white/5 px-2 -mx-2 rounded transition-colors duration-150">
+                    <span class="text-slate-500 mr-3 w-20 shrink-0">[${timeStr}]</span>
+                    <span class="${methodColor} w-16 shrink-0 font-bold">${log.method}</span>
+                    <span class="text-slate-300 flex-1 truncate mr-4">${log.url}</span>
+                    <span class="${statusColor} w-12 shrink-0 text-center">${log.status}</span>
+                    <span class="text-cyan-400 w-16 shrink-0 text-right">${log.time}ms</span>
+                    <span class="text-slate-500 ml-4 w-32 shrink-0 text-right">${log.ipAddress}</span>
+                </div>
+            `;
+
+            terminalOutput.insertAdjacentHTML('beforeend', lineHTML);
+
+            // თუ ბევრი ხაზი დაგროვდა, ვშლით ზედა ხაზებს
+            if (terminalOutput.children.length > MAX_LINES) {
+                terminalOutput.removeChild(terminalOutput.children[1]); // [0] არის Initializing მესიჯი
+            }
+
+            // ავტომატური სქროლი ბოლოში
+            terminalOutput.scrollTop = terminalOutput.scrollHeight;
+        }
+
+        connection.on("ReceiveLog", function (log) {
+            appendToTerminal(log);
+        });
+
+        connection.start()
+            .then(() => {
+                terminalOutput.insertAdjacentHTML('beforeend', '<div class="text-emerald-500 mb-4">[SYS] System Ready. Awaiting requests...</div>');
+            })
+            .catch(err => console.error(err));
+    </script>
+}
