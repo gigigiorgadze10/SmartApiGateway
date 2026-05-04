@@ -11,13 +11,14 @@
 }
 
 <div class="mb-6 flex flex-col sm:flex-row sm:justify-between sm:items-center bg-white p-4 rounded-2xl shadow-sm border border-slate-100 gap-4">
-    <h2 class="text-xl font-bold text-slate-800">@T("Overview", "Overview")</h2> <div class="flex flex-wrap gap-2">
-    <a href="?filter=1h&limit=@Model.EndpointLimit" class="px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 @(Model.ActiveFilter == "1h" ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/30" : "bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200")">1 @T("საათი", "Hour")</a>
-    <a href="?filter=24h&limit=@Model.EndpointLimit" class="px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 @(Model.ActiveFilter == "24h" ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/30" : "bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200")">24 @T("საათი", "Hours")</a>
-    <a href="?filter=7d&limit=@Model.EndpointLimit" class="px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 @(Model.ActiveFilter == "7d" ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/30" : "bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200")">7 @T("დღე", "Days")</a>
-    <a href="?filter=30d&limit=@Model.EndpointLimit" class="px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 @(Model.ActiveFilter == "30d" ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/30" : "bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200")">30 @T("დღე", "Days")</a>
-    <a href="?filter=all&limit=@Model.EndpointLimit" class="px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 @(Model.ActiveFilter == "all" ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/30" : "bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200")">All Time</a>
-</div>
+    <h2 class="text-xl font-bold text-slate-800">@T("Overview", "Overview")</h2>
+    <div class="flex flex-wrap gap-2">
+        <a href="?filter=1h&limit=@Model.EndpointLimit" class="px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 @(Model.ActiveFilter == "1h" ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/30" : "bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200")">1 @T("საათი", "Hour")</a>
+        <a href="?filter=24h&limit=@Model.EndpointLimit" class="px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 @(Model.ActiveFilter == "24h" ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/30" : "bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200")">24 @T("საათი", "Hours")</a>
+        <a href="?filter=7d&limit=@Model.EndpointLimit" class="px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 @(Model.ActiveFilter == "7d" ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/30" : "bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200")">7 @T("დღე", "Days")</a>
+        <a href="?filter=30d&limit=@Model.EndpointLimit" class="px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 @(Model.ActiveFilter == "30d" ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/30" : "bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200")">30 @T("დღე", "Days")</a>
+        <a href="?filter=all&limit=@Model.EndpointLimit" class="px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 @(Model.ActiveFilter == "all" ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/30" : "bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200")">All Time</a>
+    </div>
 </div>
 
 <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
@@ -72,6 +73,24 @@
     </div>
 </div>
 
+<!-- LIVE GEO-IP MAP SECTION -->
+<div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 mb-8">
+    <h3 class="text-lg font-bold text-slate-800 mb-6 flex items-center">
+        <span class="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center mr-3 shadow-md">
+            <i data-lucide="globe-2" class="w-4 h-4 text-emerald-400"></i>
+        </span>
+        @T("Live ტრაფიკის რუკა", "Live Traffic Map")
+        <span class="ml-auto flex items-center text-xs font-bold text-emerald-500 uppercase tracking-wider bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-100">
+            <span class="relative flex h-2 w-2 mr-2">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </span>
+            Live
+        </span>
+    </h3>
+    <div id="trafficMap" class="h-[400px] w-full rounded-2xl z-0 bg-[#0a0a0a] overflow-hidden"></div>
+</div>
+
 <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 mb-8">
     <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-6 gap-4">
         <h3 class="text-lg font-bold text-slate-800 flex items-center">
@@ -87,7 +106,7 @@
     </div>
     
     <div class="overflow-x-auto">
-        <table class="w-full text-left border-collapse">
+        <table class="w-full text-left border-collapse min-w-[800px] whitespace-nowrap">
             <thead>
                 <tr class="bg-slate-50 text-slate-500 text-sm border-b border-slate-100">
                     <th class="p-4 font-semibold rounded-tl-xl">@T("მარშრუტი", "Route") (Path)</th>
@@ -102,7 +121,7 @@
                 {
                     <tr class="hover:bg-slate-50/80 transition-colors">
                         <td class="p-4 text-sm font-medium text-slate-700 flex items-center">
-                            <span class="w-2 h-2 rounded-full mr-3 @(stat.ServerErrorCount > 0 ? "bg-red-500" : stat.ClientErrorCount > 0 ? "bg-amber-500" : "bg-emerald-500")"></span>
+                            <span class="w-2 h-2 rounded-full mr-3 shrink-0 @(stat.ServerErrorCount > 0 ? "bg-red-500" : stat.ClientErrorCount > 0 ? "bg-amber-500" : "bg-emerald-500")"></span>
                             @stat.Path
                         </td>
                         <td class="p-4 text-sm text-center font-bold text-slate-700">@stat.TotalCount</td>
@@ -133,7 +152,7 @@
         <i data-lucide="list" class="w-5 h-5 text-indigo-500 mr-2"></i> @T("ბოლო მოთხოვნები (Live)", "Recent Requests (Live)")
     </h3>
     <div class="overflow-x-auto">
-        <table class="w-full text-left border-collapse">
+        <table class="w-full text-left border-collapse min-w-[800px] whitespace-nowrap">
             <thead>
                 <tr class="bg-slate-50 text-slate-500 text-sm border-b border-slate-100">
                     <th class="p-4 font-semibold rounded-tl-xl w-24">@T("დრო", "Time")</th>
@@ -155,7 +174,7 @@
                                                      log.HttpMethod == "PUT" ? "bg-amber-100 text-amber-700" :
                                                      log.HttpMethod == "DELETE" ? "bg-red-100 text-red-700" : "bg-slate-100 text-slate-600";
                             }
-                            <span class="text-[10px] uppercase font-black px-2 py-1 rounded mr-3 @methodColor tracking-wider">
+                            <span class="text-[10px] uppercase font-black px-2 py-1 rounded mr-3 shrink-0 @methodColor tracking-wider">
                                 @log.HttpMethod
                             </span>
                             @log.RequestedUrl
@@ -186,15 +205,18 @@
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.js"></script>
+    
+    <!-- Leaflet CSS & JS for Map -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
     <script>
-        // HTML Entity Decoder-ი ქართული ასოებისთვის
         function decodeHTML(html) {
         var txt = document.createElement('textarea');
         txt.innerHTML = html;
         return txt.value;
         }
 
-        // ვშიფრავთ ლეიბლებს
         const rawTrafficLabels = JSON.parse('@Html.Raw(JsonSerializer.Serialize(Model.ChartLabels))');
         const trafficLabels = rawTrafficLabels.map(label => decodeHTML(label));
         const trafficData = JSON.parse('@Html.Raw(JsonSerializer.Serialize(Model.ChartData))');
@@ -206,18 +228,7 @@
 
         let trafficChart = new Chart(ctxTraffic, {
         type: 'line',
-        data: {
-        labels: trafficLabels,
-        datasets: [{
-        label: decodeHTML('@T("მოთხოვნები", "Requests")'), // აქაც ვშიფრავთ
-        data: trafficData,
-        borderColor: '#4f46e5',
-        backgroundColor: gradient,
-        borderWidth: 3,
-        fill: true,
-        tension: 0.4
-        }]
-        },
+        data: { labels: trafficLabels, datasets: [{ label: decodeHTML('@T("მოთხოვნები", "Requests")'), data: trafficData, borderColor: '#4f46e5', backgroundColor: gradient, borderWidth: 3, fill: true, tension: 0.4 }] },
         options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } }, y: { beginAtZero: true } } }
         });
 
@@ -228,12 +239,63 @@
         options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { position: 'bottom' } } }
         });
 
+        // --- MAP INITIALIZATION ---
+        const map = L.map('trafficMap', { zoomControl: false }).setView([20, 0], 2);
+        L.control.zoom({ position: 'bottomright' }).addTo(map);
+        
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; CARTO',
+        subdomains: 'abcd',
+        maxZoom: 20
+        }).addTo(map);
+
+        function addMapPulse(lat, lng, status) {
+        let color = status >= 500 ? '#ef4444' : status >= 400 ? '#f59e0b' : '#10b981';
+        let circle = L.circleMarker([lat, lng], {
+        radius: 6,
+        fillColor: color,
+        color: color,
+        weight: 2,
+        opacity: 1,
+        fillOpacity: 0.6
+        }).addTo(map);
+
+        // Pulse fade-out effect
+        let opacity = 1;
+        let fade = setInterval(() => {
+        opacity -= 0.05;
+        if (opacity <= 0) {
+        clearInterval(fade);
+        map.removeLayer(circle);
+        } else {
+        circle.setStyle({ opacity: opacity, fillOpacity: opacity * 0.6 });
+        }
+        }, 200); // Marker lasts ~4 seconds
+        }
+
+        // --- SIGNALR CONNECTION ---
         const connection = new signalR.HubConnectionBuilder()
         .withUrl("/trafficHub")
         .withAutomaticReconnect()
         .build();
 
         connection.on("ReceiveLog", function (log) {
+            
+        // Map Logic via GeoJS (Free, HTTPS, No API Key)
+        if (log.ipAddress && log.ipAddress !== "::1" && log.ipAddress !== "127.0.0.1") {
+        fetch(`https://get.geojs.io/v1/ip/geo/${log.ipAddress}.json`)
+        .then(res => res.json())
+        .then(data => {
+        if(data.latitude && data.longitude) {
+        addMapPulse(parseFloat(data.latitude), parseFloat(data.longitude), log.status);
+        }
+        }).catch(() => {});
+        } else {
+        // Local testing fallback (Tbilisi)
+        addMapPulse(41.7151, 44.8271, log.status);
+        }
+
+        // Update Stats
         let totalEl = document.getElementById('statTotal');
         totalEl.innerText = parseInt(totalEl.innerText) + 1;
 
@@ -252,6 +314,7 @@
         }
         statusChart.update();
 
+        // Update Table
         const tables = document.querySelectorAll('table');
         const logsTbody = tables[tables.length - 1].querySelector('tbody');
 
@@ -263,18 +326,18 @@
         log.method === "POST" ? "bg-emerald-100 text-emerald-700" :
         log.method === "PUT" ? "bg-amber-100 text-amber-700" :
         log.method === "DELETE" ? "bg-red-100 text-red-700" : "bg-slate-100 text-slate-600";
-                
+                                  
         let statusClass = log.status >= 500 ? "bg-red-100 text-red-700 border-red-200" :
         log.status >= 400 ? "bg-amber-100 text-amber-700 border-amber-200" :
         log.status >= 200 && log.status < 300 ? "bg-emerald-100 text-emerald-700 border-emerald-200" : "bg-slate-100 text-slate-600";
-                
+                                  
         let dotClass = log.status >= 500 ? "bg-red-500" : log.status >= 400 ? "bg-amber-500" : "bg-emerald-500";
 
         const newRowHTML = `
         <tr class="transition-colors bg-blue-50/70 hover:bg-slate-50">
         <td class="p-4 text-sm text-slate-500">${timeStr}</td>
         <td class="p-4 text-sm font-medium text-slate-700 flex items-center mt-1">
-        <span class="text-[10px] uppercase font-black px-2 py-1 rounded mr-3 ${methodColor} tracking-wider">${log.method}</span>
+        <span class="text-[10px] uppercase font-black px-2 py-1 rounded mr-3 shrink-0 ${methodColor} tracking-wider">${log.method}</span>
         ${log.url}
         </td>
         <td class="p-4 text-center">
@@ -293,6 +356,7 @@
         }
         }
 
+        // Update Line Chart
         if(trafficChart) {
         const now = new Date();
         const timeStr = now.toLocaleTimeString('@(isEn ? "en-US" : "ka-GE")', { hour: '2-digit', minute:'2-digit' });
