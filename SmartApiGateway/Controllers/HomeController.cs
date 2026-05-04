@@ -127,6 +127,18 @@ namespace SmartApiGateway.Controllers
             return View(model);
         }
 
+        [Authorize]
+        public IActionResult Terminal()
+        {
+            return View();
+        }
+
+        [Authorize]
+        public IActionResult Sandbox()
+        {
+            return View();
+        }
+
         [AllowAnonymous]
         public IActionResult AccessDenied()
         {

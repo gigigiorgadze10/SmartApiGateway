@@ -66,8 +66,17 @@
                 @if (HasPermission("ViewDashboard"))
                 {
                     <p class="px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 mt-4">@Translate("მონიტორინგი", "Monitoring")</p>
+                    
                     <a href="/Home/Dashboard" class="flex items-center px-3 py-2.5 rounded-lg hover:bg-slate-800 hover:text-white transition group @(ViewContext.RouteData.Values["Action"]?.ToString() == "Dashboard" ? "bg-blue-600 text-white shadow-md shadow-blue-900/20" : "")">
                         <i data-lucide="layout-dashboard" class="w-5 h-5 mr-3 group-hover:scale-110 transition-transform"></i> @Translate("მთავარი", "Dashboard")
+                    </a>
+                    
+                    <a href="/Home/Terminal" class="flex items-center px-3 py-2.5 rounded-lg hover:bg-slate-800 hover:text-white transition group @(ViewContext.RouteData.Values["Action"]?.ToString() == "Terminal" ? "bg-slate-900 text-white border border-slate-700 shadow-inner" : "")">
+                        <i data-lucide="terminal" class="w-5 h-5 mr-3 group-hover:scale-110 transition-transform text-cyan-400"></i> @Translate("ტერმინალი", "Live Terminal")
+                    </a>
+                    
+                    <a href="/Home/Sandbox" class="flex items-center px-3 py-2.5 rounded-lg hover:bg-slate-800 hover:text-white transition group @(ViewContext.RouteData.Values["Action"]?.ToString() == "Sandbox" ? "bg-slate-900 text-white border border-slate-700 shadow-inner" : "")">
+                        <i data-lucide="flask-conical" class="w-5 h-5 mr-3 group-hover:scale-110 transition-transform text-emerald-400"></i> @Translate("API ტესტერი", "API Sandbox")
                     </a>
                 }
 
