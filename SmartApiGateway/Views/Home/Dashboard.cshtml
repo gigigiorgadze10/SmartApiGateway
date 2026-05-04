@@ -187,7 +187,16 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.js"></script>
     <script>
-        const trafficLabels = JSON.parse('@Html.Raw(JsonSerializer.Serialize(Model.ChartLabels))');
+        // HTML Entity Decoder-ი ქართული ასოებისთვის
+        function decodeHTML(html) {
+        var txt = document.createElement('textarea');
+        txt.innerHTML = html;
+        return txt.value;
+        }
+
+        // ვშიფრავთ ლეიბლებს
+        const rawTrafficLabels = JSON.parse('@Html.Raw(JsonSerializer.Serialize(Model.ChartLabels))');
+        const trafficLabels = rawTrafficLabels.map(label => decodeHTML(label));
         const trafficData = JSON.parse('@Html.Raw(JsonSerializer.Serialize(Model.ChartData))');
 
         const ctxTraffic = document.getElementById('trafficChart').getContext('2d');
@@ -197,7 +206,18 @@
 
         let trafficChart = new Chart(ctxTraffic, {
         type: 'line',
-        data: { labels: trafficLabels, datasets: [{ label: '@T("მოთხოვნები", "Requests")', data: trafficData, borderColor: '#4f46e5', backgroundColor: gradient, borderWidth: 3, fill: true, tension: 0.4 }] },
+        data: {
+        labels: trafficLabels,
+        datasets: [{
+        label: decodeHTML('@T("მოთხოვნები", "Requests")'), // აქაც ვშიფრავთ
+        data: trafficData,
+        borderColor: '#4f46e5',
+        backgroundColor: gradient,
+        borderWidth: 3,
+        fill: true,
+        tension: 0.4
+        }]
+        },
         options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } }, y: { beginAtZero: true } } }
         });
 
@@ -214,7 +234,6 @@
         .build();
 
         connection.on("ReceiveLog", function (log) {
-            
         let totalEl = document.getElementById('statTotal');
         totalEl.innerText = parseInt(totalEl.innerText) + 1;
 
@@ -244,11 +263,11 @@
         log.method === "POST" ? "bg-emerald-100 text-emerald-700" :
         log.method === "PUT" ? "bg-amber-100 text-amber-700" :
         log.method === "DELETE" ? "bg-red-100 text-red-700" : "bg-slate-100 text-slate-600";
-                                  
+                
         let statusClass = log.status >= 500 ? "bg-red-100 text-red-700 border-red-200" :
         log.status >= 400 ? "bg-amber-100 text-amber-700 border-amber-200" :
         log.status >= 200 && log.status < 300 ? "bg-emerald-100 text-emerald-700 border-emerald-200" : "bg-slate-100 text-slate-600";
-                                  
+                
         let dotClass = log.status >= 500 ? "bg-red-500" : log.status >= 400 ? "bg-amber-500" : "bg-emerald-500";
 
         const newRowHTML = `
@@ -265,8 +284,7 @@
         </td>
         <td class="p-4 text-center text-sm font-medium text-slate-600">${log.time} <span class="text-xs text-slate-400">ms</span></td>
         <td class="p-4 text-sm text-slate-500 font-mono">${log.ipAddress}</td>
-        </tr>
-        `;
+        </tr>`;
                 
         logsTbody.insertAdjacentHTML('afterbegin', newRowHTML);
                 
