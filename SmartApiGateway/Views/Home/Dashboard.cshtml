@@ -73,7 +73,6 @@
     </div>
 </div>
 
-<!-- LIVE GEO-IP MAP SECTION (LIGHT THEME) -->
 <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 mb-8">
     <h3 class="text-lg font-bold text-slate-800 mb-6 flex items-center">
         <i data-lucide="globe-2" class="w-5 h-5 text-emerald-500 mr-2"></i>
@@ -86,7 +85,6 @@
             Live
         </span>
     </h3>
-    <!-- შევცვალეთ bg ფერი ღია ტონალობაში -->
     <div id="trafficMap" class="h-[400px] w-full rounded-2xl z-0 bg-slate-50 overflow-hidden border border-slate-200"></div>
 </div>
 
@@ -209,7 +207,6 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <script>
-        // HTML ენკოდინგის დეკოდერი (ქართული ასოებისთვის)
         function decodeHTML(html) {
         var txt = document.createElement('textarea');
         txt.innerHTML = html;
@@ -220,7 +217,6 @@
         const trafficLabels = rawTrafficLabels.map(label => decodeHTML(label));
         const trafficData = JSON.parse('@Html.Raw(JsonSerializer.Serialize(Model.ChartData))');
 
-        // --- CHARTS ---
         const ctxTraffic = document.getElementById('trafficChart').getContext('2d');
         let gradient = ctxTraffic.createLinearGradient(0, 0, 0, 400);
         gradient.addColorStop(0, 'rgba(99, 102, 241, 0.5)');
@@ -239,7 +235,6 @@
         options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { position: 'bottom' } } }
         });
 
-        // --- MAP INITIALIZATION ---
         const map = L.map('trafficMap', { zoomControl: false, attributionControl: false }).setView([20, 0], 2);
         L.control.zoom({ position: 'bottomright' }).addTo(map);
         
@@ -248,13 +243,12 @@
         maxZoom: 20
         }).addTo(map);
 
-        // 1. გამოვაჩინოთ არსებული Top IP-ები ჩატვირთვისას
         const initialIps = JSON.parse('@Html.Raw(JsonSerializer.Serialize(Model.TopIps.Keys))');
         
         function drawStaticMarker(lat, lng) {
         L.circleMarker([lat, lng], {
         radius: 4,
-        fillColor: '#4f46e5', // Indigo
+        fillColor: '#4f46e5',
         color: '#3730a3',
         weight: 1,
         opacity: 0.8,
@@ -272,11 +266,10 @@
         }
         }).catch(() => {});
         } else {
-        drawStaticMarker(41.7151, 44.8271); // ლოკალური IP-სთვის თბილისი
+        drawStaticMarker(41.7151, 44.8271);
         }
         });
 
-        // 2. LIVE ტრაფიკის Pulse ანიმაცია (რადარის ეფექტით)
         function addMapPulse(lat, lng, status) {
         let color = status >= 500 ? '#ef4444' : status >= 400 ? '#f59e0b' : '#10b981';
         let radius = 2;
@@ -292,7 +285,7 @@
         let opacity = 1;
         let fade = setInterval(() => {
         opacity -= 0.04;
-        radius += 1; // წრე იზრდება ანიმაციაში
+        radius += 1;
         if (opacity <= 0) {
         clearInterval(fade);
         map.removeLayer(circle);
@@ -300,24 +293,21 @@
         circle.setRadius(radius);
         circle.setStyle({ opacity: opacity, fillOpacity: opacity * 0.4 });
         }
-        }, 80); // ანიმაცია უფრო შესამჩნევია
+        }, 80);
         }
 
-        // --- SIGNALR CONNECTION ---
         const connection = new signalR.HubConnectionBuilder()
         .withUrl("/trafficHub")
         .withAutomaticReconnect()
         .build();
 
         connection.on("ReceiveLog", function (log) {
-        // C#-ის ობიექტის სტრუქტურის დაზღვევა
         let ip = log.ipAddress || log.IpAddress;
         let status = log.statusCode || log.StatusCode || log.status;
         let method = log.httpMethod || log.HttpMethod || log.method;
         let url = log.requestedUrl || log.RequestedUrl || log.url;
         let time = log.responseTimeMs || log.ResponseTimeMs || log.time;
 
-        // რუკის პულსაცია
         if (ip && ip !== "::1" && ip !== "127.0.0.1") {
         fetch(`https://get.geojs.io/v1/ip/geo/${ip}.json`)
         .then(res => res.json())
@@ -330,7 +320,6 @@
         addMapPulse(41.7151, 44.8271, status);
         }
 
-        // სტატისტიკის რიცხვების განახლება
         let totalEl = document.getElementById('statTotal');
         totalEl.innerText = parseInt(totalEl.innerText) + 1;
 
@@ -349,7 +338,6 @@
         }
         statusChart.update();
 
-        // ლაივ ცხრილის განახლება
         const tables = document.querySelectorAll('table');
         const logsTbody = tables[tables.length - 1].querySelector('tbody');
 
@@ -391,7 +379,6 @@
         }
         }
 
-        // ტრაფიკის ჩარტის განახლება
         if(trafficChart) {
         const now = new Date();
         const timeStr = now.toLocaleTimeString('@(isEn ? "en-US" : "ka-GE")', { hour: '2-digit', minute:'2-digit' });

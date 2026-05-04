@@ -17,11 +17,9 @@
         <p class="text-slate-500 mt-2 ml-16">@Html.Raw(T("გაგზავნეთ სატესტო მოთხოვნები თქვენს მიკროსერვისებთან და შეამოწმეთ პასუხები.", "Send test requests to your microservices and inspect responses."))</p>
     </div>
 
-    <!-- Request Section -->
     <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 mb-6 relative z-20">
         <div class="flex flex-col md:flex-row gap-4 mb-6 relative">
             
-            <!-- Custom Styled Dropdown -->
             <div class="relative w-full md:w-36 shrink-0" id="dropdownContainer">
                 <input type="hidden" id="reqMethod" value="GET">
                 <button type="button" id="methodTrigger" class="bg-slate-50 border border-slate-200 text-sm font-black rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 block w-full p-3 flex justify-between items-center outline-none transition">
@@ -29,7 +27,6 @@
                     <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 transition-transform duration-200" id="dropdownIcon"></i>
                 </button>
                 
-                <!-- Dropdown Menu -->
                 <div id="methodMenu" class="absolute left-0 top-full mt-2 w-full bg-white rounded-xl shadow-xl border border-slate-100 overflow-hidden transform opacity-0 scale-95 transition-all duration-200 origin-top pointer-events-none z-50">
                     <ul class="py-1 text-sm font-bold text-slate-700">
                         <li><button type="button" class="method-option w-full text-left px-4 py-2.5 hover:bg-slate-50 hover:text-blue-600 transition" data-value="GET" data-color="text-blue-600">GET</button></li>
@@ -61,7 +58,6 @@
         </div>
     </div>
 
-    <!-- Response Section (DARK THEME) -->
     <div id="responseSection" class="bg-[#0a0a0a] rounded-3xl p-6 shadow-xl border border-slate-800 hidden relative z-10">
         <div class="flex flex-wrap items-center justify-between mb-4 border-b border-slate-800 pb-4 gap-4">
             <h3 class="text-white font-bold flex items-center">
@@ -100,7 +96,6 @@
 
 @section Scripts {
     <script>
-        // Custom Dropdown Logic
         const methodTrigger = document.getElementById('methodTrigger');
         const methodMenu = document.getElementById('methodMenu');
         const methodText = document.getElementById('methodText');
@@ -145,7 +140,6 @@
             dropdownIcon.classList.remove('rotate-180');
         }
 
-        // Fetch Logic
         const btnSend = document.getElementById('sendBtn');
         const btnText = document.getElementById('btnText');
         const btnIcon = document.getElementById('btnIcon');
@@ -190,7 +184,6 @@
                 const endTime = performance.now();
                 const duration = Math.round(endTime - startTime);
 
-                // Dark theme status colors
                 resStatus.textContent = `${response.status} ${response.statusText}`;
                 resStatus.className = 'font-bold px-2 py-0.5 rounded text-sm ';
                 if(response.status >= 200 && response.status < 300) resStatus.classList.add('bg-emerald-500/20', 'text-emerald-400');

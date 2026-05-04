@@ -3,11 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SmartApiGateway.Data;
 using SmartApiGateway.Models;
-using System.Diagnostics;
-// --- დამატებულია ენის მართვისთვის ---
 using Microsoft.AspNetCore.Localization;
-using Microsoft.AspNetCore.Http;
-using System;
 
 namespace SmartApiGateway.Controllers
 {
@@ -34,9 +30,6 @@ namespace SmartApiGateway.Controllers
             return View();
         }
 
-        // ==========================================
-        // დამატებული ლოგიკა: ენის შეცვლა
-        // ==========================================
         [HttpPost]
         [AllowAnonymous]
         public IActionResult SetLanguage(string culture, string returnUrl)
@@ -49,12 +42,10 @@ namespace SmartApiGateway.Controllers
 
             return LocalRedirect(returnUrl ?? "/");
         }
-        // ==========================================
 
         [Authorize]
         public async Task<IActionResult> Dashboard(string filter = "24h", int limit = 10)
         {
-            // ... (შენი Dashboard-ის არსებული ლოგიკა უცვლელია) ...
             var query = _context.TrafficLogs.AsQueryable();
 
             if (filter != "all")

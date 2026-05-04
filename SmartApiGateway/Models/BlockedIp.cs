@@ -17,7 +17,6 @@ namespace SmartApiGateway.Models
 
         public DateTime BlockedAt { get; set; } = DateTime.UtcNow;
 
-        // ვინ დაბლოკა?
         public string? BlockedById { get; set; }
 
         [ForeignKey("BlockedById")]
