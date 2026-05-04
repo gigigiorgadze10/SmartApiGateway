@@ -9,8 +9,8 @@
 <div class="max-w-5xl mx-auto">
     <div class="mb-8">
         <h1 class="text-3xl font-black text-slate-800 flex items-center">
-            <span class="bg-slate-900 text-white w-12 h-12 flex items-center justify-center rounded-2xl mr-4 shadow-lg shadow-slate-900/20">
-                <i data-lucide="flask-conical" class="w-6 h-6 text-emerald-400"></i>
+            <span class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center mr-4 shadow-sm">
+                <i data-lucide="flask-conical" class="w-6 h-6"></i>
             </span>
             @Html.Raw(T("API ტესტერი (Sandbox)", "API Sandbox Tester"))
         </h1>
@@ -18,20 +18,26 @@
     </div>
 
     <!-- Request Section -->
-    <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 mb-6">
-        <div class="flex flex-col md:flex-row gap-4 mb-6">
+    <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 mb-6 relative z-20">
+        <div class="flex flex-col md:flex-row gap-4 mb-6 relative">
             
-            <!-- გალამაზებული Dropdown -->
-            <div class="relative w-full md:w-32 shrink-0">
-                <select id="reqMethod" class="appearance-none bg-slate-50 border border-slate-200 text-slate-800 text-sm font-black rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 block w-full p-3 pr-10 outline-none cursor-pointer transition">
-                    <option value="GET">GET</option>
-                    <option value="POST">POST</option>
-                    <option value="PUT">PUT</option>
-                    <option value="DELETE">DELETE</option>
-                    <option value="PATCH">PATCH</option>
-                </select>
-                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-400">
-                    <i data-lucide="chevron-down" class="w-4 h-4"></i>
+            <!-- Custom Styled Dropdown -->
+            <div class="relative w-full md:w-36 shrink-0" id="dropdownContainer">
+                <input type="hidden" id="reqMethod" value="GET">
+                <button type="button" id="methodTrigger" class="bg-slate-50 border border-slate-200 text-sm font-black rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 block w-full p-3 flex justify-between items-center outline-none transition">
+                    <span id="methodText" class="text-blue-600 tracking-wider">GET</span>
+                    <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 transition-transform duration-200" id="dropdownIcon"></i>
+                </button>
+                
+                <!-- Dropdown Menu -->
+                <div id="methodMenu" class="absolute left-0 top-full mt-2 w-full bg-white rounded-xl shadow-xl border border-slate-100 overflow-hidden transform opacity-0 scale-95 transition-all duration-200 origin-top pointer-events-none z-50">
+                    <ul class="py-1 text-sm font-bold text-slate-700">
+                        <li><button type="button" class="method-option w-full text-left px-4 py-2.5 hover:bg-slate-50 hover:text-blue-600 transition" data-value="GET" data-color="text-blue-600">GET</button></li>
+                        <li><button type="button" class="method-option w-full text-left px-4 py-2.5 hover:bg-slate-50 hover:text-emerald-600 transition" data-value="POST" data-color="text-emerald-600">POST</button></li>
+                        <li><button type="button" class="method-option w-full text-left px-4 py-2.5 hover:bg-slate-50 hover:text-amber-600 transition" data-value="PUT" data-color="text-amber-600">PUT</button></li>
+                        <li><button type="button" class="method-option w-full text-left px-4 py-2.5 hover:bg-slate-50 hover:text-red-600 transition" data-value="DELETE" data-color="text-red-600">DELETE</button></li>
+                        <li><button type="button" class="method-option w-full text-left px-4 py-2.5 hover:bg-slate-50 hover:text-purple-600 transition" data-value="PATCH" data-color="text-purple-600">PATCH</button></li>
+                    </ul>
                 </div>
             </div>
             
@@ -55,8 +61,8 @@
         </div>
     </div>
 
-    <!-- Response Section -->
-    <div id="responseSection" class="bg-[#0a0a0a] rounded-3xl p-6 shadow-xl border border-slate-800 hidden relative">
+    <!-- Response Section (DARK THEME) -->
+    <div id="responseSection" class="bg-[#0a0a0a] rounded-3xl p-6 shadow-xl border border-slate-800 hidden relative z-10">
         <div class="flex flex-wrap items-center justify-between mb-4 border-b border-slate-800 pb-4 gap-4">
             <h3 class="text-white font-bold flex items-center">
                 <i data-lucide="terminal-square" class="w-5 h-5 mr-2 text-slate-400"></i> Response
@@ -74,10 +80,10 @@
         </div>
         
         <div class="relative group">
-            <button onclick="copyResponse()" class="absolute top-2 right-2 p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg opacity-0 group-hover:opacity-100 transition" title="Copy JSON">
+            <button onclick="copyResponse()" class="absolute top-2 right-2 p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg opacity-0 group-hover:opacity-100 transition shadow-sm" title="Copy JSON">
                 <i data-lucide="copy" class="w-4 h-4"></i>
             </button>
-            <pre class="m-0"><code id="resBody" class="block p-4 text-sm text-emerald-400 font-mono overflow-x-auto custom-scrollbar" style="max-height: 400px;"></code></pre>
+            <pre class="m-0"><code id="resBody" class="block p-4 text-sm text-emerald-400 font-mono overflow-x-auto custom-scrollbar-dark" style="max-height: 400px;"></code></pre>
         </div>
     </div>
 </div>
@@ -85,11 +91,61 @@
 <style>
     .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
     .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-    .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    
+    .custom-scrollbar-dark::-webkit-scrollbar { width: 6px; height: 6px; }
+    .custom-scrollbar-dark::-webkit-scrollbar-track { background: transparent; }
+    .custom-scrollbar-dark::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
 </style>
 
 @section Scripts {
     <script>
+        // Custom Dropdown Logic
+        const methodTrigger = document.getElementById('methodTrigger');
+        const methodMenu = document.getElementById('methodMenu');
+        const methodText = document.getElementById('methodText');
+        const reqMethodInput = document.getElementById('reqMethod');
+        const dropdownIcon = document.getElementById('dropdownIcon');
+
+        methodTrigger.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const isOpen = !methodMenu.classList.contains('opacity-0');
+            if (isOpen) closeDropdown();
+            else openDropdown();
+        });
+
+        document.querySelectorAll('.method-option').forEach(option => {
+            option.addEventListener('click', (e) => {
+                const val = e.target.getAttribute('data-value');
+                const color = e.target.getAttribute('data-color');
+                
+                reqMethodInput.value = val;
+                methodText.textContent = val;
+                methodText.className = `${color} tracking-wider`;
+                
+                closeDropdown();
+            });
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!methodTrigger.contains(e.target) && !methodMenu.contains(e.target)) {
+                closeDropdown();
+            }
+        });
+
+        function openDropdown() {
+            methodMenu.classList.remove('opacity-0', 'scale-95', 'pointer-events-none');
+            methodMenu.classList.add('opacity-100', 'scale-100', 'pointer-events-auto');
+            dropdownIcon.classList.add('rotate-180');
+        }
+
+        function closeDropdown() {
+            methodMenu.classList.add('opacity-0', 'scale-95', 'pointer-events-none');
+            methodMenu.classList.remove('opacity-100', 'scale-100', 'pointer-events-auto');
+            dropdownIcon.classList.remove('rotate-180');
+        }
+
+        // Fetch Logic
         const btnSend = document.getElementById('sendBtn');
         const btnText = document.getElementById('btnText');
         const btnIcon = document.getElementById('btnIcon');
@@ -100,7 +156,7 @@
         const resTime = document.getElementById('resTime');
 
         btnSend.addEventListener('click', async () => {
-            const method = document.getElementById('reqMethod').value;
+            const method = reqMethodInput.value;
             const url = document.getElementById('reqUrl').value;
             let body = document.getElementById('reqBody').value;
 
@@ -109,7 +165,6 @@
                 return;
             }
 
-            // UI Loading State (Html.Raw JS-ში)
             btnText.innerHTML = '@Html.Raw(T("იგზავნება...", "Sending..."))';
             btnIcon.classList.add('hidden');
             btnLoader.classList.remove('hidden');
@@ -135,7 +190,7 @@
                 const endTime = performance.now();
                 const duration = Math.round(endTime - startTime);
 
-                // სტატუსის ფერები
+                // Dark theme status colors
                 resStatus.textContent = `${response.status} ${response.statusText}`;
                 resStatus.className = 'font-bold px-2 py-0.5 rounded text-sm ';
                 if(response.status >= 200 && response.status < 300) resStatus.classList.add('bg-emerald-500/20', 'text-emerald-400');
@@ -144,7 +199,6 @@
 
                 resTime.textContent = `${duration} ms`;
 
-                // JSON ენკოდინგი და პრინტი
                 const contentType = response.headers.get("content-type");
                 let resultText = "";
                 if (contentType && contentType.indexOf("application/json") !== -1) {
@@ -164,7 +218,6 @@
                 resBody.textContent = error.toString();
                 responseSection.classList.remove('hidden');
             } finally {
-                // UI Reset
                 btnText.innerHTML = '@Html.Raw(T("გაგზავნა", "Send"))';
                 btnIcon.classList.remove('hidden');
                 btnLoader.classList.add('hidden');
