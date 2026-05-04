@@ -128,12 +128,6 @@ namespace SmartApiGateway.Controllers
         }
 
         [Authorize]
-        public IActionResult Terminal()
-        {
-            return View();
-        }
-
-        [Authorize]
         public IActionResult Sandbox()
         {
             return View();

@@ -12,21 +12,28 @@
             <span class="bg-slate-900 text-white w-12 h-12 flex items-center justify-center rounded-2xl mr-4 shadow-lg shadow-slate-900/20">
                 <i data-lucide="flask-conical" class="w-6 h-6 text-emerald-400"></i>
             </span>
-            @T("API ტესტერი (Sandbox)", "API Sandbox Tester")
+            @Html.Raw(T("API ტესტერი (Sandbox)", "API Sandbox Tester"))
         </h1>
-        <p class="text-slate-500 mt-2 ml-16">@T("გაგზავნეთ სატესტო მოთხოვნები თქვენს მიკროსერვისებთან და შეამოწმეთ პასუხები.", "Send test requests to your microservices and inspect responses.")</p>
+        <p class="text-slate-500 mt-2 ml-16">@Html.Raw(T("გაგზავნეთ სატესტო მოთხოვნები თქვენს მიკროსერვისებთან და შეამოწმეთ პასუხები.", "Send test requests to your microservices and inspect responses."))</p>
     </div>
 
     <!-- Request Section -->
     <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 mb-6">
         <div class="flex flex-col md:flex-row gap-4 mb-6">
-            <select id="reqMethod" class="bg-slate-50 border border-slate-200 text-slate-800 text-sm font-bold rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 block w-full md:w-32 p-3 outline-none">
-                <option value="GET">GET</option>
-                <option value="POST">POST</option>
-                <option value="PUT">PUT</option>
-                <option value="DELETE">DELETE</option>
-                <option value="PATCH">PATCH</option>
-            </select>
+            
+            <!-- გალამაზებული Dropdown -->
+            <div class="relative w-full md:w-32 shrink-0">
+                <select id="reqMethod" class="appearance-none bg-slate-50 border border-slate-200 text-slate-800 text-sm font-black rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 block w-full p-3 pr-10 outline-none cursor-pointer transition">
+                    <option value="GET">GET</option>
+                    <option value="POST">POST</option>
+                    <option value="PUT">PUT</option>
+                    <option value="DELETE">DELETE</option>
+                    <option value="PATCH">PATCH</option>
+                </select>
+                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-400">
+                    <i data-lucide="chevron-down" class="w-4 h-4"></i>
+                </div>
+            </div>
             
             <div class="relative flex-1">
                 <div class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
@@ -35,16 +42,16 @@
                 <input type="text" id="reqUrl" class="bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 block w-full pl-12 p-3 outline-none font-mono" placeholder="https://api.yoursystem.com/v1/users" value="https://jsonplaceholder.typicode.com/todos/1">
             </div>
             
-            <button id="sendBtn" class="bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl px-8 py-3 shadow-lg shadow-emerald-500/30 transition flex items-center justify-center min-w-[120px]">
-                <span id="btnText">@T("გაგზავნა", "Send")</span>
+            <button id="sendBtn" class="bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl px-8 py-3 shadow-lg shadow-emerald-500/30 transition flex items-center justify-center min-w-[140px]">
+                <span id="btnText">@Html.Raw(T("გაგზავნა", "Send"))</span>
                 <i data-lucide="send" id="btnIcon" class="w-4 h-4 ml-2"></i>
                 <i data-lucide="loader-2" id="btnLoader" class="w-4 h-4 ml-2 animate-spin hidden"></i>
             </button>
         </div>
 
         <div>
-            <label class="block text-sm font-bold text-slate-700 mb-2">@T("Request Body (JSON)", "Request Body (JSON)")</label>
-            <textarea id="reqBody" rows="5" class="block p-4 w-full text-sm text-slate-800 bg-slate-50 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none font-mono custom-scrollbar" placeholder='{\n  "key": "value"\n}'></textarea>
+            <label class="block text-sm font-bold text-slate-700 mb-2">@Html.Raw(T("Request Body (JSON)", "Request Body (JSON)"))</label>
+            <textarea id="reqBody" rows="5" class="block p-4 w-full text-sm text-slate-800 bg-slate-50 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none font-mono custom-scrollbar" placeholder='{&#10;  "key": "value"&#10;}'></textarea>
         </div>
     </div>
 
@@ -57,11 +64,11 @@
             <div class="flex items-center space-x-4 text-sm font-mono">
                 <div class="flex items-center">
                     <span class="text-slate-500 mr-2">Status:</span>
-                    <span id="resStatus" class="font-bold px-2 py-0.5 rounded">200 OK</span>
+                    <span id="resStatus" class="font-bold px-2 py-0.5 rounded"></span>
                 </div>
                 <div class="flex items-center">
                     <span class="text-slate-500 mr-2">Time:</span>
-                    <span id="resTime" class="text-cyan-400 font-bold">120 ms</span>
+                    <span id="resTime" class="text-cyan-400 font-bold"></span>
                 </div>
             </div>
         </div>
@@ -102,8 +109,8 @@
                 return;
             }
 
-            // UI Loading State
-            btnText.textContent = '@T("იგზავნება...", "Sending...")';
+            // UI Loading State (Html.Raw JS-ში)
+            btnText.innerHTML = '@Html.Raw(T("იგზავნება...", "Sending..."))';
             btnIcon.classList.add('hidden');
             btnLoader.classList.remove('hidden');
             btnSend.disabled = true;
@@ -158,7 +165,7 @@
                 responseSection.classList.remove('hidden');
             } finally {
                 // UI Reset
-                btnText.textContent = '@T("გაგზავნა", "Send")';
+                btnText.innerHTML = '@Html.Raw(T("გაგზავნა", "Send"))';
                 btnIcon.classList.remove('hidden');
                 btnLoader.classList.add('hidden');
                 btnSend.disabled = false;
