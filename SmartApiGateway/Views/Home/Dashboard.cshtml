@@ -13,11 +13,11 @@
 <div class="mb-6 flex flex-col sm:flex-row sm:justify-between sm:items-center bg-white p-4 rounded-2xl shadow-sm border border-slate-100 gap-4">
     <h2 class="text-xl font-bold text-slate-800">@T("Overview", "Overview")</h2>
     <div class="flex flex-wrap gap-2">
-        <a href="?filter=1h&limit=@Model.EndpointLimit" class="px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 @(Model.ActiveFilter == "1h" ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/30" : "bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200")">1 @T("საათი", "Hour")</a>
-        <a href="?filter=24h&limit=@Model.EndpointLimit" class="px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 @(Model.ActiveFilter == "24h" ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/30" : "bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200")">24 @T("საათი", "Hours")</a>
-        <a href="?filter=7d&limit=@Model.EndpointLimit" class="px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 @(Model.ActiveFilter == "7d" ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/30" : "bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200")">7 @T("დღე", "Days")</a>
-        <a href="?filter=30d&limit=@Model.EndpointLimit" class="px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 @(Model.ActiveFilter == "30d" ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/30" : "bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200")">30 @T("დღე", "Days")</a>
-        <a href="?filter=all&limit=@Model.EndpointLimit" class="px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 @(Model.ActiveFilter == "all" ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/30" : "bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200")">All Time</a>
+        <a href="?filter=1h&limit=@Model.EndpointLimit" class="px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 @(Model.ActiveFilter == "1h" ? "bg-black text-white shadow-md shadow-black/20 border border-black" : "bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200")">1 @T("საათი", "Hour")</a>
+        <a href="?filter=24h&limit=@Model.EndpointLimit" class="px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 @(Model.ActiveFilter == "24h" ? "bg-black text-white shadow-md shadow-black/20 border border-black" : "bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200")">24 @T("საათი", "Hours")</a>
+        <a href="?filter=7d&limit=@Model.EndpointLimit" class="px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 @(Model.ActiveFilter == "7d" ? "bg-black text-white shadow-md shadow-black/20 border border-black" : "bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200")">7 @T("დღე", "Days")</a>
+        <a href="?filter=30d&limit=@Model.EndpointLimit" class="px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 @(Model.ActiveFilter == "30d" ? "bg-black text-white shadow-md shadow-black/20 border border-black" : "bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200")">30 @T("დღე", "Days")</a>
+        <a href="?filter=all&limit=@Model.EndpointLimit" class="px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 @(Model.ActiveFilter == "all" ? "bg-black text-white shadow-md shadow-black/20 border border-black" : "bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200")">All Time</a>
     </div>
 </div>
 
@@ -43,7 +43,10 @@
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
     <div class="lg:col-span-2 bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
         <h3 class="text-lg font-bold text-slate-800 mb-6 flex items-center">
-            <i data-lucide="trending-up" class="w-5 h-5 text-indigo-500 mr-2"></i> @T("ტრაფიკის დინამიკა", "Traffic Dynamics")
+            <span class="w-8 h-8 rounded-xl bg-black flex items-center justify-center mr-3 shadow-md">
+                <i data-lucide="trending-up" class="w-4 h-4 text-indigo-400"></i>
+            </span>
+            @T("ტრაფიკის დინამიკა", "Traffic Dynamics")
         </h3>
         <div class="relative h-80"><canvas id="trafficChart"></canvas></div>
     </div>
@@ -51,14 +54,20 @@
     <div class="space-y-8">
         <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
             <h3 class="text-lg font-bold text-slate-800 mb-6 flex items-center">
-                <i data-lucide="pie-chart" class="w-5 h-5 text-emerald-500 mr-2"></i> @T("სტატუსები", "Statuses")
+                <span class="w-8 h-8 rounded-xl bg-black flex items-center justify-center mr-3 shadow-md">
+                    <i data-lucide="pie-chart" class="w-4 h-4 text-emerald-400"></i>
+                </span>
+                @T("სტატუსები", "Statuses")
             </h3>
             <div class="relative h-56 flex justify-center items-center"><canvas id="statusChart"></canvas></div>
         </div>
 
         <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
             <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center">
-                <i data-lucide="users" class="w-5 h-5 text-indigo-500 mr-2"></i> Top 5 IP
+                <span class="w-8 h-8 rounded-xl bg-black flex items-center justify-center mr-3 shadow-md">
+                    <i data-lucide="users" class="w-4 h-4 text-cyan-400"></i>
+                </span>
+                Top 5 IP
             </h3>
             <div class="space-y-3" id="topIpsContainer">
                 @foreach (var ip in Model.TopIps)
@@ -76,7 +85,7 @@
 <!-- LIVE GEO-IP MAP SECTION -->
 <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 mb-8">
     <h3 class="text-lg font-bold text-slate-800 mb-6 flex items-center">
-        <span class="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center mr-3 shadow-md">
+        <span class="w-8 h-8 rounded-xl bg-black flex items-center justify-center mr-3 shadow-md">
             <i data-lucide="globe-2" class="w-4 h-4 text-emerald-400"></i>
         </span>
         @T("Live ტრაფიკის რუკა", "Live Traffic Map")
@@ -94,14 +103,17 @@
 <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 mb-8">
     <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-6 gap-4">
         <h3 class="text-lg font-bold text-slate-800 flex items-center">
-            <i data-lucide="route" class="w-5 h-5 text-blue-500 mr-2"></i> @T("ენდპოინტების აქტივობა", "Endpoint Activity")
+            <span class="w-8 h-8 rounded-xl bg-black flex items-center justify-center mr-3 shadow-md">
+                <i data-lucide="route" class="w-4 h-4 text-blue-400"></i>
+            </span>
+            @T("ენდპოინტების აქტივობა", "Endpoint Activity")
         </h3>
         <div class="flex items-center space-x-1 bg-slate-50 p-1.5 rounded-xl border border-slate-200">
             <span class="text-xs font-bold text-slate-400 px-2 uppercase tracking-wider hidden sm:block">@T("რაოდენობა:", "Limit:")</span>
-            <a href="?filter=@Model.ActiveFilter&limit=10" class="px-3 py-1.5 rounded-lg text-sm font-bold transition-all @(Model.EndpointLimit == 10 ? "bg-white text-blue-600 shadow-sm border border-slate-200/50" : "text-slate-500 hover:bg-slate-200/50 hover:text-slate-700")">10</a>
-            <a href="?filter=@Model.ActiveFilter&limit=50" class="px-3 py-1.5 rounded-lg text-sm font-bold transition-all @(Model.EndpointLimit == 50 ? "bg-white text-blue-600 shadow-sm border border-slate-200/50" : "text-slate-500 hover:bg-slate-200/50 hover:text-slate-700")">50</a>
-            <a href="?filter=@Model.ActiveFilter&limit=100" class="px-3 py-1.5 rounded-lg text-sm font-bold transition-all @(Model.EndpointLimit == 100 ? "bg-white text-blue-600 shadow-sm border border-slate-200/50" : "text-slate-500 hover:bg-slate-200/50 hover:text-slate-700")">100</a>
-            <a href="?filter=@Model.ActiveFilter&limit=0" class="px-3 py-1.5 rounded-lg text-sm font-bold transition-all @(Model.EndpointLimit == 0 ? "bg-white text-blue-600 shadow-sm border border-slate-200/50" : "text-slate-500 hover:bg-slate-200/50 hover:text-slate-700")">@T("ყველა", "All")</a>
+            <a href="?filter=@Model.ActiveFilter&limit=10" class="px-3 py-1.5 rounded-lg text-sm font-bold transition-all @(Model.EndpointLimit == 10 ? "bg-black text-white shadow-sm" : "text-slate-500 hover:bg-slate-200/50 hover:text-slate-700")">10</a>
+            <a href="?filter=@Model.ActiveFilter&limit=50" class="px-3 py-1.5 rounded-lg text-sm font-bold transition-all @(Model.EndpointLimit == 50 ? "bg-black text-white shadow-sm" : "text-slate-500 hover:bg-slate-200/50 hover:text-slate-700")">50</a>
+            <a href="?filter=@Model.ActiveFilter&limit=100" class="px-3 py-1.5 rounded-lg text-sm font-bold transition-all @(Model.EndpointLimit == 100 ? "bg-black text-white shadow-sm" : "text-slate-500 hover:bg-slate-200/50 hover:text-slate-700")">100</a>
+            <a href="?filter=@Model.ActiveFilter&limit=0" class="px-3 py-1.5 rounded-lg text-sm font-bold transition-all @(Model.EndpointLimit == 0 ? "bg-black text-white shadow-sm" : "text-slate-500 hover:bg-slate-200/50 hover:text-slate-700")">@T("ყველა", "All")</a>
         </div>
     </div>
     
@@ -149,7 +161,10 @@
 
 <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 mb-8">
     <h3 class="text-lg font-bold text-slate-800 mb-6 flex items-center">
-        <i data-lucide="list" class="w-5 h-5 text-indigo-500 mr-2"></i> @T("ბოლო მოთხოვნები (Live)", "Recent Requests (Live)")
+        <span class="w-8 h-8 rounded-xl bg-black flex items-center justify-center mr-3 shadow-md">
+            <i data-lucide="list" class="w-4 h-4 text-indigo-400"></i>
+        </span>
+        @T("ბოლო მოთხოვნები (Live)", "Recent Requests (Live)")
     </h3>
     <div class="overflow-x-auto">
         <table class="w-full text-left border-collapse min-w-[800px] whitespace-nowrap">
@@ -206,7 +221,6 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.js"></script>
     
-    <!-- Leaflet CSS & JS for Map -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
@@ -239,12 +253,11 @@
         options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { position: 'bottom' } } }
         });
 
-        // --- MAP INITIALIZATION ---
-        const map = L.map('trafficMap', { zoomControl: false }).setView([20, 0], 2);
+        // --- MAP INITIALIZATION (Attribution Disabled) ---
+        const map = L.map('trafficMap', { zoomControl: false, attributionControl: false }).setView([20, 0], 2);
         L.control.zoom({ position: 'bottomright' }).addTo(map);
         
         L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-        attribution: '&copy; CARTO',
         subdomains: 'abcd',
         maxZoom: 20
         }).addTo(map);
@@ -260,7 +273,6 @@
         fillOpacity: 0.6
         }).addTo(map);
 
-        // Pulse fade-out effect
         let opacity = 1;
         let fade = setInterval(() => {
         opacity -= 0.05;
@@ -270,7 +282,7 @@
         } else {
         circle.setStyle({ opacity: opacity, fillOpacity: opacity * 0.6 });
         }
-        }, 200); // Marker lasts ~4 seconds
+        }, 200);
         }
 
         // --- SIGNALR CONNECTION ---
@@ -280,8 +292,6 @@
         .build();
 
         connection.on("ReceiveLog", function (log) {
-            
-        // Map Logic via GeoJS (Free, HTTPS, No API Key)
         if (log.ipAddress && log.ipAddress !== "::1" && log.ipAddress !== "127.0.0.1") {
         fetch(`https://get.geojs.io/v1/ip/geo/${log.ipAddress}.json`)
         .then(res => res.json())
@@ -291,11 +301,9 @@
         }
         }).catch(() => {});
         } else {
-        // Local testing fallback (Tbilisi)
         addMapPulse(41.7151, 44.8271, log.status);
         }
 
-        // Update Stats
         let totalEl = document.getElementById('statTotal');
         totalEl.innerText = parseInt(totalEl.innerText) + 1;
 
@@ -314,7 +322,6 @@
         }
         statusChart.update();
 
-        // Update Table
         const tables = document.querySelectorAll('table');
         const logsTbody = tables[tables.length - 1].querySelector('tbody');
 
@@ -356,7 +363,6 @@
         }
         }
 
-        // Update Line Chart
         if(trafficChart) {
         const now = new Date();
         const timeStr = now.toLocaleTimeString('@(isEn ? "en-US" : "ka-GE")', { hour: '2-digit', minute:'2-digit' });
