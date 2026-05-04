@@ -209,6 +209,7 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <script>
+        // HTML ენკოდინგის დეკოდერი (ქართული ასოებისთვის)
         function decodeHTML(html) {
         var txt = document.createElement('textarea');
         txt.innerHTML = html;
@@ -219,6 +220,7 @@
         const trafficLabels = rawTrafficLabels.map(label => decodeHTML(label));
         const trafficData = JSON.parse('@Html.Raw(JsonSerializer.Serialize(Model.ChartData))');
 
+        // --- CHARTS ---
         const ctxTraffic = document.getElementById('trafficChart').getContext('2d');
         let gradient = ctxTraffic.createLinearGradient(0, 0, 0, 400);
         gradient.addColorStop(0, 'rgba(99, 102, 241, 0.5)');
@@ -237,7 +239,7 @@
         options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { position: 'bottom' } } }
         });
 
-        // შეცვლილია რუკის თემა Light ვერსიაზე
+        // --- MAP INITIALIZATION ---
         const map = L.map('trafficMap', { zoomControl: false, attributionControl: false }).setView([20, 0], 2);
         L.control.zoom({ position: 'bottomright' }).addTo(map);
         
@@ -246,65 +248,108 @@
         maxZoom: 20
         }).addTo(map);
 
+        // 1. გამოვაჩინოთ არსებული Top IP-ები ჩატვირთვისას
+        const initialIps = JSON.parse('@Html.Raw(JsonSerializer.Serialize(Model.TopIps.Keys))');
+        
+        function drawStaticMarker(lat, lng) {
+        L.circleMarker([lat, lng], {
+        radius: 4,
+        fillColor: '#4f46e5', // Indigo
+        color: '#3730a3',
+        weight: 1,
+        opacity: 0.8,
+        fillOpacity: 0.5
+        }).addTo(map);
+        }
+
+        initialIps.forEach(ip => {
+        if (ip && ip !== "::1" && ip !== "127.0.0.1") {
+        fetch(`https://get.geojs.io/v1/ip/geo/${ip}.json`)
+        .then(res => res.json())
+        .then(data => {
+        if(data.latitude && data.longitude) {
+        drawStaticMarker(parseFloat(data.latitude), parseFloat(data.longitude));
+        }
+        }).catch(() => {});
+        } else {
+        drawStaticMarker(41.7151, 44.8271); // ლოკალური IP-სთვის თბილისი
+        }
+        });
+
+        // 2. LIVE ტრაფიკის Pulse ანიმაცია (რადარის ეფექტით)
         function addMapPulse(lat, lng, status) {
         let color = status >= 500 ? '#ef4444' : status >= 400 ? '#f59e0b' : '#10b981';
+        let radius = 2;
         let circle = L.circleMarker([lat, lng], {
-        radius: 6,
+        radius: radius,
         fillColor: color,
         color: color,
         weight: 2,
         opacity: 1,
-        fillOpacity: 0.6
+        fillOpacity: 0.8
         }).addTo(map);
 
         let opacity = 1;
         let fade = setInterval(() => {
-        opacity -= 0.05;
+        opacity -= 0.04;
+        radius += 1; // წრე იზრდება ანიმაციაში
         if (opacity <= 0) {
         clearInterval(fade);
         map.removeLayer(circle);
         } else {
-        circle.setStyle({ opacity: opacity, fillOpacity: opacity * 0.6 });
+        circle.setRadius(radius);
+        circle.setStyle({ opacity: opacity, fillOpacity: opacity * 0.4 });
         }
-        }, 200);
+        }, 80); // ანიმაცია უფრო შესამჩნევია
         }
 
+        // --- SIGNALR CONNECTION ---
         const connection = new signalR.HubConnectionBuilder()
         .withUrl("/trafficHub")
         .withAutomaticReconnect()
         .build();
 
         connection.on("ReceiveLog", function (log) {
-        if (log.ipAddress && log.ipAddress !== "::1" && log.ipAddress !== "127.0.0.1") {
-        fetch(`https://get.geojs.io/v1/ip/geo/${log.ipAddress}.json`)
+        // C#-ის ობიექტის სტრუქტურის დაზღვევა
+        let ip = log.ipAddress || log.IpAddress;
+        let status = log.statusCode || log.StatusCode || log.status;
+        let method = log.httpMethod || log.HttpMethod || log.method;
+        let url = log.requestedUrl || log.RequestedUrl || log.url;
+        let time = log.responseTimeMs || log.ResponseTimeMs || log.time;
+
+        // რუკის პულსაცია
+        if (ip && ip !== "::1" && ip !== "127.0.0.1") {
+        fetch(`https://get.geojs.io/v1/ip/geo/${ip}.json`)
         .then(res => res.json())
         .then(data => {
         if(data.latitude && data.longitude) {
-        addMapPulse(parseFloat(data.latitude), parseFloat(data.longitude), log.status);
+        addMapPulse(parseFloat(data.latitude), parseFloat(data.longitude), status);
         }
         }).catch(() => {});
         } else {
-        addMapPulse(41.7151, 44.8271, log.status);
+        addMapPulse(41.7151, 44.8271, status);
         }
 
+        // სტატისტიკის რიცხვების განახლება
         let totalEl = document.getElementById('statTotal');
         totalEl.innerText = parseInt(totalEl.innerText) + 1;
 
-        if (log.status >= 200 && log.status < 300) {
+        if (status >= 200 && status < 300) {
         let el = document.getElementById('statSuccess');
         el.innerText = parseInt(el.innerText) + 1;
         statusChart.data.datasets[0].data[0]++;
-        } else if (log.status >= 400 && log.status < 500) {
+        } else if (status >= 400 && status < 500) {
         let el = document.getElementById('statClient');
         el.innerText = parseInt(el.innerText) + 1;
         statusChart.data.datasets[0].data[1]++;
-        } else if (log.status >= 500) {
+        } else if (status >= 500) {
         let el = document.getElementById('statServer');
         el.innerText = parseInt(el.innerText) + 1;
         statusChart.data.datasets[0].data[2]++;
         }
         statusChart.update();
 
+        // ლაივ ცხრილის განახლება
         const tables = document.querySelectorAll('table');
         const logsTbody = tables[tables.length - 1].querySelector('tbody');
 
@@ -312,31 +357,31 @@
         const now = new Date();
         const timeStr = now.toLocaleTimeString('@(isEn ? "en-US" : "ka-GE")', { hour12: false });
                 
-        let methodColor = log.method === "GET" ? "bg-blue-100 text-blue-700" :
-        log.method === "POST" ? "bg-emerald-100 text-emerald-700" :
-        log.method === "PUT" ? "bg-amber-100 text-amber-700" :
-        log.method === "DELETE" ? "bg-red-100 text-red-700" : "bg-slate-100 text-slate-600";
+        let methodColor = method === "GET" ? "bg-blue-100 text-blue-700" :
+        method === "POST" ? "bg-emerald-100 text-emerald-700" :
+        method === "PUT" ? "bg-amber-100 text-amber-700" :
+        method === "DELETE" ? "bg-red-100 text-red-700" : "bg-slate-100 text-slate-600";
                                   
-        let statusClass = log.status >= 500 ? "bg-red-100 text-red-700 border-red-200" :
-        log.status >= 400 ? "bg-amber-100 text-amber-700 border-amber-200" :
-        log.status >= 200 && log.status < 300 ? "bg-emerald-100 text-emerald-700 border-emerald-200" : "bg-slate-100 text-slate-600";
+        let statusClass = status >= 500 ? "bg-red-100 text-red-700 border-red-200" :
+        status >= 400 ? "bg-amber-100 text-amber-700 border-amber-200" :
+        status >= 200 && status < 300 ? "bg-emerald-100 text-emerald-700 border-emerald-200" : "bg-slate-100 text-slate-600";
                                   
-        let dotClass = log.status >= 500 ? "bg-red-500" : log.status >= 400 ? "bg-amber-500" : "bg-emerald-500";
+        let dotClass = status >= 500 ? "bg-red-500" : status >= 400 ? "bg-amber-500" : "bg-emerald-500";
 
         const newRowHTML = `
         <tr class="transition-colors bg-blue-50/70 hover:bg-slate-50">
         <td class="p-4 text-sm text-slate-500">${timeStr}</td>
         <td class="p-4 text-sm font-medium text-slate-700 flex items-center mt-1">
-        <span class="text-[10px] uppercase font-black px-2 py-1 rounded mr-3 shrink-0 ${methodColor} tracking-wider">${log.method}</span>
-        ${log.url}
+        <span class="text-[10px] uppercase font-black px-2 py-1 rounded mr-3 shrink-0 ${methodColor} tracking-wider">${method}</span>
+        ${url}
         </td>
         <td class="p-4 text-center">
         <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold shadow-sm border ${statusClass}">
-        <span class="w-1.5 h-1.5 rounded-full mr-2 ${dotClass}"></span>${log.status}
+        <span class="w-1.5 h-1.5 rounded-full mr-2 ${dotClass}"></span>${status}
         </span>
         </td>
-        <td class="p-4 text-center text-sm font-medium text-slate-600">${log.time} <span class="text-xs text-slate-400">ms</span></td>
-        <td class="p-4 text-sm text-slate-500 font-mono">${log.ipAddress}</td>
+        <td class="p-4 text-center text-sm font-medium text-slate-600">${time} <span class="text-xs text-slate-400">ms</span></td>
+        <td class="p-4 text-sm text-slate-500 font-mono">${ip}</td>
         </tr>`;
                 
         logsTbody.insertAdjacentHTML('afterbegin', newRowHTML);
@@ -346,11 +391,12 @@
         }
         }
 
+        // ტრაფიკის ჩარტის განახლება
         if(trafficChart) {
         const now = new Date();
         const timeStr = now.toLocaleTimeString('@(isEn ? "en-US" : "ka-GE")', { hour: '2-digit', minute:'2-digit' });
         trafficChart.data.labels.push(timeStr);
-        trafficChart.data.datasets[0].data.push(log.time);
+        trafficChart.data.datasets[0].data.push(time);
                 
         if(trafficChart.data.labels.length > 50) {
         trafficChart.data.labels.shift();
