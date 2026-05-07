@@ -21,7 +21,6 @@ namespace SmartApiGateway.Controllers
         {
             var query = _context.ApiEndpoints.Include(e => e.CreatedBy).AsQueryable();
 
-            // მულტი-ტენანტური ფილტრი
             if (!User.IsInRole("SuperAdmin"))
             {
                 var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);

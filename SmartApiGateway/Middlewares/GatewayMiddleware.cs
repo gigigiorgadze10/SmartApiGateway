@@ -96,7 +96,6 @@ namespace SmartApiGateway.Middlewares
                 context.Response.Headers["X-Cache"] = "HIT";
                 await context.Response.WriteAsync(cached!);
 
-                // გავატანეთ EndpointId და CreatedById
                 await LogAndBroadcastAsync(hub, dbContext, clientIp, targetUrl,
                     context.Request.Method, 200, 0, endpoint.Id, endpoint.CreatedById);
                 return;
@@ -154,7 +153,6 @@ namespace SmartApiGateway.Middlewares
             finally
             {
                 stopwatch.Stop();
-                // გავატანეთ EndpointId და CreatedById
                 await LogAndBroadcastAsync(hub, dbContext, clientIp, targetUrl,
                     context.Request.Method, statusCode, stopwatch.ElapsedMilliseconds, endpoint.Id, endpoint.CreatedById);
             }
@@ -263,11 +261,9 @@ namespace SmartApiGateway.Middlewares
                 time
             };
 
-            // 1. ვაგზავნით SuperAdmin-ებთან
             await hub.Clients.Group("SuperAdmins").SendAsync("ReceiveLog", payload);
             await hub.Clients.Group("SuperAdmins").SendAsync("ReceiveTrafficUpdate");
 
-            // 2. ვაგზავნით კონკრეტულ შემქმნელთან (თუ ენდპოინტს ყავს პატრონი)
             if (!string.IsNullOrEmpty(userId))
             {
                 await hub.Clients.User(userId).SendAsync("ReceiveLog", payload);

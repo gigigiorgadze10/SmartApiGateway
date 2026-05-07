@@ -49,7 +49,6 @@ namespace SmartApiGateway.Controllers
         {
             var query = _context.TrafficLogs.AsQueryable();
 
-            // მულტი-ტენანტური ფილტრი
             if (!User.IsInRole("SuperAdmin"))
             {
                 var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -70,7 +69,6 @@ namespace SmartApiGateway.Controllers
             var totalRequests = await query.CountAsync();
             var avgTime = totalRequests > 0 ? await query.AverageAsync(t => t.ResponseTimeMs) : 0;
 
-            // BlockedIPs გლობალურია, მაგრამ თუ გინდა ეგეც შეგიძლია გაფილტრო
             var blockedCount = await _context.BlockedIps.CountAsync();
 
             int logsLimit = limit > 0 ? limit : 100;
