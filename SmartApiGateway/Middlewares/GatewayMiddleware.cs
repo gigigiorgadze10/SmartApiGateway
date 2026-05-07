@@ -95,8 +95,10 @@ namespace SmartApiGateway.Middlewares
                 context.Response.ContentType = "application/json";
                 context.Response.Headers["X-Cache"] = "HIT";
                 await context.Response.WriteAsync(cached!);
+
+                // გავატანეთ EndpointId და CreatedById
                 await LogAndBroadcastAsync(hub, dbContext, clientIp, targetUrl,
-                    context.Request.Method, 200, 0);
+                    context.Request.Method, 200, 0, endpoint.Id, endpoint.CreatedById);
                 return;
             }
 
@@ -152,8 +154,9 @@ namespace SmartApiGateway.Middlewares
             finally
             {
                 stopwatch.Stop();
+                // გავატანეთ EndpointId და CreatedById
                 await LogAndBroadcastAsync(hub, dbContext, clientIp, targetUrl,
-                    context.Request.Method, statusCode, stopwatch.ElapsedMilliseconds);
+                    context.Request.Method, statusCode, stopwatch.ElapsedMilliseconds, endpoint.Id, endpoint.CreatedById);
             }
         }
 
@@ -233,7 +236,8 @@ namespace SmartApiGateway.Middlewares
         private static async Task LogAndBroadcastAsync(
             IHubContext<TrafficHub> hub,
             ApplicationDbContext db,
-            string ip, string url, string method, int status, long time)
+            string ip, string url, string method, int status, long time,
+            int? endpointId = null, string? userId = null)
         {
             var log = new TrafficLog
             {
@@ -242,22 +246,33 @@ namespace SmartApiGateway.Middlewares
                 HttpMethod = method,
                 StatusCode = status,
                 ResponseTimeMs = time,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
+                EndpointId = endpointId,
+                UserId = userId
             };
 
             db.TrafficLogs.Add(log);
             await db.SaveChangesAsync();
 
-            await hub.Clients.All.SendAsync("ReceiveLog", new
+            var payload = new
             {
                 ipAddress = ip,
                 url,
                 method,
                 status,
                 time
-            });
+            };
 
-            await hub.Clients.All.SendAsync("ReceiveTrafficUpdate");
+            // 1. ვაგზავნით SuperAdmin-ებთან
+            await hub.Clients.Group("SuperAdmins").SendAsync("ReceiveLog", payload);
+            await hub.Clients.Group("SuperAdmins").SendAsync("ReceiveTrafficUpdate");
+
+            // 2. ვაგზავნით კონკრეტულ შემქმნელთან (თუ ენდპოინტს ყავს პატრონი)
+            if (!string.IsNullOrEmpty(userId))
+            {
+                await hub.Clients.User(userId).SendAsync("ReceiveLog", payload);
+                await hub.Clients.User(userId).SendAsync("ReceiveTrafficUpdate");
+            }
         }
     }
 }

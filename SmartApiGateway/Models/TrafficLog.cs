@@ -18,5 +18,8 @@ namespace SmartApiGateway.Models
         public long ResponseTimeMs { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        public int? EndpointId { get; set; }
+        public string? UserId { get; set; }
     }
 }

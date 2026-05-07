@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using SmartApiGateway.Data;
 using SmartApiGateway.Models;
 using Microsoft.AspNetCore.Localization;
+using System.Security.Claims;
 
 namespace SmartApiGateway.Controllers
 {
@@ -48,6 +49,13 @@ namespace SmartApiGateway.Controllers
         {
             var query = _context.TrafficLogs.AsQueryable();
 
+            // მულტი-ტენანტური ფილტრი
+            if (!User.IsInRole("SuperAdmin"))
+            {
+                var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                query = query.Where(t => t.UserId == currentUserId);
+            }
+
             if (filter != "all")
             {
                 DateTime cutoff = DateTime.UtcNow.AddHours(-24);
@@ -61,6 +69,8 @@ namespace SmartApiGateway.Controllers
 
             var totalRequests = await query.CountAsync();
             var avgTime = totalRequests > 0 ? await query.AverageAsync(t => t.ResponseTimeMs) : 0;
+
+            // BlockedIPs გლობალურია, მაგრამ თუ გინდა ეგეც შეგიძლია გაფილტრო
             var blockedCount = await _context.BlockedIps.CountAsync();
 
             int logsLimit = limit > 0 ? limit : 100;

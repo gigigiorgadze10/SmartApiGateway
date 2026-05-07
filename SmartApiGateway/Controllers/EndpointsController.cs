@@ -19,7 +19,16 @@ namespace SmartApiGateway.Controllers
 
         public async Task<IActionResult> Index()
         {
-            var endpoints = await _context.ApiEndpoints.Include(e => e.CreatedBy).ToListAsync();
+            var query = _context.ApiEndpoints.Include(e => e.CreatedBy).AsQueryable();
+
+            // მულტი-ტენანტური ფილტრი
+            if (!User.IsInRole("SuperAdmin"))
+            {
+                var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                query = query.Where(e => e.CreatedById == currentUserId);
+            }
+
+            var endpoints = await query.ToListAsync();
             return View(endpoints);
         }
 
