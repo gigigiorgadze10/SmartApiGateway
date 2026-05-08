@@ -4,6 +4,9 @@ using Microsoft.EntityFrameworkCore;
 using SmartApiGateway.Data;
 using SmartApiGateway.Models;
 using System.Security.Claims;
+using SmartApiGateway.Services;
+using MongoDB.Driver;
+using MongoDB.Driver.Linq;
 
 namespace SmartApiGateway.Controllers
 {
@@ -11,10 +14,12 @@ namespace SmartApiGateway.Controllers
     public class BlockedIpsController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly MongoLogService _mongoService;
 
-        public BlockedIpsController(ApplicationDbContext context)
+        public BlockedIpsController(ApplicationDbContext context, MongoLogService mongoService)
         {
             _context = context;
+            _mongoService = mongoService;
         }
 
         public async Task<IActionResult> Index()
@@ -24,10 +29,13 @@ namespace SmartApiGateway.Controllers
                 .OrderByDescending(b => b.BlockedAt)
                 .ToListAsync();
 
-            var trafficCounts = await _context.TrafficLogs
+            // ლოგების დათვლა გადატანილია MongoDB-ზე
+            var trafficCountsList = await _mongoService.GetLogsAsQueryable()
                 .GroupBy(t => t.IpAddress)
                 .Select(g => new { Ip = g.Key, Count = g.Count() })
-                .ToDictionaryAsync(k => k.Ip, v => v.Count);
+                .ToListAsync();
+
+            var trafficCounts = trafficCountsList.ToDictionary(k => k.Ip, v => v.Count);
 
             ViewBag.TrafficCounts = trafficCounts;
 
