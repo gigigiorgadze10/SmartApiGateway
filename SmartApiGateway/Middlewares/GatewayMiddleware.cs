@@ -1,11 +1,12 @@
 ﻿using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using SmartApiGateway.Data;
 using SmartApiGateway.Hubs;
 using SmartApiGateway.Models;
+using SmartApiGateway.Services;
 using System.Collections.Concurrent;
 using System.Diagnostics;
-using Microsoft.EntityFrameworkCore;
 
 namespace SmartApiGateway.Middlewares
 {
@@ -60,6 +61,7 @@ namespace SmartApiGateway.Middlewares
             var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
             var cache = scope.ServiceProvider.GetRequiredService<IMemoryCache>();
             var hub = scope.ServiceProvider.GetRequiredService<IHubContext<TrafficHub>>();
+            var mongoService = scope.ServiceProvider.GetRequiredService<MongoLogService>();
 
             if (await IsIpBlockedAsync(dbContext, cache, clientIp))
             {
@@ -96,7 +98,7 @@ namespace SmartApiGateway.Middlewares
                 context.Response.Headers["X-Cache"] = "HIT";
                 await context.Response.WriteAsync(cached!);
 
-                await LogAndBroadcastAsync(hub, dbContext, clientIp, targetUrl,
+                await LogAndBroadcastAsync(hub, mongoService, clientIp, targetUrl,
                     context.Request.Method, 200, 0, endpoint.Id, endpoint.CreatedById);
                 return;
             }

@@ -25,16 +25,24 @@ namespace SmartApiGateway.Services
             _logsCollection = mongoDatabase.GetCollection<TrafficLog>(collectionName);
         }
 
-        // 1. ლოგის ჩაწერა (უმსუბუქესი ოპერაცია Mongo-სთვის)
+        // 1. ლოგის ჩაწერა 
         public async Task InsertLogAsync(TrafficLog log)
         {
             await _logsCollection.InsertOneAsync(log);
         }
 
-        // 2. ლოგების წამოღება (IQueryable საშუალებას გვაძლევს LINQ გამოვიყენოთ Controller-ში)
+        // 2. ლოგების წამოღება (IQueryable)
         public IMongoQueryable<TrafficLog> GetLogsAsQueryable()
         {
             return _logsCollection.AsQueryable();
+        }
+
+        // 3. ძველი ლოგების წაშლა (Cleanup სერვისისთვის)
+        public async Task<long> DeleteOldLogsAsync(DateTime cutoffDate, CancellationToken ct = default)
+        {
+            var filter = Builders<TrafficLog>.Filter.Lt(x => x.CreatedAt, cutoffDate);
+            var result = await _logsCollection.DeleteManyAsync(filter, ct);
+            return result.DeletedCount;
         }
     }
 }

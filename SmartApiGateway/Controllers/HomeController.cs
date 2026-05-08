@@ -5,16 +5,21 @@ using SmartApiGateway.Data;
 using SmartApiGateway.Models;
 using Microsoft.AspNetCore.Localization;
 using System.Security.Claims;
+using SmartApiGateway.Services;
+using MongoDB.Driver;
+using MongoDB.Driver.Linq;
 
 namespace SmartApiGateway.Controllers
 {
     public class HomeController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly MongoLogService _mongoService;
 
-        public HomeController(ApplicationDbContext context)
+        public HomeController(ApplicationDbContext context, MongoLogService mongoService)
         {
             _context = context;
+            _mongoService = mongoService;
         }
 
         [AllowAnonymous]
@@ -47,7 +52,7 @@ namespace SmartApiGateway.Controllers
         [Authorize]
         public async Task<IActionResult> Dashboard(string filter = "24h", int limit = 10)
         {
-            var query = _context.TrafficLogs.AsQueryable();
+            var query = _mongoService.GetLogsAsQueryable();
 
             if (!User.IsInRole("SuperAdmin"))
             {
@@ -83,12 +88,14 @@ namespace SmartApiGateway.Controllers
             var clientErr = await query.CountAsync(t => t.StatusCode >= 400 && t.StatusCode < 500);
             var serverErr = await query.CountAsync(t => t.StatusCode >= 500);
 
-            var topIps = await query
+            var topIpsList = await query
                 .GroupBy(t => t.IpAddress)
-                .OrderByDescending(g => g.Count())
-                .Take(5)
                 .Select(g => new { Ip = g.Key, Count = g.Count() })
-                .ToDictionaryAsync(k => k.Ip, v => v.Count);
+                .OrderByDescending(g => g.Count)
+                .Take(5)
+                .ToListAsync();
+
+            var topIps = topIpsList.ToDictionary(k => k.Ip, v => v.Count);
 
             var endpointQuery = query
                 .GroupBy(t => t.RequestedUrl)

@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using SmartApiGateway.Data;
+using SmartApiGateway.Services;
 
 namespace SmartApiGateway.Services
 {
@@ -39,13 +40,11 @@ namespace SmartApiGateway.Services
             try
             {
                 using var scope = _scopeFactory.CreateScope();
-                var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                var mongoService = scope.ServiceProvider.GetRequiredService<MongoLogService>();
 
                 var cutoff = DateTime.UtcNow.AddDays(-RetentionDays);
 
-                int deleted = await db.TrafficLogs
-                    .Where(t => t.CreatedAt < cutoff)
-                    .ExecuteDeleteAsync(ct);
+                long deleted = await mongoService.DeleteOldLogsAsync(cutoff, ct);
 
                 if (deleted > 0)
                 {
