@@ -29,7 +29,7 @@ namespace SmartApiGateway.Services
             await _logsCollection.InsertOneAsync(log);
         }
 
-        public IMongoQueryable<TrafficLog> GetLogsAsQueryable()
+        public IQueryable<TrafficLog> GetLogsAsQueryable()
         {
             return _logsCollection.AsQueryable();
         }

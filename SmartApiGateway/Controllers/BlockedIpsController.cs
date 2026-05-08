@@ -24,19 +24,22 @@ namespace SmartApiGateway.Controllers
 
         public async Task<IActionResult> Index()
         {
-            // ვიყენებთ სრულ მისამართს კონფლიქტის ასარიდებლად
             var blockedIps = await EntityFrameworkQueryableExtensions.ToListAsync(
                 _context.BlockedIps
                 .Include(b => b.BlockedBy)
                 .OrderByDescending(b => b.BlockedAt)
             );
 
-            var trafficCountsList = await _mongoService.GetLogsAsQueryable()
+            var query = _mongoService.GetLogsAsQueryable()
                 .GroupBy(t => t.IpAddress)
-                .Select(g => new { Ip = g.Key, Count = g.Count() })
-                .ToListAsync();
+                .Select(g => new { Ip = g.Key, Count = g.Count() });
 
-            var trafficCounts = trafficCountsList.ToDictionary(k => k.Ip, v => v.Count);
+            // მკაფიოდ ვიყენებთ MongoQueryable-ს
+            var trafficCountsList = await MongoQueryable.ToListAsync(query);
+
+            var trafficCounts = trafficCountsList
+                .Where(x => !string.IsNullOrEmpty(x.Ip))
+                .ToDictionary(k => k.Ip!, v => v.Count);
 
             ViewBag.TrafficCounts = trafficCounts;
 
@@ -48,7 +51,6 @@ namespace SmartApiGateway.Controllers
         {
             if (string.IsNullOrWhiteSpace(ipAddress)) return RedirectToAction(nameof(Index));
 
-            // ვიყენებთ სრულ მისამართს კონფლიქტის ასარიდებლად
             bool exists = await EntityFrameworkQueryableExtensions.AnyAsync(
                 _context.BlockedIps, b => b.IpAddress == ipAddress
             );

@@ -71,31 +71,41 @@ namespace SmartApiGateway.Controllers
                 query = query.Where(t => t.CreatedAt >= cutoff);
             }
 
-            var totalRequests = await query.CountAsync();
-            var avgTime = totalRequests > 0 ? await query.AverageAsync(t => t.ResponseTimeMs) : 0;
+            // მკაფიოდ განვსაზღვროთ მონგოს მეთოდები
+            var totalRequests = await MongoQueryable.CountAsync(query);
+
+            var avgTime = totalRequests > 0
+                ? await MongoQueryable.AverageAsync(query, t => t.ResponseTimeMs)
+                : 0;
 
             var blockedCount = await EntityFrameworkQueryableExtensions.CountAsync(_context.BlockedIps);
 
             int logsLimit = limit > 0 ? limit : 100;
-            var recentLogs = await query.OrderByDescending(t => t.CreatedAt).Take(logsLimit).ToListAsync();
+            var recentLogsQuery = query.OrderByDescending(t => t.CreatedAt).Take(logsLimit);
+            var recentLogs = await MongoQueryable.ToListAsync(recentLogsQuery);
 
-            var chartLogs = await query.OrderByDescending(t => t.CreatedAt).Take(50).ToListAsync();
+            var chartLogsQuery = query.OrderByDescending(t => t.CreatedAt).Take(50);
+            var chartLogs = await MongoQueryable.ToListAsync(chartLogsQuery);
+
             chartLogs = chartLogs.OrderBy(t => t.CreatedAt).ToList();
             var chartLabels = chartLogs.Select(t => t.CreatedAt.ToLocalTime().ToString("HH:mm")).ToList();
             var chartData = chartLogs.Select(t => t.ResponseTimeMs).ToList();
 
-            var success = await query.CountAsync(t => t.StatusCode >= 200 && t.StatusCode < 300);
-            var clientErr = await query.CountAsync(t => t.StatusCode >= 400 && t.StatusCode < 500);
-            var serverErr = await query.CountAsync(t => t.StatusCode >= 500);
+            var success = await MongoQueryable.CountAsync(query, t => t.StatusCode >= 200 && t.StatusCode < 300);
+            var clientErr = await MongoQueryable.CountAsync(query, t => t.StatusCode >= 400 && t.StatusCode < 500);
+            var serverErr = await MongoQueryable.CountAsync(query, t => t.StatusCode >= 500);
 
-            var topIpsList = await query
+            var topIpsQuery = query
                 .GroupBy(t => t.IpAddress)
                 .Select(g => new { Ip = g.Key, Count = g.Count() })
                 .OrderByDescending(g => g.Count)
-                .Take(5)
-                .ToListAsync();
+                .Take(5);
 
-            var topIps = topIpsList.ToDictionary(k => k.Ip, v => v.Count);
+            var topIpsList = await MongoQueryable.ToListAsync(topIpsQuery);
+
+            var topIps = topIpsList
+                .Where(x => !string.IsNullOrEmpty(x.Ip))
+                .ToDictionary(k => k.Ip!, v => v.Count);
 
             var endpointQuery = query
                 .GroupBy(t => t.RequestedUrl)
@@ -109,9 +119,8 @@ namespace SmartApiGateway.Controllers
                 })
                 .OrderByDescending(e => e.TotalCount);
 
-            var endpointStats = limit > 0
-                ? await endpointQuery.Take(limit).ToListAsync()
-                : await endpointQuery.ToListAsync();
+            var endpointStatsQuery = limit > 0 ? endpointQuery.Take(limit) : endpointQuery;
+            var endpointStats = await MongoQueryable.ToListAsync(endpointStatsQuery);
 
             var model = new DashboardViewModel
             {
