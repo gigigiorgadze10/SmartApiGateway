@@ -78,6 +78,7 @@ builder.Services.AddRateLimiter(options =>
     };
 });
 
+builder.Services.AddSingleton<MongoLogService>();
 builder.Services.AddHostedService<LogCleanupService>();
 builder.Services.AddControllersWithViews();
 builder.Services.AddMemoryCache();
