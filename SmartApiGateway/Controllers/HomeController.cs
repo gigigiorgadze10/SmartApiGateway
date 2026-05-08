@@ -74,7 +74,7 @@ namespace SmartApiGateway.Controllers
             var totalRequests = await query.CountAsync();
             var avgTime = totalRequests > 0 ? await query.AverageAsync(t => t.ResponseTimeMs) : 0;
 
-            var blockedCount = await _context.BlockedIps.CountAsync();
+            var blockedCount = await EntityFrameworkQueryableExtensions.CountAsync(_context.BlockedIps);
 
             int logsLimit = limit > 0 ? limit : 100;
             var recentLogs = await query.OrderByDescending(t => t.CreatedAt).Take(logsLimit).ToListAsync();

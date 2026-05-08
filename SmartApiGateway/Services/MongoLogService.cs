@@ -14,10 +14,9 @@ namespace SmartApiGateway.Services
             var databaseName = configuration["MongoDb:DatabaseName"];
             var collectionName = configuration["MongoDb:CollectionName"];
 
-            // თუ ლოკალურად connection string ცარიელია, თავიდან ავიცილოთ ერორი
             if (string.IsNullOrEmpty(connectionString))
             {
-                connectionString = "mongodb://localhost:27017"; // ლოკალური ტესტირებისთვის
+                connectionString = "mongodb://localhost:27017";
             }
 
             var mongoClient = new MongoClient(connectionString);
@@ -25,19 +24,16 @@ namespace SmartApiGateway.Services
             _logsCollection = mongoDatabase.GetCollection<TrafficLog>(collectionName);
         }
 
-        // 1. ლოგის ჩაწერა 
         public async Task InsertLogAsync(TrafficLog log)
         {
             await _logsCollection.InsertOneAsync(log);
         }
 
-        // 2. ლოგების წამოღება (IQueryable)
         public IMongoQueryable<TrafficLog> GetLogsAsQueryable()
         {
             return _logsCollection.AsQueryable();
         }
 
-        // 3. ძველი ლოგების წაშლა (Cleanup სერვისისთვის)
         public async Task<long> DeleteOldLogsAsync(DateTime cutoffDate, CancellationToken ct = default)
         {
             var filter = Builders<TrafficLog>.Filter.Lt(x => x.CreatedAt, cutoffDate);

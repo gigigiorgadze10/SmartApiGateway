@@ -121,12 +121,8 @@ namespace SmartApiGateway.Middlewares
 
                 foreach (var header in response.Headers)
                 {
-                    if (header.Key.Equals("Transfer-Encoding", StringComparison.OrdinalIgnoreCase))
-                        continue;
-
-                    if (header.Key.Equals("Content-Encoding", StringComparison.OrdinalIgnoreCase))
-                        continue;
-
+                    if (header.Key.Equals("Transfer-Encoding", StringComparison.OrdinalIgnoreCase)) continue;
+                    if (header.Key.Equals("Content-Encoding", StringComparison.OrdinalIgnoreCase)) continue;
                     context.Response.Headers.TryAdd(header.Key, header.Value.ToArray());
                 }
 
@@ -155,87 +151,67 @@ namespace SmartApiGateway.Middlewares
             finally
             {
                 stopwatch.Stop();
-                await LogAndBroadcastAsync(hub, dbContext, clientIp, targetUrl,
+                await LogAndBroadcastAsync(hub, mongoService, clientIp, targetUrl,
                     context.Request.Method, statusCode, stopwatch.ElapsedMilliseconds, endpoint.Id, endpoint.CreatedById);
             }
         }
 
-        private static HttpRequestMessage BuildProxyRequest(
-            HttpContext context, string targetUrl, string clientIp)
+        private static HttpRequestMessage BuildProxyRequest(HttpContext context, string targetUrl, string clientIp)
         {
             var msg = new HttpRequestMessage(new HttpMethod(context.Request.Method), targetUrl);
 
-            if (!HttpMethods.IsGet(context.Request.Method) &&
-                !HttpMethods.IsHead(context.Request.Method) &&
-                !HttpMethods.IsDelete(context.Request.Method) &&
-                context.Request.ContentLength is > 0)
+            if (!HttpMethods.IsGet(context.Request.Method) && !HttpMethods.IsHead(context.Request.Method) &&
+                !HttpMethods.IsDelete(context.Request.Method) && context.Request.ContentLength is > 0)
             {
                 msg.Content = new StreamContent(context.Request.Body);
                 if (!string.IsNullOrEmpty(context.Request.ContentType))
-                {
-                    msg.Content.Headers.TryAddWithoutValidation(
-                        "Content-Type", context.Request.ContentType);
-                }
+                    msg.Content.Headers.TryAddWithoutValidation("Content-Type", context.Request.ContentType);
             }
 
             foreach (var header in context.Request.Headers)
             {
-                if (header.Key.StartsWith("Content-", StringComparison.OrdinalIgnoreCase))
-                    continue;
-                if (header.Key.Equals("Host", StringComparison.OrdinalIgnoreCase))
-                    continue;
-
-                if (header.Key.Equals("Accept-Encoding", StringComparison.OrdinalIgnoreCase))
-                    continue;
-
+                if (header.Key.StartsWith("Content-", StringComparison.OrdinalIgnoreCase)) continue;
+                if (header.Key.Equals("Host", StringComparison.OrdinalIgnoreCase)) continue;
+                if (header.Key.Equals("Accept-Encoding", StringComparison.OrdinalIgnoreCase)) continue;
                 msg.Headers.TryAddWithoutValidation(header.Key, header.Value.ToArray());
             }
 
             msg.Headers.TryAddWithoutValidation("X-Forwarded-For", clientIp);
-            msg.Headers.TryAddWithoutValidation(
-                "X-Forwarded-Host", context.Request.Host.ToString());
+            msg.Headers.TryAddWithoutValidation("X-Forwarded-Host", context.Request.Host.ToString());
             msg.Headers.TryAddWithoutValidation("X-Gateway-Version", "SmartGateway/1.0");
 
             return msg;
         }
 
-        private static async Task<bool> IsIpBlockedAsync(
-            ApplicationDbContext db, IMemoryCache cache, string ip)
+        private static async Task<bool> IsIpBlockedAsync(ApplicationDbContext db, IMemoryCache cache, string ip)
         {
             const string key = "blocked_ips_set";
             if (!cache.TryGetValue(key, out HashSet<string>? set))
             {
-                var ips = await db.BlockedIps
-                    .Select(b => b.IpAddress)
-                    .ToListAsync();
+                var ips = await db.BlockedIps.Select(b => b.IpAddress).ToListAsync();
                 set = new HashSet<string>(ips, StringComparer.OrdinalIgnoreCase);
                 cache.Set(key, set, TimeSpan.FromSeconds(30));
             }
             return set!.Contains(ip);
         }
 
-        private static async Task<ApiEndpoint?> FindEndpointAsync(
-            ApplicationDbContext db, IMemoryCache cache, string requestPath)
+        private static async Task<ApiEndpoint?> FindEndpointAsync(ApplicationDbContext db, IMemoryCache cache, string requestPath)
         {
             const string key = "active_endpoints";
             if (!cache.TryGetValue(key, out List<ApiEndpoint>? endpoints))
             {
-                endpoints = await db.ApiEndpoints
-                    .Where(e => e.IsActive)
-                    .ToListAsync();
+                endpoints = await db.ApiEndpoints.Where(e => e.IsActive).ToListAsync();
                 cache.Set(key, endpoints, TimeSpan.FromSeconds(30));
             }
 
             return endpoints!.FirstOrDefault(e =>
-                requestPath.Equals(
-                    e.RoutePath.TrimEnd('/'), StringComparison.OrdinalIgnoreCase) ||
-                requestPath.StartsWith(
-                    e.RoutePath.TrimEnd('/') + "/", StringComparison.OrdinalIgnoreCase));
+                requestPath.Equals(e.RoutePath.TrimEnd('/'), StringComparison.OrdinalIgnoreCase) ||
+                requestPath.StartsWith(e.RoutePath.TrimEnd('/') + "/", StringComparison.OrdinalIgnoreCase));
         }
 
         private static async Task LogAndBroadcastAsync(
             IHubContext<TrafficHub> hub,
-            ApplicationDbContext db,
+            MongoLogService mongoService,
             string ip, string url, string method, int status, long time,
             int? endpointId = null, string? userId = null)
         {
@@ -251,17 +227,9 @@ namespace SmartApiGateway.Middlewares
                 UserId = userId
             };
 
-            db.TrafficLogs.Add(log);
-            await db.SaveChangesAsync();
+            await mongoService.InsertLogAsync(log);
 
-            var payload = new
-            {
-                ipAddress = ip,
-                url,
-                method,
-                status,
-                time
-            };
+            var payload = new { ipAddress = ip, url, method, status, time };
 
             await hub.Clients.Group("SuperAdmins").SendAsync("ReceiveLog", payload);
             await hub.Clients.Group("SuperAdmins").SendAsync("ReceiveTrafficUpdate");
