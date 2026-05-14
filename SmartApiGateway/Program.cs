@@ -84,6 +84,7 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddMemoryCache();
 builder.Services.AddSignalR();
 builder.Services.AddHostedService<SmartShieldService>();
+builder.Services.AddHostedService<MlAnomalyDetectionService>();
 
 var app = builder.Build();
 
