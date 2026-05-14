@@ -83,6 +83,18 @@
                             </div>
                         </div>
                     </div>
+
+                    <div class="p-4 bg-purple-50 rounded-lg border border-purple-100">
+                        <div class="flex items-center">
+                            <input asp-for="EnableMlAnomalyDetection" class="w-5 h-5 text-purple-600 bg-white border-purple-300 rounded focus:ring-purple-500 cursor-pointer" />
+                            <div class="ml-3">
+                                <label asp-for="EnableMlAnomalyDetection" class="font-bold text-purple-800 cursor-pointer flex items-center text-sm">
+                                    <i data-lucide="activity" class="w-4 h-4 mr-1"></i> @T("ML Anomaly Detection (AI Spike Detection)", "ML Anomaly Detection (Spike Detection)")
+                                </label>
+                                <p class="text-purple-600/80 text-xs mt-1 leading-tight">@T("მანქანური სწავლების მოდელი შეისწავლის ტრაფიკის ნორმას და აღმოაჩენს უჩვეულო ნახტომებს (DDoS).", "Machine learning model learns traffic baselines and detects unusual spikes (DDoS).")</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 

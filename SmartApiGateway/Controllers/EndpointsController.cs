@@ -91,6 +91,8 @@ namespace SmartApiGateway.Controllers
                 endpoint.RateLimitPerSecond = model.RateLimitPerSecond;
                 endpoint.EnableSmartShield = model.EnableSmartShield;
 
+                endpoint.EnableMlAnomalyDetection = model.EnableMlAnomalyDetection;
+
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }

@@ -32,6 +32,9 @@ namespace SmartApiGateway.Models
         [Display(Name = "Smart Shield (AI ქცევითი ანალიზი)")]
         public bool EnableSmartShield { get; set; } = false;
 
+        [Display(Name = "ML ანომალიების ამოცნობა (AI Spike Detection)")]
+        public bool EnableMlAnomalyDetection { get; set; } = false;
+
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         public string? CreatedById { get; set; }

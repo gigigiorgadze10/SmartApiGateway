@@ -64,6 +64,12 @@
                                             <i data-lucide="brain" class="w-3 h-3 mr-1"></i> Smart
                                         </span>
                                     }
+                                    @if (item.EnableMlAnomalyDetection)
+                                    {
+                                        <span class="inline-flex items-center px-2 py-1 rounded-md text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200 uppercase" title="ML Spike Detection">
+                                            <i data-lucide="activity" class="w-3 h-3 mr-1"></i> ML
+                                        </span>
+                                    }
                                     @if (!item.EnableRateLimiting && !item.EnableSmartShield)
                                     {
                                         <span class="inline-flex items-center px-2 py-1 rounded-md text-[10px] font-bold bg-slate-50 text-slate-400 border border-slate-100 uppercase">
