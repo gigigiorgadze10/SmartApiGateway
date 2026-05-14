@@ -83,6 +83,7 @@ builder.Services.AddHostedService<LogCleanupService>();
 builder.Services.AddControllersWithViews();
 builder.Services.AddMemoryCache();
 builder.Services.AddSignalR();
+builder.Services.AddHostedService<SmartShieldService>();
 
 var app = builder.Build();
 
