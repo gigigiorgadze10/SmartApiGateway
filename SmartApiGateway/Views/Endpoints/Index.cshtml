@@ -51,18 +51,26 @@
                             <td class="p-4 text-sm text-slate-600 max-w-xs truncate" title="@item.TargetUrl">@item.TargetUrl</td>
                             
                             <td class="p-4 text-center">
-                                @if (item.EnableRateLimiting)
-                                {
-                                    <span class="inline-flex items-center px-2 py-1 rounded-md text-[10px] font-bold bg-red-50 text-red-600 border border-red-100 uppercase" title="@T("ბლოკავს IP-ს ლიმიტის გადაჭარბებისას", "Blocks IP on limit excess")">
-                                        <i data-lucide="shield-alert" class="w-3 h-3 mr-1"></i> @item.RateLimitPerSecond req/s
-                                    </span>
-                                }
-                                else
-                                {
-                                    <span class="inline-flex items-center px-2 py-1 rounded-md text-[10px] font-bold bg-slate-50 text-slate-400 border border-slate-100 uppercase">
-                                        <i data-lucide="shield-off" class="w-3 h-3 mr-1"></i> @T("გამორთული", "Off")
-                                    </span>
-                                }
+                                <div class="flex flex-col gap-1 items-center">
+                                    @if (item.EnableRateLimiting)
+                                    {
+                                        <span class="inline-flex items-center px-2 py-1 rounded-md text-[10px] font-bold bg-red-50 text-red-600 border border-red-100 uppercase" title="Rate Limiting">
+                                            <i data-lucide="shield-alert" class="w-3 h-3 mr-1"></i> @item.RateLimitPerSecond req/s
+                                        </span>
+                                    }
+                                    @if (item.EnableSmartShield)
+                                    {
+                                        <span class="inline-flex items-center px-2 py-1 rounded-md text-[10px] font-bold bg-indigo-50 text-indigo-600 border border-indigo-100 uppercase" title="Smart Shield">
+                                            <i data-lucide="brain" class="w-3 h-3 mr-1"></i> Smart
+                                        </span>
+                                    }
+                                    @if (!item.EnableRateLimiting && !item.EnableSmartShield)
+                                    {
+                                        <span class="inline-flex items-center px-2 py-1 rounded-md text-[10px] font-bold bg-slate-50 text-slate-400 border border-slate-100 uppercase">
+                                            <i data-lucide="shield-off" class="w-3 h-3 mr-1"></i> @T("გამორთული", "Off")
+                                        </span>
+                                    }
+                                </div>
                             </td>
 
                             <td class="p-4 text-center">

@@ -23,11 +23,14 @@ namespace SmartApiGateway.Models
         [Display(Name = "აღწერა")]
         public string Description { get; set; } = string.Empty;
 
-        [Display(Name = "დაცვა ჩართულია?")]
+        [Display(Name = "Rate Limiting დაცვა")]
         public bool EnableRateLimiting { get; set; } = false;
 
         [Display(Name = "ლიმიტი (წამში)")]
         public int RateLimitPerSecond { get; set; } = 5;
+
+        [Display(Name = "Smart Shield (AI ქცევითი ანალიზი)")]
+        public bool EnableSmartShield { get; set; } = false;
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 

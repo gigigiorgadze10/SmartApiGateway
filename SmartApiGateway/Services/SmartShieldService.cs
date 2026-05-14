@@ -46,10 +46,18 @@ namespace SmartApiGateway.Services
             var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
             var hubContext = scope.ServiceProvider.GetRequiredService<IHubContext<TrafficHub>>();
 
+            var protectedEndpoints = await EntityFrameworkQueryableExtensions.ToListAsync(
+                dbContext.ApiEndpoints.Where(e => e.EnableSmartShield).Select(e => e.Id), ct);
+
+            if (!protectedEndpoints.Any()) return;
+
             var cutoff = DateTime.UtcNow.AddMinutes(-1);
 
             var query = mongoService.GetLogsAsQueryable()
-                .Where(x => x.CreatedAt >= cutoff && x.StatusCode >= 400 && x.StatusCode < 500)
+                .Where(x => x.CreatedAt >= cutoff
+                         && x.StatusCode >= 400 && x.StatusCode < 500
+                         && x.EndpointId.HasValue
+                         && protectedEndpoints.Contains(x.EndpointId.Value))
                 .GroupBy(x => x.IpAddress)
                 .Select(g => new { Ip = g.Key, ErrorCount = g.Count() });
 

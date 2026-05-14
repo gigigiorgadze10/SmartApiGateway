@@ -89,6 +89,7 @@ namespace SmartApiGateway.Controllers
 
                 endpoint.EnableRateLimiting = model.EnableRateLimiting;
                 endpoint.RateLimitPerSecond = model.RateLimitPerSecond;
+                endpoint.EnableSmartShield = model.EnableSmartShield;
 
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
