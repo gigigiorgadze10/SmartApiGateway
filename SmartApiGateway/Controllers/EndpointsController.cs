@@ -34,7 +34,7 @@ namespace SmartApiGateway.Controllers
         [HttpGet]
         public IActionResult Create()
         {
-            return View();
+            return View(new ApiEndpoint { RateLimitPerSecond = 5 });
         }
 
         [HttpPost]
@@ -86,6 +86,9 @@ namespace SmartApiGateway.Controllers
                 endpoint.TargetUrl = model.TargetUrl;
                 endpoint.IsActive = model.IsActive;
                 endpoint.Description = model.Description;
+
+                endpoint.EnableRateLimiting = model.EnableRateLimiting;
+                endpoint.RateLimitPerSecond = model.RateLimitPerSecond;
 
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));

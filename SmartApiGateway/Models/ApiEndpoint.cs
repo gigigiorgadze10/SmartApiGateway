@@ -23,6 +23,12 @@ namespace SmartApiGateway.Models
         [Display(Name = "აღწერა")]
         public string Description { get; set; } = string.Empty;
 
+        [Display(Name = "დაცვა ჩართულია?")]
+        public bool EnableRateLimiting { get; set; } = false;
+
+        [Display(Name = "ლიმიტი (წამში)")]
+        public int RateLimitPerSecond { get; set; } = 5;
+
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         public string? CreatedById { get; set; }

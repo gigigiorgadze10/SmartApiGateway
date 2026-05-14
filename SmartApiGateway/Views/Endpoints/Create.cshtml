@@ -30,19 +30,17 @@
                 <label asp-for="RoutePath" class="block text-sm font-semibold text-slate-700 mb-2">@T("მარშრუტი (Route Path)", "Route Path")</label>
                 <input asp-for="RoutePath" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition font-mono text-sm" placeholder="@T("მაგ:", "e.g:") /api/users" />
                 <span asp-validation-for="RoutePath" class="text-red-500 text-xs mt-1 block"></span>
-                <p class="text-xs text-slate-400 mt-2">@T("ამ მისამართზე შემოსულ ტრაფიკს სისტემა დაიჭერს.", "Traffic coming to this address will be intercepted.")</p>
             </div>
 
             <div>
                 <label asp-for="TargetUrl" class="block text-sm font-semibold text-slate-700 mb-2">@T("სამიზნე (Target URL)", "Target URL")</label>
                 <textarea asp-for="TargetUrl" rows="2" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition font-mono text-sm" placeholder="@T("მაგ:", "e.g:") https://server1.com/api, https://server2.com/api"></textarea>
                 <span asp-validation-for="TargetUrl" class="text-red-500 text-xs mt-1 block"></span>
-                <p class="text-xs text-slate-400 mt-2">@T("სად გავაგზავნოთ ტრაფიკი? Load Balancing-ისთვის გამოყავით მძიმით.", "Where to forward traffic? Separate with commas for Load Balancing.")</p>
             </div>
 
             <div>
                 <label asp-for="Description" class="block text-sm font-semibold text-slate-700 mb-2">@T("აღწერა", "Description")</label>
-                <input asp-for="Description" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition" placeholder="@T("რას აკეთებს ეს მარშრუტი?", "What does this route do?")" />
+                <input asp-for="Description" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition" />
             </div>
 
             <div class="flex items-center p-4 bg-slate-50 rounded-xl border border-slate-200">
@@ -51,7 +49,25 @@
                 </div>
                 <div class="ml-3 text-sm">
                     <label asp-for="IsActive" class="font-bold text-slate-700 cursor-pointer">@T("მარშრუტი აქტიურია", "Endpoint is Active")</label>
-                    <p class="text-slate-500 text-xs">@T("მონიშვნის მოხსნის შემთხვევაში ტრაფიკი დაიბლოკება.", "If unchecked, traffic will be blocked.")</p>
+                </div>
+            </div>
+
+            <div class="p-5 bg-red-50 rounded-xl border border-red-100">
+                <div class="flex items-center mb-4">
+                    <div class="flex items-center h-5">
+                        <input asp-for="EnableRateLimiting" class="w-5 h-5 text-red-600 bg-white border-red-300 rounded focus:ring-red-500 cursor-pointer" />
+                    </div>
+                    <div class="ml-3 text-sm">
+                        <label asp-for="EnableRateLimiting" class="font-bold text-red-800 cursor-pointer flex items-center">
+                            <i data-lucide="shield-alert" class="w-4 h-4 mr-1"></i> @T("DDoS დაცვა & Auto-Ban", "Enable Auto-Ban & Protection")
+                        </label>
+                        <p class="text-red-600/80 text-xs mt-1">@T("ლიმიტის გადაჭარბებისას IP მისამართი ავტომატურად დაიბლოკება.", "IP will be automatically blocked if it exceeds the limit.")</p>
+                    </div>
+                </div>
+
+                <div>
+                    <label asp-for="RateLimitPerSecond" class="block text-sm font-semibold text-red-800 mb-2">@T("მაქსიმალური რექუესთი (წამში)", "Max Requests per Second")</label>
+                    <input asp-for="RateLimitPerSecond" type="number" min="1" class="w-full p-3 bg-white border border-red-200 rounded-xl focus:ring-2 focus:ring-red-500 outline-none transition" />
                 </div>
             </div>
 

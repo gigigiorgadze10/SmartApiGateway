@@ -53,6 +53,25 @@
                 </div>
             </div>
 
+            <div class="p-5 bg-red-50 rounded-xl border border-red-100">
+                <div class="flex items-center mb-4">
+                    <div class="flex items-center h-5">
+                        <input asp-for="EnableRateLimiting" class="w-5 h-5 text-red-600 bg-white border-red-300 rounded focus:ring-red-500 cursor-pointer" />
+                    </div>
+                    <div class="ml-3 text-sm">
+                        <label asp-for="EnableRateLimiting" class="font-bold text-red-800 cursor-pointer flex items-center">
+                            <i data-lucide="shield-alert" class="w-4 h-4 mr-1"></i> @T("DDoS დაცვა & Auto-Ban", "Enable Auto-Ban & Protection")
+                        </label>
+                        <p class="text-red-600/80 text-xs mt-1">@T("ლიმიტის გადაჭარბებისას IP მისამართი ავტომატურად დაიბლოკება.", "IP will be automatically blocked if it exceeds the limit.")</p>
+                    </div>
+                </div>
+
+                <div>
+                    <label asp-for="RateLimitPerSecond" class="block text-sm font-semibold text-red-800 mb-2">@T("მაქსიმალური რექუესთი (წამში)", "Max Requests per Second")</label>
+                    <input asp-for="RateLimitPerSecond" type="number" min="1" class="w-full p-3 bg-white border border-red-200 rounded-xl focus:ring-2 focus:ring-red-500 outline-none transition" />
+                </div>
+            </div>
+
             <div class="pt-4 flex justify-end space-x-3 border-t border-slate-100">
                 <a asp-action="Index" class="px-6 py-2.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-bold rounded-xl transition">@T("გაუქმება", "Cancel")</a>
                 <button type="submit" class="px-6 py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl shadow-lg shadow-amber-500/30 transition flex items-center">

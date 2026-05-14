@@ -79,6 +79,46 @@ namespace SmartApiGateway.Middlewares
                 return;
             }
 
+            if (endpoint.EnableRateLimiting && endpoint.RateLimitPerSecond > 0)
+            {
+                string rlKey = $"RL_{endpoint.Id}_{clientIp}";
+
+                var currentCount = cache.GetOrCreate(rlKey, entry =>
+                {
+                    entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(1);
+                    return 0;
+                });
+
+                currentCount++;
+                cache.Set(rlKey, currentCount, TimeSpan.FromSeconds(1));
+
+                if (currentCount > endpoint.RateLimitPerSecond)
+                {
+                    bool alreadyBlocked = await dbContext.BlockedIps.AnyAsync(b => b.IpAddress == clientIp);
+                    if (!alreadyBlocked)
+                    {
+                        var newBlockedIp = new BlockedIp
+                        {
+                            IpAddress = clientIp,
+                            Reason = $"Auto-Banned: გადააჭარბა {endpoint.RateLimitPerSecond} req/s ენდპოინტზე {endpoint.RoutePath}",
+                            BlockedById = endpoint.CreatedById 
+                        };
+
+                        dbContext.BlockedIps.Add(newBlockedIp);
+                        await dbContext.SaveChangesAsync();
+
+                        cache.Remove("blocked_ips_set");
+                    }
+
+                    context.Response.StatusCode = 429;
+                    context.Response.ContentType = "application/json";
+                    await context.Response.WriteAsync("{\"error\":\"Too Many Requests. Your IP has been permanently blocked.\"}");
+
+                    await LogAndBroadcastAsync(hub, mongoService, clientIp, requestPath, context.Request.Method, 429, 0, endpoint.Id, endpoint.CreatedById);
+                    return;
+                }
+            }
+
             var availableUrls = endpoint.GetTargetUrls();
             int targetIndex = _rotationIndices.AddOrUpdate(
                 endpoint.Id, 0, (_, old) => (old + 1) % availableUrls.Length);
