@@ -27,6 +27,7 @@
                     <tr class="bg-slate-50/50 border-b border-slate-200 text-slate-500 uppercase text-[11px] font-black tracking-wider">
                         <th class="p-4 pl-6">@T("მარშრუტი", "Route")</th>
                         <th class="p-4">Target URL</th>
+                        <th class="p-4 text-center">@T("დაცვა", "Protection")</th>
                         <th class="p-4 text-center">@T("სტატუსი", "Status")</th>
                         <th class="p-4">@T("ავტორი", "Author")</th>
                         <th class="p-4 pr-6 text-right">@T("მოქმედება", "Action")</th>
@@ -35,7 +36,7 @@
                 <tbody class="divide-y divide-slate-100">
                     @if (!Model.Any())
                     {
-                        <tr><td colspan="5" class="p-8 text-center text-slate-400">@T("მარშრუტები ჯერ არ დამატებულა", "No endpoints added yet")</td></tr>
+                        <tr><td colspan="6" class="p-8 text-center text-slate-400">@T("მარშრუტები ჯერ არ დამატებულა", "No endpoints added yet")</td></tr>
                     }
                     @foreach (var item in Model)
                     {
@@ -48,6 +49,22 @@
                                 <span class="font-mono text-sm text-blue-600 bg-blue-50 px-2 py-1 rounded-md font-semibold border border-blue-100">@item.RoutePath</span>
                             </td>
                             <td class="p-4 text-sm text-slate-600 max-w-xs truncate" title="@item.TargetUrl">@item.TargetUrl</td>
+                            
+                            <td class="p-4 text-center">
+                                @if (item.EnableRateLimiting)
+                                {
+                                    <span class="inline-flex items-center px-2 py-1 rounded-md text-[10px] font-bold bg-red-50 text-red-600 border border-red-100 uppercase" title="@T("ბლოკავს IP-ს ლიმიტის გადაჭარბებისას", "Blocks IP on limit excess")">
+                                        <i data-lucide="shield-alert" class="w-3 h-3 mr-1"></i> @item.RateLimitPerSecond req/s
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="inline-flex items-center px-2 py-1 rounded-md text-[10px] font-bold bg-slate-50 text-slate-400 border border-slate-100 uppercase">
+                                        <i data-lucide="shield-off" class="w-3 h-3 mr-1"></i> @T("გამორთული", "Off")
+                                    </span>
+                                }
+                            </td>
+
                             <td class="p-4 text-center">
                                 @if (item.IsActive)
                                 {
