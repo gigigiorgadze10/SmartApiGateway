@@ -27,18 +27,34 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Smart Gateway</title>
-    
+    <title>@ViewData["Title"] - Synox Gateway</title>
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Georgian:wght@400;500;700;900&display=swap" rel="stylesheet">
-    
+
     <style>
-        body { font-family: 'Noto Sans Georgian', sans-serif; }
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        body {
+        font-family: 'Noto Sans Georgian', sans-serif;
+        }
+
+        ::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+        background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+        }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 flex h-screen overflow-hidden antialiased">
@@ -49,13 +65,13 @@
         <div id="sidebar-overlay" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-40 hidden md:hidden transition-opacity"></div>
 
         <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 text-slate-300 flex flex-col flex-shrink-0 transform -translate-x-full md:translate-x-0 md:static transition-transform duration-300 ease-in-out shadow-2xl md:shadow-none">
-            
+
             <div class="h-16 flex items-center justify-between px-6 bg-slate-950 border-b border-slate-800">
                 <div class="flex items-center">
                     <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white mr-3 shadow-lg shadow-blue-500/20">
                         <i data-lucide="network" class="w-5 h-5"></i>
                     </div>
-                    <span class="text-white text-lg font-bold tracking-wide">Gateway<span class="text-blue-500">OS</span></span>
+                    <span class="text-white text-lg font-bold tracking-wide">Synox<span class="text-blue-500"> Gateway</span></span>
                 </div>
                 <button id="close-sidebar-btn" class="md:hidden text-slate-400 hover:text-white transition">
                     <i data-lucide="x" class="w-6 h-6"></i>
@@ -66,11 +82,11 @@
                 @if (HasPermission("ViewDashboard"))
                 {
                     <p class="px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 mt-4">@Translate("მონიტორინგი", "Monitoring")</p>
-                    
+
                     <a href="/Home/Dashboard" class="flex items-center px-3 py-2.5 rounded-lg hover:bg-slate-800 hover:text-white transition group @(ViewContext.RouteData.Values["Action"]?.ToString() == "Dashboard" ? "bg-blue-600 text-white shadow-md shadow-blue-900/20" : "")">
                         <i data-lucide="layout-dashboard" class="w-5 h-5 mr-3 group-hover:scale-110 transition-transform"></i> @Translate("მთავარი", "Dashboard")
                     </a>
-                    
+
                     <a href="/Home/Sandbox" class="flex items-center px-3 py-2.5 rounded-lg hover:bg-slate-800 hover:text-white transition group @(ViewContext.RouteData.Values["Action"]?.ToString() == "Sandbox" ? "bg-slate-800 text-white" : "")">
                         <i data-lucide="flask-conical" class="w-5 h-5 mr-3 group-hover:scale-110 transition-transform text-emerald-400"></i> @Translate("API ტესტერი", "API Sandbox")
                     </a>
@@ -109,7 +125,7 @@
                 <a href="/Settings" class="flex items-center px-3 py-2.5 rounded-lg hover:bg-slate-800 hover:text-white transition group">
                     <i data-lucide="settings" class="w-5 h-5 mr-3 group-hover:rotate-90 transition-transform"></i> @Translate("პარამეტრები", "Settings")
                 </a>
-                
+
                 <div class="md:hidden mt-4 pt-4 border-t border-slate-800">
                     <div class="flex items-center px-3 mb-4">
                         <div class="w-9 h-9 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-300 font-bold uppercase mr-3 shadow-inner">
@@ -130,44 +146,44 @@
         </aside>
 
         <div class="flex-1 flex flex-col min-w-0 bg-slate-50 relative z-10">
-            
+
             <div class="md:hidden flex items-center justify-between bg-white border-b border-slate-200 p-4 sticky top-0 z-30 shadow-sm">
                 <button id="mobile-menu-btn" class="p-2 -ml-2 text-slate-500 hover:bg-slate-100 rounded-lg transition">
                     <i data-lucide="menu" class="w-6 h-6"></i>
                 </button>
                 <div class="flex items-center">
-                    <span class="text-slate-800 font-bold tracking-wide">Gateway<span class="text-blue-500">OS</span></span>
+                    <span class="text-slate-800 font-bold tracking-wide">Synox<span class="text-blue-500"> Gateway</span></span>
                 </div>
-                <div class="w-8"></div> 
+                <div class="w-8"></div>
             </div>
 
             <header class="hidden md:flex h-16 bg-white border-b border-slate-200 items-center justify-end px-6 z-20 shadow-sm">
-                
-                <div class="flex items-center space-x-4 mr-4 pr-4 border-r border-slate-200">
-    <div class="relative inline-block text-left" id="language-switcher">
-        <form id="langForm" asp-controller="Home" asp-action="SetLanguage" method="post" class="m-0">
-            <input type="hidden" name="returnUrl" value="@Context.Request.Path" />
-            <input type="hidden" name="culture" id="cultureInput" value="@(isEnglish ? "en" : "ka")" />
-            
-            <button type="button" id="lang-menu-button" class="flex items-center space-x-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 px-3 py-2 rounded-xl transition duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/50 shadow-sm">
-                <i data-lucide="globe" class="w-4 h-4 text-blue-500"></i>
-                <span class="text-sm font-bold text-slate-700">@(isEnglish ? "EN" : "KA")</span>
-                <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400"></i>
-            </button>
 
-            <div id="lang-menu" class="hidden absolute right-0 mt-2 w-40 rounded-2xl shadow-xl bg-white border border-slate-100 divide-y divide-slate-50 origin-top-right transition-all transform z-50">
-                <div class="p-1.5">
-                    <button type="button" onclick="submitLang('ka')" class="w-full text-left flex items-center px-3 py-2.5 text-sm font-semibold rounded-xl hover:bg-slate-50 transition-colors @(!isEnglish ? "bg-blue-50 text-blue-600" : "text-slate-600")">
-                        <span class="text-base mr-3 shadow-sm rounded-sm">🇬🇪</span> ქართული
-                    </button>
-                    <button type="button" onclick="submitLang('en')" class="w-full text-left flex items-center px-3 py-2.5 text-sm font-semibold rounded-xl hover:bg-slate-50 transition-colors @(isEnglish ? "bg-blue-50 text-blue-600" : "text-slate-600")">
-                        <span class="text-base mr-3 shadow-sm rounded-sm">🇬🇧</span> English
-                    </button>
+                <div class="flex items-center space-x-4 mr-4 pr-4 border-r border-slate-200">
+                    <div class="relative inline-block text-left" id="language-switcher">
+                        <form id="langForm" asp-controller="Home" asp-action="SetLanguage" method="post" class="m-0">
+                            <input type="hidden" name="returnUrl" value="@Context.Request.Path" />
+                            <input type="hidden" name="culture" id="cultureInput" value="@(isEnglish ? "en" : "ka")" />
+
+                            <button type="button" id="lang-menu-button" class="flex items-center space-x-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 px-3 py-2 rounded-xl transition duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/50 shadow-sm">
+                                <i data-lucide="globe" class="w-4 h-4 text-blue-500"></i>
+                                <span class="text-sm font-bold text-slate-700">@(isEnglish ? "EN" : "KA")</span>
+                                <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400"></i>
+                            </button>
+
+                            <div id="lang-menu" class="hidden absolute right-0 mt-2 w-40 rounded-2xl shadow-xl bg-white border border-slate-100 divide-y divide-slate-50 origin-top-right transition-all transform z-50">
+                                <div class="p-1.5">
+                                    <button type="button" onclick="submitLang('ka')" class="w-full text-left flex items-center px-3 py-2.5 text-sm font-semibold rounded-xl hover:bg-slate-50 transition-colors @(!isEnglish ? "bg-blue-50 text-blue-600" : "text-slate-600")">
+                                        <span class="text-base mr-3 shadow-sm rounded-sm">🇬🇪</span> ქართული
+                                    </button>
+                                    <button type="button" onclick="submitLang('en')" class="w-full text-left flex items-center px-3 py-2.5 text-sm font-semibold rounded-xl hover:bg-slate-50 transition-colors @(isEnglish ? "bg-blue-50 text-blue-600" : "text-slate-600")">
+                                        <span class="text-base mr-3 shadow-sm rounded-sm">🇬🇧</span> English
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
                 </div>
-            </div>
-        </form>
-    </div>
-</div>
 
                 <div class="flex items-center space-x-4">
                     <div class="flex items-center space-x-3 border-r border-slate-200 pr-4">
@@ -200,46 +216,46 @@
     }
 
     @await RenderSectionAsync("Scripts", required: false)
-    
-    <script>
-const langBtn = document.getElementById('lang-menu-button');
-const langMenu = document.getElementById('lang-menu');
 
-if(langBtn && langMenu) {
-    langBtn.addEventListener('click', (e) => {
+    <script>
+        const langBtn = document.getElementById('lang-menu-button');
+        const langMenu = document.getElementById('lang-menu');
+
+        if(langBtn && langMenu) {
+        langBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         langMenu.classList.toggle('hidden');
-    });
+        });
 
-    document.addEventListener('click', (e) => {
+        document.addEventListener('click', (e) => {
         if (!langMenu.contains(e.target) && !langBtn.contains(e.target)) {
-            langMenu.classList.add('hidden');
+        langMenu.classList.add('hidden');
         }
-    });
-}
+        });
+        }
 
-function submitLang(culture) {
-    document.getElementById('cultureInput').value = culture;
-    document.getElementById('langForm').submit();
-}
+        function submitLang(culture) {
+        document.getElementById('cultureInput').value = culture;
+        document.getElementById('langForm').submit();
+        }
         if (typeof lucide !== 'undefined') { lucide.createIcons(); }
 
         document.addEventListener("DOMContentLoaded", function () {
-            const sidebar = document.getElementById('sidebar');
-            const mobileMenuBtn = document.getElementById('mobile-menu-btn');
-            const closeSidebarBtn = document.getElementById('close-sidebar-btn');
-            const overlay = document.getElementById('sidebar-overlay');
+        const sidebar = document.getElementById('sidebar');
+        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+        const closeSidebarBtn = document.getElementById('close-sidebar-btn');
+        const overlay = document.getElementById('sidebar-overlay');
 
-            if (sidebar && mobileMenuBtn) {
-                function toggleSidebar() {
-                    sidebar.classList.toggle('-translate-x-full');
-                    overlay.classList.toggle('hidden');
-                }
+        if (sidebar && mobileMenuBtn) {
+        function toggleSidebar() {
+        sidebar.classList.toggle('-translate-x-full');
+        overlay.classList.toggle('hidden');
+        }
 
-                mobileMenuBtn.addEventListener('click', toggleSidebar);
-                if (closeSidebarBtn) closeSidebarBtn.addEventListener('click', toggleSidebar);
-                if (overlay) overlay.addEventListener('click', toggleSidebar);
-            }
+        mobileMenuBtn.addEventListener('click', toggleSidebar);
+        if (closeSidebarBtn) closeSidebarBtn.addEventListener('click', toggleSidebar);
+        if (overlay) overlay.addEventListener('click', toggleSidebar);
+        }
         });
     </script>
 </body>

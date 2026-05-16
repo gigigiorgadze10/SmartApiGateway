@@ -12,7 +12,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@T("რეგისტრაცია", "Registration") - Smart API Gateway</title>
+    <title>@T("რეგისტრაცია", "Registration") - Synox Gateway</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Georgian:wght@400;500;700;900&display=swap" rel="stylesheet">
@@ -28,7 +28,7 @@
                 <form id="langForm" asp-controller="Home" asp-action="SetLanguage" method="post" class="m-0">
                     <input type="hidden" name="returnUrl" value="/Account/Register" />
                     <input type="hidden" name="culture" id="cultureInput" value="@(isEn ? "en" : "ka")" />
-                
+
                     <button type="button" id="lang-menu-button" class="flex items-center space-x-2 bg-white hover:bg-slate-50 border border-slate-200 px-3 py-2 rounded-xl transition duration-200 shadow-sm">
                         <i data-lucide="globe" class="w-4 h-4 text-blue-500"></i>
                         <span class="text-sm font-bold text-slate-700">@(isEn ? "EN" : "KA")</span>
@@ -117,5 +117,4 @@
             }
             function submitLang(culture) { document.getElementById('cultureInput').value = culture; document.getElementById('langForm').submit(); }
         </script>
-    </body>
-</html>
+    </body></html>

@@ -3,19 +3,18 @@
 
 @{
     ViewData["Title"] = "სისტემაში შესვლა";
-    Layout = null; 
-    
+    Layout = null;
+
     var requestCulture = Context.Features.Get<IRequestCultureFeature>();
     bool isEn = requestCulture?.RequestCulture.UICulture.Name == "en";
     string T(string ka, string en) => isEn ? en : ka;
 }
-
 <!DOCTYPE html>
 <html lang="@(isEn ? "en" : "ka")">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@T("შესვლა", "Login") - Smart Gateway</title>
+    <title>@T("შესვლა", "Login") - Synox Gateway</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Georgian:wght@400;500;700;900&display=swap" rel="stylesheet">
@@ -102,7 +101,6 @@
                 </div>
             </form>
         </div>
-    
+
         <script>lucide.createIcons();</script>
-    </body>
-</html>
+    </body></html>
