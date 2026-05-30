@@ -10,132 +10,65 @@ using SmartApiGateway.Models;
 
 namespace SmartApiGateway.Services
 {
-    public class TrafficData
-    {
-        public float RequestCount { get; set; }
-    }
+    public class TrafficData { public float RequestCount { get; set; } }
+    public class SpikePrediction { [VectorType(3)] public double[] Prediction { get; set; } = new double[3]; }
 
-    public class SpikePrediction
-    {
-        [VectorType(3)]
-        public double[] Prediction { get; set; } = new double[3];
-    }
-
-    public class MlAnomalyDetectionService : BackgroundService
+    public class MlAnomalyDetectionService
     {
         private readonly IServiceScopeFactory _scopeFactory;
         private readonly ILogger<MlAnomalyDetectionService> _logger;
-        private readonly TimeSpan _checkInterval = TimeSpan.FromMinutes(1);
         private readonly MLContext _mlContext;
 
         public MlAnomalyDetectionService(IServiceScopeFactory scopeFactory, ILogger<MlAnomalyDetectionService> logger)
         {
             _scopeFactory = scopeFactory;
             _logger = logger;
-            _mlContext = new MLContext(seed: 0); 
+            _mlContext = new MLContext(seed: 0);
         }
 
-        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+        public async Task ExecuteDetectionAsync()
         {
-            _logger.LogInformation("🧠 ML Anomaly Detection Service გაეშვა...");
-
-            while (!stoppingToken.IsCancellationRequested)
-            {
-                try
-                {
-                    await DetectAnomaliesAsync(stoppingToken);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "ML Anomaly Detection შეცდომა.");
-                }
-
-                await Task.Delay(_checkInterval, stoppingToken);
-            }
-        }
-
-        private async Task DetectAnomaliesAsync(CancellationToken ct)
-        {
+            var ct = CancellationToken.None;
             using var scope = _scopeFactory.CreateScope();
             var mongoService = scope.ServiceProvider.GetRequiredService<MongoLogService>();
             var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
             var hubContext = scope.ServiceProvider.GetRequiredService<IHubContext<TrafficHub>>();
 
-            var mlEndpoints = await EntityFrameworkQueryableExtensions.ToListAsync(
+            var mlEndpoints = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync(
                 dbContext.ApiEndpoints.Where(e => e.EnableMlAnomalyDetection).Select(e => e.Id), ct);
 
             if (!mlEndpoints.Any()) return;
 
-            var cutoff = DateTime.UtcNow.AddMinutes(-60);
+            var logs = await MongoDB.Driver.Linq.MongoQueryable.ToListAsync(mongoService.GetLogsAsQueryable()
+                .Where(x => x.CreatedAt >= DateTime.UtcNow.AddMinutes(-60) && x.EndpointId.HasValue && mlEndpoints.Contains(x.EndpointId.Value)), ct);
 
-            var logs = await MongoQueryable.ToListAsync(mongoService.GetLogsAsQueryable()
-                .Where(x => x.CreatedAt >= cutoff && x.EndpointId.HasValue && mlEndpoints.Contains(x.EndpointId.Value)), ct);
-
-            var logsByIp = logs.GroupBy(x => x.IpAddress).Where(g => !string.IsNullOrEmpty(g.Key)).ToList();
-
-            bool newlyBlocked = false;
+            var logsByIp = logs.GroupBy(x => x.IpAddress).Where(g => !string.IsNullOrEmpty(g.Key));
 
             foreach (var ipGroup in logsByIp)
             {
                 var ip = ipGroup.Key;
-
                 if (ipGroup.Count() < 60) continue;
 
                 var timeSeriesData = new List<TrafficData>();
                 for (int i = 59; i >= 0; i--)
                 {
-                    var minuteStart = DateTime.UtcNow.AddMinutes(-i - 1);
-                    var minuteEnd = DateTime.UtcNow.AddMinutes(-i);
-                    var countInMinute = ipGroup.Count(x => x.CreatedAt >= minuteStart && x.CreatedAt < minuteEnd);
-                    timeSeriesData.Add(new TrafficData { RequestCount = countInMinute });
+                    timeSeriesData.Add(new TrafficData { RequestCount = ipGroup.Count(x => x.CreatedAt >= DateTime.UtcNow.AddMinutes(-i - 1) && x.CreatedAt < DateTime.UtcNow.AddMinutes(-i)) });
                 }
 
                 var dataView = _mlContext.Data.LoadFromEnumerable(timeSeriesData);
+                var pipeline = _mlContext.Transforms.DetectSpikeBySsa(nameof(SpikePrediction.Prediction), nameof(TrafficData.RequestCount), 99.0, 15, 30, 10);
+                var predictions = _mlContext.Data.CreateEnumerable<SpikePrediction>(pipeline.Fit(dataView).Transform(dataView), false).ToList();
 
-                var pipeline = _mlContext.Transforms.DetectSpikeBySsa(
-                    outputColumnName: nameof(SpikePrediction.Prediction),
-                    inputColumnName: nameof(TrafficData.RequestCount),
-                    confidence: 99.0,         
-                    pvalueHistoryLength: 15,   
-                    trainingWindowSize: 30,      
-                    seasonalityWindowSize: 10);  
-
-                var model = pipeline.Fit(dataView);
-                var transformedData = model.Transform(dataView);
-                var predictions = _mlContext.Data.CreateEnumerable<SpikePrediction>(transformedData, reuseRowObject: false).ToList();
-
-                var latestPrediction = predictions.Last();
-                bool isSpike = latestPrediction.Prediction[0] == 1;
-
-                if (isSpike)
+                if (predictions.Last().Prediction[0] == 1)
                 {
-                    bool exists = await EntityFrameworkQueryableExtensions.AnyAsync(
-                        dbContext.BlockedIps, b => b.IpAddress == ip, ct);
-
-                    if (!exists)
+                    if (!await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.AnyAsync(dbContext.BlockedIps, b => b.IpAddress == ip, ct))
                     {
-                        int requestsLastMinute = (int)timeSeriesData.Last().RequestCount;
-                        var blockedIp = new BlockedIp
-                        {
-                            IpAddress = ip,
-                            Reason = $"ML Auto-Ban: არაბუნებრივი ტრაფიკის ანომალია ({requestsLastMinute} req/min) 99% სიზუსტით."
-                        };
-
-                        dbContext.BlockedIps.Add(blockedIp);
-                        newlyBlocked = true;
-
-                        _logger.LogWarning("🤖 ML.NET-მა დაიჭირა DDoS ანომალია და დაბლოკა IP: {Ip}", ip);
-
-                        await hubContext.Clients.Group("SuperAdmins").SendAsync("ReceiveShieldAlert",
-                            new { ip = ip, reason = blockedIp.Reason, count = requestsLastMinute }, ct);
+                        dbContext.BlockedIps.Add(new BlockedIp { IpAddress = ip, Reason = "ML Auto-Ban: არაბუნებრივი ტრაფიკი." });
+                        await hubContext.Clients.Group("SuperAdmins").SendAsync("ReceiveShieldAlert", new { ip = ip });
                     }
                 }
             }
-
-            if (newlyBlocked)
-            {
-                await dbContext.SaveChangesAsync(ct);
-            }
+            await dbContext.SaveChangesAsync(ct);
         }
     }
 }

@@ -1,0 +1,82 @@
+﻿@using Microsoft.Extensions.Diagnostics.HealthChecks
+@model HealthReport
+@{
+    ViewData["Title"] = "სისტემის სტატუსი";
+
+    string GetStatusColor(HealthStatus status) => status switch
+    {
+        HealthStatus.Healthy => "text-emerald-600 bg-emerald-50 border-emerald-200",
+        HealthStatus.Degraded => "text-amber-600 bg-amber-50 border-amber-200",
+        HealthStatus.Unhealthy => "text-rose-600 bg-rose-50 border-rose-200",
+        _ => "text-slate-600 bg-slate-50 border-slate-200"
+    };
+
+    string GetIcon(HealthStatus status) => status switch
+    {
+        HealthStatus.Healthy => "check-circle",
+        HealthStatus.Degraded => "alert-triangle",
+        HealthStatus.Unhealthy => "x-circle",
+        _ => "help-circle"
+    };
+}
+
+<div class="max-w-5xl mx-auto">
+    <div class="flex items-center justify-between mb-8">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-800 flex items-center">
+                <i data-lucide="activity" class="w-6 h-6 mr-3 text-rose-500"></i> სისტემის სტატუსი
+            </h1>
+            <p class="text-slate-500 mt-1">კრიტიკული სერვისებისა და მონაცემთა ბაზების მდგომარეობა</p>
+        </div>
+
+        <div class="px-4 py-2 rounded-xl border flex items-center shadow-sm @GetStatusColor(Model.Status)">
+            <i data-lucide="@GetIcon(Model.Status)" class="w-5 h-5 mr-2"></i>
+            <span class="font-bold">ზოგადი სტატუსი: @Model.Status.ToString()</span>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm flex items-start space-x-4">
+            <div class="p-3 rounded-xl bg-emerald-50 text-emerald-600">
+                <i data-lucide="server" class="w-6 h-6"></i>
+            </div>
+            <div class="flex-1">
+                <div class="flex justify-between items-start">
+                    <h3 class="font-bold text-slate-800 text-lg">Synox Gateway Server</h3>
+                    <span class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-emerald-100 text-emerald-700">Healthy</span>
+                </div>
+                <p class="text-slate-500 text-sm mt-1">მთავარი აპლიკაცია და Middleware პაიპლაინი გამართულია.</p>
+                <div class="mt-3 text-xs text-slate-400 flex items-center">
+                    <i data-lucide="clock" class="w-3 h-3 mr-1"></i> განახლდა ახლახანს
+                </div>
+            </div>
+        </div>
+
+        @foreach (var item in Model.Entries)
+        {
+            var dbType = item.Key.Contains("Postgre") ? "database" : "layers";
+
+            <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm flex items-start space-x-4">
+                <div class="p-3 rounded-xl @(GetStatusColor(item.Value.Status))">
+                    <i data-lucide="@dbType" class="w-6 h-6"></i>
+                </div>
+                <div class="flex-1">
+                    <div class="flex justify-between items-start">
+                        <h3 class="font-bold text-slate-800 text-lg">@item.Key</h3>
+                        <span class="px-2.5 py-1 text-xs font-semibold rounded-lg @GetStatusColor(item.Value.Status)">
+                            @item.Value.Status.ToString()
+                        </span>
+                    </div>
+                    <p class="text-slate-500 text-sm mt-1">
+                        @(item.Value.Description ?? (item.Value.Status == HealthStatus.Healthy ? "კავშირი მონაცემთა ბაზასთან წარმატებულია." : "ფიქსირდება პრობლემა კავშირისას."))
+                    </p>
+                    <div class="mt-3 flex items-center justify-between">
+                        <span class="text-xs text-slate-400 flex items-center">
+                            <i data-lucide="zap" class="w-3 h-3 mr-1"></i> პასუხის დრო: @item.Value.Duration.TotalMilliseconds.ToString("0.00") ms
+                        </span>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>

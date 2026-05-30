@@ -1,0 +1,55 @@
+﻿@{
+    ViewData["Title"] = "Load Balancing";
+}
+
+<div class="h-[calc(100vh-12rem)] flex items-center justify-center">
+    <div class="max-w-2xl w-full bg-white rounded-2xl shadow-sm border border-slate-200 p-10 text-center relative overflow-hidden">
+
+        <div class="absolute -top-24 -right-24 w-48 h-48 bg-blue-50 rounded-full opacity-50 blur-3xl"></div>
+        <div class="absolute -bottom-24 -left-24 w-48 h-48 bg-purple-50 rounded-full opacity-50 blur-3xl"></div>
+
+        <div class="relative z-10">
+            <div class="flex justify-center items-center space-x-6 mb-8">
+                <div class="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center shadow-sm border border-slate-200">
+                    <i data-lucide="server" class="w-8 h-8 text-slate-600"></i>
+                </div>
+                <div class="flex space-x-2">
+                    <i data-lucide="arrow-right" class="w-6 h-6 text-purple-400 animate-pulse"></i>
+                    <i data-lucide="arrow-right" class="w-6 h-6 text-blue-400 animate-pulse" style="animation-delay: 200ms;"></i>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div class="w-10 h-10 bg-purple-50 rounded-lg flex items-center justify-center border border-purple-100">
+                        <i data-lucide="database" class="w-5 h-5 text-purple-600"></i>
+                    </div>
+                    <div class="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center border border-blue-100">
+                        <i data-lucide="database" class="w-5 h-5 text-blue-600"></i>
+                    </div>
+                    <div class="w-10 h-10 bg-emerald-50 rounded-lg flex items-center justify-center border border-emerald-100">
+                        <i data-lucide="database" class="w-5 h-5 text-emerald-600"></i>
+                    </div>
+                    <div class="w-10 h-10 bg-amber-50 rounded-lg flex items-center justify-center border border-amber-100">
+                        <i data-lucide="database" class="w-5 h-5 text-amber-600"></i>
+                    </div>
+                </div>
+            </div>
+
+            <h2 class="text-3xl font-bold text-slate-800 mb-3">Load Balancing</h2>
+            <div class="inline-flex items-center px-3 py-1 rounded-full bg-amber-100 text-amber-700 text-sm font-semibold mb-6">
+                <i data-lucide="construction" class="w-4 h-4 mr-2"></i> დამუშავების პროცესშია
+            </div>
+
+            <p class="text-slate-500 text-lg mb-8 max-w-lg mx-auto leading-relaxed">
+                ეს მოდული ამჟამად დამუშავების პროცესშია. სამომავლოდ ის უზრუნველყოფს ტრაფიკის ინტელექტუალურ გადანაწილებას (Round-Robin, Least Connections) მიკროსერვისებს შორის, სისტემის წარმადობისა და საიმედოობის გასაზრდელად.
+            </p>
+
+            <div class="w-full bg-slate-100 rounded-full h-2.5 mb-8 overflow-hidden">
+                <div class="bg-gradient-to-r from-blue-500 to-purple-500 h-2.5 rounded-full" style="width: 45%"></div>
+            </div>
+
+            <a href="/Home/Dashboard" class="inline-flex items-center px-6 py-3 bg-white border border-slate-300 rounded-xl text-slate-700 font-semibold hover:bg-slate-50 hover:text-blue-600 transition shadow-sm group">
+                <i data-lucide="arrow-left" class="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform"></i>
+                დეშბორდზე დაბრუნება
+            </a>
+        </div>
+    </div>
+</div>

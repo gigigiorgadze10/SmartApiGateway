@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using SmartApiGateway.Data;
 using SmartApiGateway.Models;
 using System.Security.Claims;
+using SmartApiGateway.Filters;
 
 namespace SmartApiGateway.Controllers
 {
@@ -38,6 +39,7 @@ namespace SmartApiGateway.Controllers
         }
 
         [HttpPost]
+        [AuditLog("ახალი API მარშრუტის დამატება")]
         public async Task<IActionResult> Create(ApiEndpoint endpoint)
         {
             if (ModelState.IsValid)
@@ -67,6 +69,7 @@ namespace SmartApiGateway.Controllers
         }
 
         [HttpPost]
+        [AuditLog("არსებული API მარშრუტის რედაქტირება/ცვლილება")]
         public async Task<IActionResult> Edit(int id, ApiEndpoint model)
         {
             if (id != model.Id) return NotFound();
@@ -100,6 +103,7 @@ namespace SmartApiGateway.Controllers
         }
 
         [HttpPost]
+        [AuditLog("API მარშრუტის წაშლა სისტემიდან")]
         public async Task<IActionResult> Delete(int id)
         {
             var endpoint = await _context.ApiEndpoints.FindAsync(id);

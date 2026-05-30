@@ -13,6 +13,7 @@ namespace SmartApiGateway.Data
 
         public DbSet<BlockedIp> BlockedIps { get; set; }
         public DbSet<ApiEndpoint> ApiEndpoints { get; set; }
+        public DbSet<AuditLog> AuditLogs { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {

@@ -1,3 +1,6 @@
+using Hangfire;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
@@ -5,8 +8,10 @@ using SmartApiGateway.Data;
 using SmartApiGateway.Hubs;
 using SmartApiGateway.Middlewares;
 using SmartApiGateway.Services;
+using System.Linq;
+using System.Text.Json;
 using System.Threading.RateLimiting;
-using Microsoft.AspNetCore.HttpOverrides;
+using Hangfire.PostgreSql;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -79,13 +84,24 @@ builder.Services.AddRateLimiter(options =>
     };
 });
 
+builder.Services.AddHealthChecks()
+    .AddNpgSql(builder.Configuration.GetConnectionString("DefaultConnection")!, name: "PostgreSQL Database")
+    .AddMongoDb(sp => new MongoDB.Driver.MongoClient(builder.Configuration.GetSection("MongoDb:ConnectionString").Value!), name: "MongoDB Database");
+
 builder.Services.AddSingleton<MongoLogService>();
 builder.Services.AddHostedService<LogCleanupService>();
 builder.Services.AddControllersWithViews();
 builder.Services.AddMemoryCache();
 builder.Services.AddSignalR();
-builder.Services.AddHostedService<SmartShieldService>();
-builder.Services.AddHostedService<MlAnomalyDetectionService>();
+builder.Services.AddTransient<SmartShieldService>();
+builder.Services.AddTransient<MlAnomalyDetectionService>();
+
+builder.Services.AddHangfire(config => config
+    .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+    .UseSimpleAssemblyNameTypeSerializer()
+    .UseRecommendedSerializerSettings()
+    .UsePostgreSqlStorage(c => c.UseNpgsqlConnection(builder.Configuration.GetConnectionString("DefaultConnection"))));
+builder.Services.AddHangfireServer();
 
 var app = builder.Build();
 
@@ -125,12 +141,15 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
+
 var supportedCultures = new[] { "ka", "en" };
 var localizationOptions = new RequestLocalizationOptions()
     .SetDefaultCulture("ka")
     .AddSupportedCultures(supportedCultures)
     .AddSupportedUICultures(supportedCultures);
+
 app.UseRequestLocalization(localizationOptions);
+
 app.UseRouting();
 app.UseCors("AllowAll");
 app.UseRateLimiter();
@@ -152,6 +171,9 @@ app.UseWhen(context =>
     !context.Request.Path.StartsWithSegments("/Roles") &&
     !context.Request.Path.StartsWithSegments("/BlockedIps") &&
     !context.Request.Path.StartsWithSegments("/Settings") &&
+    !context.Request.Path.StartsWithSegments("/LoadBalancing") &&
+    !context.Request.Path.StartsWithSegments("/Health") &&
+    !context.Request.Path.StartsWithSegments("/AuditLogs") &&    
     !context.Request.Path.StartsWithSegments("/lib") &&
     !context.Request.Path.StartsWithSegments("/css") &&
     !context.Request.Path.StartsWithSegments("/js"),
@@ -159,5 +181,9 @@ app.UseWhen(context =>
     {
         appBuilder.UseMiddleware<GatewayMiddleware>();
     });
+
+app.UseHangfireDashboard("/hangfire");
+RecurringJob.AddOrUpdate<SmartShieldService>("smart-shield-job", x => x.ExecuteAnalysisAsync(), "*/1 * * * *");
+RecurringJob.AddOrUpdate<MlAnomalyDetectionService>("ml-anomaly-job", x => x.ExecuteDetectionAsync(), "*/5 * * * *");
 
 app.Run();
